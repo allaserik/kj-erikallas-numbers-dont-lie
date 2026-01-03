@@ -20,6 +20,9 @@ If you have Actuator on the classpath, also:
 curl -s http://localhost:8080/actuator/health
 ```
 
+curl -s -X POST http://localhost:8080/api/audit-test
+
+
 ## Test run (unit tests)
 
 From `backend/`:
