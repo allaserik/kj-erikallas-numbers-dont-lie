@@ -50,4 +50,5 @@ dist/
 *.log
 
 # Windows Zone Identifier (NTFS ADS leakage)
+# find . -type f -name '*Zone.Identifier*' -delete
 *Zone.Identifier*
