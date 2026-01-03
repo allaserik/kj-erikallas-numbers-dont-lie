@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(
@@ -66,6 +70,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleGeneric(
             Exception ex,
             HttpServletRequest req) {
+        log.error("Unhandled exception processing request to " + req.getRequestURI(), ex);
+        
         ApiError body = new ApiError(
                 OffsetDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
