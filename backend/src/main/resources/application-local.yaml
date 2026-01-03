@@ -21,5 +21,11 @@ management:
       exposure:
         include: health,info
 
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
 vaadin:
   launch-browser: true

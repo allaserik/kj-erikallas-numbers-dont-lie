@@ -68,11 +68,19 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- Flyway Postgres support (keep this) -->
+		<!-- Flyway Postgres support -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.6.0</version>
+		</dependency>
+
+		<!-- Optional -->
 
 		<!-- Devtools optional -->
 		<dependency>
@@ -81,8 +89,6 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-
-		<!-- Optional -->
 
 		<!-- Lombok -->
 		<dependency>
