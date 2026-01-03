@@ -19,6 +19,11 @@ spring:
       add-mappings: false
   mvc:
     throw-exception-if-no-handler-found: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://kj-ea-ndl.eu.auth0.com/
 
 management:
   endpoints:
@@ -31,6 +36,9 @@ springdoc:
     enabled: true
   api-docs:
     enabled: true
+
+auth0:
+  audience: ${AUTH0_AUDIENCE:https://numbers-dont-lie-api}
 
 vaadin:
   launch-browser: true
