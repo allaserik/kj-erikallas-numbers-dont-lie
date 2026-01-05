@@ -39,6 +39,3 @@ springdoc:
 
 auth0:
   audience: ${AUTH0_AUDIENCE:https://numbers-dont-lie-api}
-
-vaadin:
-  launch-browser: true
