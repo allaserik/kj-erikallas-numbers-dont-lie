@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,8 @@ public class ProfileController {
         public int heightCm;
 
         @NotBlank(message = "baselineActivityLevel is required")
+        // allowed values: sedentary, light, moderate, active, very_active
+        @Pattern(regexp = "^(sedentary|light|moderate|active|very_active)$", message = "baselineActivityLevel must be one of: sedentary, light, moderate, active, very_active")
         public String baselineActivityLevel;
     }
 
