@@ -16,8 +16,12 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
 public class AiInsightService {
+    private static final Logger log = LoggerFactory.getLogger(AiInsightService.class);
 
     private static final Duration CACHE_TTL = Duration.ofHours(24);
 
@@ -54,7 +58,7 @@ public class AiInsightService {
 
     public record AiInsightResult(
             AiPayload payload,
-            boolean cached,
+            String source,
             OffsetDateTime createdAt) {
     }
 
@@ -92,12 +96,13 @@ public class AiInsightService {
         // Cache hit?
         var cached = repo.findFirstByUserIdAndInputHashOrderByCreatedAtDesc(userId, inputHash).orElse(null);
         if (cached != null && cached.getCreatedAt().isAfter(OffsetDateTime.now().minus(CACHE_TTL))) {
-            return new AiInsightResult(parseAndValidate(cached.getPayload()), true, cached.getCreatedAt());
+            return new AiInsightResult(parseAndValidate(cached.getPayload()), "cache", cached.getCreatedAt());
         }
 
         // No cache hit: call OpenAI (or fallback)
         if (!openAi.hasKey()) {
-            return fallbackToLast(userId, "OPENAI_API_KEY missing");
+            log.warn("OPENAI_API_KEY missing, falling back to last insight. userId={}", userId);
+            return fallbackToLast(userId);
         }
 
         String systemPrompt = "You are a supportive wellness coach. You must respond ONLY with valid JSON matching the provided schema. "
@@ -122,18 +127,21 @@ public class AiInsightService {
                     OffsetDateTime.now());
             repo.save(stored);
 
-            return new AiInsightResult(payload, false, stored.getCreatedAt());
+            return new AiInsightResult(payload, "openai", stored.getCreatedAt());
         } catch (Exception e) {
-            return fallbackToLast(userId, e.getMessage());
+            log.warn("AI insight generation failed, falling back. userId={}, reason={}",
+                    userId, e.getMessage());
+            return fallbackToLast(userId);
         }
     }
 
-    private AiInsightResult fallbackToLast(UUID userId, String reason) {
+    private AiInsightResult fallbackToLast(UUID userId) {
+        // seek to return last cached insight
         var last = repo.findFirstByUserIdOrderByCreatedAtDesc(userId).orElse(null);
         if (last != null) {
-            return new AiInsightResult(parseAndValidate(last.getPayload()), true, last.getCreatedAt());
+            return new AiInsightResult(parseAndValidate(last.getPayload()), "cached", last.getCreatedAt());
         }
-        // structured fallback (still valid schema)
+        // structured default fallback (still valid schema)
         AiPayload payload = new AiPayload(
                 java.util.List.of(
                         "AI is temporarily unavailable. Take a 10-minute walk or do light stretching.",
@@ -141,7 +149,7 @@ public class AiInsightService {
                         "Pick one small task and do 10 minutes of focused work with a timer."),
                 "What is the smallest helpful thing you can do in the next 15 minutes?",
                 "AI is unavailable right now, but you can still make progress today. Focus on one small step and protect your energy.");
-        return new AiInsightResult(payload, true, OffsetDateTime.now());
+        return new AiInsightResult(payload, "fallback", OffsetDateTime.now());
     }
 
     private String sha256(String s) {

@@ -61,6 +61,7 @@ public class OpenAiClient {
                 "text", Map.of(
                         "format", Map.of(
                                 "type", "json_schema",
+                                "name", "wellness_insight_v1",
                                 "strict", true,
                                 "schema", schema)),
                 "store", false);

@@ -38,6 +38,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.badRequest().body(body);
         }
 
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<ApiError> handleIllegalArgument(
+                        IllegalArgumentException ex,
+                        HttpServletRequest req) {
+                ApiError body = new ApiError(
+                                OffsetDateTime.now(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                                ex.getMessage(),
+                                req.getRequestURI(),
+                                List.of());
+                return ResponseEntity.badRequest().body(body);
+        }
+
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiError> handleUnreadable(
                         HttpMessageNotReadableException ex,

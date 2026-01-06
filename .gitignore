@@ -56,3 +56,7 @@ dist/
 # OpenAI keys
 openai-on.sh
 openai-off.sh
+
+# Secrets
+secrets/
+secrets.sh
