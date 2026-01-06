@@ -3,7 +3,7 @@
 kood/Jõhvi generative AI specialization Wellness App project
 
 - KJ gitea's:
-  [numbers-dont-lie](https://gitea.kood.tech/erikallas/numbers-dont-lie.git
+[numbers-dont-lie](https://gitea.kood.tech/erikallas/numbers-dont-lie.git
 
 [ai-assistant](https://gitea.kood.tech/erikallas/ai-assistant.git)
 
