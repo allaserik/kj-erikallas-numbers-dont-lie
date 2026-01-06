@@ -52,3 +52,7 @@ dist/
 # Windows Zone Identifier (NTFS ADS leakage)
 # find . -type f -name '*Zone.Identifier*' -delete
 *Zone.Identifier*
+
+# OpenAI keys
+openai-on.sh
+openai-off.sh
