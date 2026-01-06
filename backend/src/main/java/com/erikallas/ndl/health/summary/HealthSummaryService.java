@@ -1,6 +1,5 @@
 package com.erikallas.ndl.health.summary;
 
-import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import java.time.OffsetDateTime;

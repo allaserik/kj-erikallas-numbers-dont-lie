@@ -3,8 +3,6 @@ package com.erikallas.ndl.health.summary;
 
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
-import com.erikallas.ndl.health.summary.HealthSummaryDto;
-import com.erikallas.ndl.health.summary.HealthSummaryService;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import com.erikallas.ndl.user.UserService;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
