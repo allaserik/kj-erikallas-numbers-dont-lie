@@ -9,3 +9,11 @@ export type AiInsightResponse = {
   source: "openai" | "cache" | "fallback";
   createdAt: string;
 };
+
+export type MeResponse = {
+  sub: string;
+  email?: string;
+  aud: string[];
+  iss: string;
+  scope?: string;
+};

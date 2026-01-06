@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import type { MeResponse } from "../api/types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
-
-type MeResponse = {
-  sub: string;
-  email?: string;
-  aud: string[];
-  iss: string;
-  scope?: string;
-};
 
 export default function Dashboard() {
   const { loginWithRedirect, logout, isAuthenticated, isLoading, getAccessTokenSilently, user } =
