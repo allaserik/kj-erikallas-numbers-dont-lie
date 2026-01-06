@@ -2,10 +2,14 @@ package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
 import com.erikallas.ndl.user.UserService;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 public class AiInsightController {
 

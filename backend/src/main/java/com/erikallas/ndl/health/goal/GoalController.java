@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.erikallas.ndl.user.UserService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 public class GoalController {
 
