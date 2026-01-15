@@ -8,6 +8,10 @@
 *.class
 target
 
+# vscode
+.vscode/
+.vscode/settings.json
+
 # Maven Wrapper
 .mvn/wrapper/maven-wrapper.jar
 

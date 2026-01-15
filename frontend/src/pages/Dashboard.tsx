@@ -34,7 +34,7 @@ export default function Dashboard() {
   const firstError =
     meQ.error || profileQ.error || goalQ.error || weightsQ.error || insightQ.error;
 
-    const firstErrorMessage = firstError ? explainApiError(firstError) : "";
+  const firstErrorMessage = firstError ? explainApiError(firstError) : "";
 
   const latestWeight = weightsQ.data?.[0]?.valueKg;
   const heightCm = profileQ.data?.heightCm;
