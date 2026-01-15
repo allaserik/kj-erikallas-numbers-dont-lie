@@ -1,93 +1,166 @@
-import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import type { MeResponse } from "../api/types";
+import { PageHeader } from "../components/layout/PageHeader"; // if you don't have this yet, we’ll add below
+import { Button } from "../shared/ui/Button";
+import { Alert } from "../shared/ui/Alert";
+import { Card, CardBody, CardSubtitle, CardTitle } from "../shared/ui/Card";
+import { Spinner } from "../shared/ui/Spinner";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+import { useAuthedQuery } from "../shared/auth/useAuthedQuery";
+import { getMe } from "../api/me";
+import { getProfile } from "../api/profile";
+import { getActiveGoal } from "../api/goals";
+import { getWeights } from "../api/weight";
+import { getCurrentInsight } from "../api/insights";
+import { useEffect } from "react";
+
+function calcBmi(heightCm: number, weightKg: number) {
+  const h = heightCm / 100;
+  return weightKg / (h * h);
+}
+
+function LogLoadingStates(props: { states: any }) {
+  useEffect(() => {
+    console.log("Loading states:", props.states);
+  }, [props.states]);
+  return null;
+}
+
 
 export default function Dashboard() {
-  const { loginWithRedirect, logout, isAuthenticated, isLoading, getAccessTokenSilently, user } =
-    useAuth0();
+  const { loginWithRedirect, logout, isAuthenticated, isLoading, user } = useAuth0();
 
-  const [me, setMe] = useState<MeResponse | null>(null);
-  const [error, setError] = useState<string>("");
+  const meQ = useAuthedQuery(getMe);
+  const profileQ = useAuthedQuery(getProfile);
+  const goalQ = useAuthedQuery(getActiveGoal);
+  const weightsQ = useAuthedQuery(getWeights);
+  const insightQ = useAuthedQuery(getCurrentInsight);
 
-  useEffect(() => {
-    let alive = true;
+  const anyLoading =
+    meQ.loading || profileQ.loading || goalQ.loading || weightsQ.loading || insightQ.loading;
 
-    (async () => {
-      setError("");
-      setMe(null);
+  const firstError =
+    meQ.error || profileQ.error || goalQ.error || weightsQ.error || insightQ.error;
 
-      if (!isAuthenticated) return;
+  const latestWeight = weightsQ.data?.[0]?.valueKg;
+  const heightCm = profileQ.data?.heightCm;
 
-      try {
-        const token = await getAccessTokenSilently();
-        const res = await fetch(`${API_BASE_URL}/api/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          throw new Error(text || `HTTP ${res.status}`);
-        }
-
-        const data = (await res.json()) as MeResponse;
-        if (alive) setMe(data);
-      } catch (e) {
-        if (!alive) return;
-        setError(e instanceof Error ? e.message : "Unknown error");
-      }
-    })();
-
-    return () => {
-      alive = false;
-    };
-  }, [isAuthenticated, getAccessTokenSilently]);
+  const bmi =
+    heightCm && latestWeight ? calcBmi(heightCm, latestWeight) : null;
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-lg font-semibold">Dashboard</div>
-          <div className="text-sm text-gray-600">
-            {isLoading ? "Auth loading..." : isAuthenticated ? `Signed in${user?.email ? `: ${user.email}` : ""}` : "Signed out"}
-          </div>
-        </div>
-
-        <div className="flex gap-2">
-          {!isAuthenticated ? (
-            <button
-              className="rounded-lg bg-gray-900 px-3 py-2 text-sm font-semibold text-white"
-              onClick={() => loginWithRedirect()}
-            >
+      <PageHeader
+        title="Today"
+        subtitle={
+          isLoading
+            ? "Auth loading..."
+            : isAuthenticated
+              ? `Signed in${user?.email ? `: ${user.email}` : ""}`
+              : "Signed out"
+        }
+        actions={
+          !isAuthenticated ? (
+            <Button variant="primary" onClick={() => loginWithRedirect()}>
               Log in
-            </button>
+            </Button>
           ) : (
-            <button
-              className="rounded-lg border px-3 py-2 text-sm font-semibold"
-              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-            >
+            <Button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
               Log out
-            </button>
-          )}
-        </div>
-      </div>
+            </Button>
+          )
+        }
+      />
 
-      {error && (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm">
-          <div className="font-semibold">API error</div>
-          <div className="text-amber-900 break-words">{error}</div>
-        </div>
+      {!isAuthenticated && !isLoading && (
+        <Card>
+          <CardTitle>Welcome</CardTitle>
+          <CardSubtitle>Log in to view your numbers and insights.</CardSubtitle>
+          <CardBody>
+            <Button variant="primary" fullWidth onClick={() => loginWithRedirect()}>
+              Continue
+            </Button>
+          </CardBody>
+        </Card>
       )}
 
-      {isAuthenticated && !me && !error && (
-        <div className="text-sm text-gray-600">Loading /api/me ...</div>
+      {isAuthenticated && anyLoading && <Spinner label="Loading dashboard..." />}
+
+      {isAuthenticated && firstError && (
+        <Alert title="API error" message={firstError} tone="warning" />
       )}
 
-      {me && (
-        <pre className="rounded-lg border bg-white p-3 text-xs overflow-auto">
-          {JSON.stringify(me, null, 2)}
-        </pre>
+      {isAuthenticated && !firstError && (
+        <>
+          <Card>
+            <CardTitle>Profile</CardTitle>
+            <CardSubtitle>Identity + basics</CardSubtitle>
+            <CardBody>
+              <div className="text-sm space-y-1">
+                <div><span className="text-gray-600">sub:</span> {meQ.data?.sub ?? "-"}</div>
+                <div><span className="text-gray-600">email:</span> {meQ.data?.email ?? user?.email ?? "-"}</div>
+                <div><span className="text-gray-600">height:</span> {heightCm ? `${heightCm} cm` : "-"}</div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardTitle>Numbers don’t lie</CardTitle>
+            <CardSubtitle>Latest stats</CardSubtitle>
+            <CardBody>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg border p-3">
+                  <div className="text-gray-600">Latest weight</div>
+                  <div className="text-lg font-semibold">
+                    {latestWeight ? `${latestWeight.toFixed(1)} kg` : "-"}
+                  </div>
+                </div>
+
+                <div className="rounded-lg border p-3">
+                  <div className="text-gray-600">BMI</div>
+                  <div className="text-lg font-semibold">
+                    {bmi ? bmi.toFixed(1) : "-"}
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <CardTitle>AI insight</CardTitle>
+                <CardSubtitle>Personal recommendations</CardSubtitle>
+              </div>
+              <span className="rounded-full border px-2 py-1 text-xs text-gray-700">
+                {insightQ.data?.source ?? "—"}
+              </span>
+            </div>
+
+            <CardBody>
+              {insightQ.data?.payload ? (
+                <div className="text-sm space-y-3">
+                  <ul className="list-disc pl-5 space-y-1">
+                    {insightQ.data.payload.recommendations.map((r, i) => (
+                      <li key={i}>{r}</li>
+                    ))}
+                  </ul>
+
+                  <div>
+                    <div className="text-gray-600">Reflection question</div>
+                    <div className="font-medium">{insightQ.data.payload.reflection_question}</div>
+                  </div>
+
+                  <div>
+                    <div className="text-gray-600">Summary</div>
+                    <div>{insightQ.data.payload.summary}</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-gray-600">No insight yet.</div>
+              )}
+            </CardBody>
+          </Card>
+        </>
       )}
     </div>
   );
