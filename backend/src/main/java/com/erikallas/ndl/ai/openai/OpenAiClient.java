@@ -13,6 +13,7 @@ import org.springframework.web.client.RestClient;
 public class OpenAiClient {
 
     private final RestClient rest;
+    @SuppressWarnings("unused")
     private final ObjectMapper om;
     private final Environment env;
 

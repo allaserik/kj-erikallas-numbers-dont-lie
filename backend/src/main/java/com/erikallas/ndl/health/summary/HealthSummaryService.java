@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class HealthSummaryService {
 
+    @SuppressWarnings("unused")
     private final WeightEntryRepository weightRepo;
 
     public HealthSummaryService(WeightEntryRepository weightRepo) {
