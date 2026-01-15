@@ -11,18 +11,11 @@ import { getProfile } from "../api/profile";
 import { getActiveGoal } from "../api/goals";
 import { getWeights } from "../api/weight";
 import { getCurrentInsight } from "../api/insights";
-import { useEffect } from "react";
+import { explainApiError } from "../shared/api/errors";
 
 function calcBmi(heightCm: number, weightKg: number) {
   const h = heightCm / 100;
   return weightKg / (h * h);
-}
-
-function LogLoadingStates(props: { states: any }) {
-  useEffect(() => {
-    console.log("Loading states:", props.states);
-  }, [props.states]);
-  return null;
 }
 
 
@@ -40,6 +33,8 @@ export default function Dashboard() {
 
   const firstError =
     meQ.error || profileQ.error || goalQ.error || weightsQ.error || insightQ.error;
+
+    const firstErrorMessage = firstError ? explainApiError(firstError) : "";
 
   const latestWeight = weightsQ.data?.[0]?.valueKg;
   const heightCm = profileQ.data?.heightCm;
@@ -86,7 +81,7 @@ export default function Dashboard() {
       {isAuthenticated && anyLoading && <Spinner label="Loading dashboard..." />}
 
       {isAuthenticated && firstError && (
-        <Alert title="API error" message={firstError} tone="warning" />
+        <Alert title="API error" message={firstErrorMessage} tone="warning" />
       )}
 
       {isAuthenticated && !firstError && (
