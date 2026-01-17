@@ -25,7 +25,16 @@ export default function AppShell() {
               `${linkBase} ${isActive ? linkActive : linkInactive}`
             }
           >
-            <span>Home</span>
+            <span>Today</span>
+          </NavLink>
+
+          <NavLink
+            to="/checkin"
+            className={({ isActive }) =>
+              `${linkBase} ${isActive ? linkActive : linkInactive}`
+            }
+          >
+            <span>Log</span>
           </NavLink>
 
           <NavLink
@@ -38,24 +47,16 @@ export default function AppShell() {
           </NavLink>
 
           <NavLink
-            to="/goals"
+            to="/settings"
             className={({ isActive }) =>
               `${linkBase} ${isActive ? linkActive : linkInactive}`
             }
           >
-            <span>Goals</span>
-          </NavLink>
-
-          <NavLink
-            to="/checkin"
-            className={({ isActive }) =>
-              `${linkBase} ${isActive ? linkActive : linkInactive}`
-            }
-          >
-            <span>Check-in</span>
+            <span>Settings</span>
           </NavLink>
         </div>
       </nav>
+
     </div>
   );
 }
