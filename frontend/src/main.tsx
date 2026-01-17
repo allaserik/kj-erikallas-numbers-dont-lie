@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Trends from "./pages/Trends";
 import Goals from "./pages/Goals";
 import CheckIn from "./pages/CheckIn";
+import ProfilePage from "./pages/Profile";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,8 @@ const router = createBrowserRouter([
       { path: "/trends", element: <Trends /> },
       { path: "/goals", element: <Goals /> },
       { path: "/checkin", element: <CheckIn /> },
+      { path: "/profile", element: <ProfilePage /> },
+
     ],
   },
 ]);
