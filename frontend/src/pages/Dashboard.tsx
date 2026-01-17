@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   const firstErrorMessage = firstError ? explainApiError(firstError) : "";
 
-  const latestWeight = weightsQ.data?.[0]?.valueKg;
+  const latestWeight = weightsQ.data?.[0]?.weightKg;
   const heightCm = profileQ.data?.heightCm;
 
   const bmi =
@@ -78,7 +78,23 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {isAuthenticated && anyLoading && <Spinner label="Loading dashboard..." />}
+      {isAuthenticated && anyLoading && (
+        <>
+          <Spinner label="Loading dashboard..." />
+          <Card>
+            <CardTitle>Loading data</CardTitle>
+            <CardBody>
+              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                {meQ.loading && <li>Loading user info...</li>}
+                {profileQ.loading && <li>Loading profile...</li>}
+                {goalQ.loading && <li>Loading active goal...</li>}
+                {weightsQ.loading && <li>Loading weight entries...</li>}
+                {insightQ.loading && <li>Loading AI insights...</li>}
+              </ul>
+            </CardBody>
+          </Card>
+        </>
+      )}
 
       {isAuthenticated && firstError && (
         <Alert title="API error" message={firstErrorMessage} tone="warning" />

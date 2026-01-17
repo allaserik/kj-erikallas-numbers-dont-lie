@@ -1,7 +1,7 @@
 import { api } from "../shared/api/client";
 
 export type WeightEntry = {
-  valueKg: number;
+  weightKg: number;
   measuredAt: string;
 };
 
