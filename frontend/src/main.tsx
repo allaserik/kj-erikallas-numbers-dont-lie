@@ -10,6 +10,7 @@ import Trends from "./pages/Trends";
 import Goals from "./pages/Goals";
 import CheckIn from "./pages/CheckIn";
 import ProfilePage from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: "/goals", element: <Goals /> },
       { path: "/checkin", element: <CheckIn /> },
       { path: "/profile", element: <ProfilePage /> },
+      { path: "/settings", element: <Settings /> },
 
     ],
   },
