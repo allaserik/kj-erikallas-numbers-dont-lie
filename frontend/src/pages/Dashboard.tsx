@@ -15,6 +15,8 @@ import { explainApiError } from "../shared/api/errors";
 import { isSetupRequired } from "../setup/isSetupRequired";
 import { Link } from "react-router-dom";
 import { SetupRequiredCard } from "../features/dashboard/components/SetupRequiredCard";
+import { DashboardErrorAlert } from "../features/dashboard/components/DashboardErrorAlert";
+import { DashboardLoadingCard } from "../features/dashboard/components/DashboardLoadingCard";
 
 
 function calcBmi(heightCm: number, weightKg: number) {
@@ -88,27 +90,15 @@ export default function Dashboard() {
 
       {!setupRequired && (
         <>
-          {isAuthenticated && anyLoading && (
-            <>
-              <Spinner label="Loading dashboard..." />
-              <Card>
-                <CardTitle>Loading data</CardTitle>
-                <CardBody>
-                  <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-                    {meQ.loading && <li>Loading user info...</li>}
-                    {profileQ.loading && <li>Loading profile...</li>}
-                    {goalQ.loading && <li>Loading active goal...</li>}
-                    {weightsQ.loading && <li>Loading weight entries...</li>}
-                    {insightQ.loading && <li>Loading AI insights...</li>}
-                  </ul>
-                </CardBody>
-              </Card>
-            </>
-          )}
+          {isAuthenticated && anyLoading && <DashboardLoadingCard loadingFlags={{
+            me: meQ.loading,
+            profile: profileQ.loading,
+            goal: goalQ.loading,
+            weights: weightsQ.loading,
+            insight: insightQ.loading
+          }} />}
 
-          {isAuthenticated && firstError && (
-            <Alert title="API error" message={firstErrorMessage} tone="warning" />
-          )}
+          {isAuthenticated && firstError && <DashboardErrorAlert message={firstErrorMessage} />}
 
           {isAuthenticated && !firstError && (
             <>
