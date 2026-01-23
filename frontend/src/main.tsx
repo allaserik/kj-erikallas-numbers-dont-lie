@@ -5,7 +5,7 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import "./index.css";
 
 import AppShell from "./layout/AppShell";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/old-Dashboard";
 import Trends from "./pages/Trends";
 import Goals from "./pages/Goals";
 import CheckIn from "./pages/CheckIn";

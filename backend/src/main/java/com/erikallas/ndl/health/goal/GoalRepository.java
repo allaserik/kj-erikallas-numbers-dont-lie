@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GoalRepository extends JpaRepository<GoalEntity, UUID> {
     Optional<GoalEntity> findFirstByUserIdAndActiveTrue(UUID userId);
+
+    Optional<GoalEntity> findActiveByUserId(UUID userId);
 }
