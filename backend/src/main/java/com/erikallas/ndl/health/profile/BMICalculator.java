@@ -8,17 +8,14 @@ import java.math.RoundingMode;
  * 
  * BMI = weight (kg) / height² (m²)
  * 
- * Classifications:
- * - Underweight: BMI < 18.5
- * - Normal weight: BMI 18.5 - 24.9
- * - Overweight: BMI 25 - 29.9
- * - Obese: BMI >= 30
+ * Classifications: - Underweight: BMI < 18.5 - Normal weight: BMI 18.5 - 24.9 -
+ * Overweight: BMI 25 - 29.9 - Obese: BMI >= 30
  */
 public class BMICalculator {
 
     /**
-     * Calculate BMI from weight (kg) and height (cm).
-     * Returns BMI value rounded to 2 decimal places.
+     * Calculate BMI from weight (kg) and height (cm). Returns BMI value rounded to
+     * 2 decimal places.
      */
     public static BigDecimal calculateBMI(double weightKg, int heightCm) {
         if (weightKg <= 0 || heightCm <= 0) {
@@ -36,8 +33,8 @@ public class BMICalculator {
     }
 
     /**
-     * Classify BMI value into categories.
-     * Returns: "underweight", "normal", "overweight", or "obese"
+     * Classify BMI value into categories. Returns: "underweight", "normal",
+     * "overweight", or "obese"
      */
     public static String classifyBMI(BigDecimal bmi) {
         if (bmi == null) {
@@ -64,11 +61,11 @@ public class BMICalculator {
         }
 
         return switch (classification) {
-            case "underweight" -> "Underweight (BMI < 18.5)";
-            case "normal" -> "Normal Weight (BMI 18.5 - 24.9)";
-            case "overweight" -> "Overweight (BMI 25 - 29.9)";
-            case "obese" -> "Obese (BMI >= 30)";
-            default -> "Unknown";
+        case "underweight" -> "Underweight (BMI < 18.5)";
+        case "normal" -> "Normal Weight (BMI 18.5 - 24.9)";
+        case "overweight" -> "Overweight (BMI 25 - 29.9)";
+        case "obese" -> "Obese (BMI >= 30)";
+        default -> "Unknown";
         };
     }
 }

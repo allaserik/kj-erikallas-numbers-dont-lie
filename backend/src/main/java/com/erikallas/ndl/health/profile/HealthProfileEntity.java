@@ -62,14 +62,8 @@ public class HealthProfileEntity {
     protected HealthProfileEntity() {
     }
 
-    public HealthProfileEntity(
-            UUID userId,
-            Integer birthYear,
-            String gender,
-            int heightCm,
-            String baselineActivityLevel,
-            OffsetDateTime createdAt,
-            OffsetDateTime updatedAt) {
+    public HealthProfileEntity(UUID userId, Integer birthYear, String gender, int heightCm,
+            String baselineActivityLevel, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.userId = userId;
         this.birthYear = birthYear;
         this.gender = gender;
@@ -179,8 +173,8 @@ public class HealthProfileEntity {
     }
 
     /**
-     * Calculate and set BMI value and classification from weight and height.
-     * This should be called whenever weight or height changes.
+     * Calculate and set BMI value and classification from weight and height. This
+     * should be called whenever weight or height changes.
      */
     public void calculateBMI(double weightKg) {
         try {
@@ -193,17 +187,12 @@ public class HealthProfileEntity {
             this.bmiClassification = null;
         }
     }
+
     @Override
     public String toString() {
-        return "HealthProfileEntity{" +
-                "userId=" + userId +
-                ", birthYear=" + birthYear +
-                ", gender='" + gender + '\'' +
-                ", heightCm=" + heightCm +
-                ", baselineActivityLevel='" + baselineActivityLevel + '\'' +
-                ", dietaryPreferences=" + dietaryPreferences +
-                ", dietaryRestrictions=" + dietaryRestrictions +
-                ", fitnessAssessmentCompleted=" + fitnessAssessmentCompleted +
-                '}';
+        return "HealthProfileEntity{" + "userId=" + userId + ", birthYear=" + birthYear + ", gender='" + gender + '\''
+                + ", heightCm=" + heightCm + ", baselineActivityLevel='" + baselineActivityLevel + '\''
+                + ", dietaryPreferences=" + dietaryPreferences + ", dietaryRestrictions=" + dietaryRestrictions
+                + ", fitnessAssessmentCompleted=" + fitnessAssessmentCompleted + '}';
     }
 }

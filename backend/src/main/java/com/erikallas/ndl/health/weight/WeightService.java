@@ -21,12 +21,8 @@ public class WeightService {
     @Transactional
     public WeightEntryEntity add(UUID userId, double weightKg, OffsetDateTime measuredAt, String note) {
         // Save weight entry
-        var entry = repo.save(new WeightEntryEntity(
-                UUID.randomUUID(),
-                userId,
-                measuredAt != null ? measuredAt : OffsetDateTime.now(),
-                weightKg,
-                note));
+        var entry = repo.save(new WeightEntryEntity(UUID.randomUUID(), userId,
+                measuredAt != null ? measuredAt : OffsetDateTime.now(), weightKg, note));
 
         // Update BMI in health profile if it exists
         var profile = profileRepo.findById(userId);

@@ -36,33 +36,29 @@ public class RefreshTokenController {
     /**
      * Refresh access token using a valid refresh token.
      * 
-     * Request: { "refresh_token": "token-uuid" }
-     * Response:
-     * - 200: { "access_token": "jwt", "refresh_token": "uuid", "token_type": "Bearer", "expires_in": 900 }
-     * - 400: { "message": "Invalid or expired refresh token" }
+     * Request: { "refresh_token": "token-uuid" } Response: - 200: { "access_token":
+     * "jwt", "refresh_token": "uuid", "token_type": "Bearer", "expires_in": 900 } -
+     * 400: { "message": "Invalid or expired refresh token" }
      */
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
         // Validate request
         if (request.getRefreshToken() == null || request.getRefreshToken().isEmpty()) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Refresh token is required"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Refresh token is required"));
         }
 
         // Validate refresh token
         RefreshTokenEntity tokenEntity = refreshTokenService.validateToken(request.getRefreshToken());
 
         if (tokenEntity == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "Invalid or expired refresh token"));
+            return ResponseEntity.badRequest().body(Map.of("message", "Invalid or expired refresh token"));
         }
 
         // Get user
         UserEntity user = userRepository.findById(tokenEntity.getUserId()).orElse(null);
 
         if (user == null) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("message", "User not found"));
+            return ResponseEntity.badRequest().body(Map.of("message", "User not found"));
         }
 
         // Generate new access token (JWT would be created in real implementation)

@@ -177,16 +177,16 @@ public class AuthService {
     }
 
     /**
-     * Generate a refresh token for a user (issued on login/registration).
-     * Refresh tokens are valid for 7 days.
+     * Generate a refresh token for a user (issued on login/registration). Refresh
+     * tokens are valid for 7 days.
      */
     public String generateRefreshToken(UserEntity user) {
         return refreshTokenService.generateRefreshToken(user.getId());
     }
 
     /**
-     * Validate and retrieve a refresh token.
-     * Returns the token entity if valid, null otherwise.
+     * Validate and retrieve a refresh token. Returns the token entity if valid,
+     * null otherwise.
      */
     public com.erikallas.ndl.auth.model.RefreshTokenEntity validateRefreshToken(String token) {
         return refreshTokenService.validateToken(token);

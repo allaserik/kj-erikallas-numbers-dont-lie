@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service for managing refresh tokens.
  * 
- * Refresh tokens enable users to obtain new access tokens without re-authenticating.
- * Tokens are valid for 7 days.
+ * Refresh tokens enable users to obtain new access tokens without
+ * re-authenticating. Tokens are valid for 7 days.
  */
 @Service
 public class RefreshTokenService {
@@ -26,8 +26,8 @@ public class RefreshTokenService {
     }
 
     /**
-     * Generate and save a new refresh token for a user.
-     * Returns the token string to be sent to client.
+     * Generate and save a new refresh token for a user. Returns the token string to
+     * be sent to client.
      */
     @Transactional
     public String generateRefreshToken(UUID userId) {
@@ -46,8 +46,8 @@ public class RefreshTokenService {
     }
 
     /**
-     * Validate and retrieve a refresh token.
-     * Returns the token entity if valid, or null if invalid/expired/revoked.
+     * Validate and retrieve a refresh token. Returns the token entity if valid, or
+     * null if invalid/expired/revoked.
      */
     public RefreshTokenEntity validateToken(String token) {
         var entity = tokenRepository.findByToken(token).orElse(null);

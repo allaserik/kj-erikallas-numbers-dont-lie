@@ -10,9 +10,9 @@ import java.util.UUID;
 /**
  * Refresh token entity for long-lived user sessions.
  * 
- * Refresh tokens allow users to obtain new access tokens without re-authenticating.
- * Tokens are valid for 7 days, after which user must re-login.
- * Tokens can be revoked explicitly if needed.
+ * Refresh tokens allow users to obtain new access tokens without
+ * re-authenticating. Tokens are valid for 7 days, after which user must
+ * re-login. Tokens can be revoked explicitly if needed.
  */
 @Entity
 @Table(name = "refresh_tokens")
@@ -115,13 +115,7 @@ public class RefreshTokenEntity {
 
     @Override
     public String toString() {
-        return "RefreshTokenEntity{" +
-                "id=" + id +
-                ", userId=" + userId +
-                ", token='" + token + '\'' +
-                ", createdAt=" + createdAt +
-                ", expiresAt=" + expiresAt +
-                ", revokedAt=" + revokedAt +
-                '}';
+        return "RefreshTokenEntity{" + "id=" + id + ", userId=" + userId + ", token='" + token + '\'' + ", createdAt="
+                + createdAt + ", expiresAt=" + expiresAt + ", revokedAt=" + revokedAt + '}';
     }
 }

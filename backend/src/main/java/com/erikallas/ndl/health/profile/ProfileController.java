@@ -28,22 +28,15 @@ public class ProfileController {
     }
 
     /**
-     * Create or update user's health profile.
-     * Accepts all health data: demographics, activity, dietary, fitness assessment.
+     * Create or update user's health profile. Accepts all health data:
+     * demographics, activity, dietary, fitness assessment.
      */
     @PostMapping("/api/profile")
     public HealthProfileEntity upsertProfile(@Valid @RequestBody HealthProfileRequest request,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
-        return profileService.upsert(
-                user.getId(),
-                request.getBirthYear(),
-                request.getGender(),
-                request.getHeightCm(),
-                request.getBaselineActivityLevel(),
-                request.getDietaryPreferences(),
-                request.getDietaryRestrictions(),
-                request.getFitnessAssessment(),
-                request.getFitnessAssessmentCompleted());
+        return profileService.upsert(user.getId(), request.getBirthYear(), request.getGender(), request.getHeightCm(),
+                request.getBaselineActivityLevel(), request.getDietaryPreferences(), request.getDietaryRestrictions(),
+                request.getFitnessAssessment(), request.getFitnessAssessmentCompleted());
     }
 }

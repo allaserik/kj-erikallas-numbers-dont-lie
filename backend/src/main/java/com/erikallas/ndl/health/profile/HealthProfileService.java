@@ -22,40 +22,22 @@ public class HealthProfileService {
     }
 
     @Transactional
-    public HealthProfileEntity upsert(
-            UUID userId,
-            Integer birthYear,
-            String gender,
-            int heightCm,
+    public HealthProfileEntity upsert(UUID userId, Integer birthYear, String gender, int heightCm,
             String baselineActivityLevel) {
         return upsert(userId, birthYear, gender, heightCm, baselineActivityLevel, null, null, null, null);
     }
 
     @Transactional
-    public HealthProfileEntity upsert(
-            UUID userId,
-            Integer birthYear,
-            String gender,
-            int heightCm,
-            String baselineActivityLevel,
-            List<String> dietaryPreferences,
-            List<String> dietaryRestrictions,
-            Map<String, Object> fitnessAssessment,
-            Boolean fitnessAssessmentCompleted) {
-        
+    public HealthProfileEntity upsert(UUID userId, Integer birthYear, String gender, int heightCm,
+            String baselineActivityLevel, List<String> dietaryPreferences, List<String> dietaryRestrictions,
+            Map<String, Object> fitnessAssessment, Boolean fitnessAssessmentCompleted) {
+
         OffsetDateTime now = OffsetDateTime.now();
         HealthProfileEntity existing = repo.findById(userId).orElse(null);
-        
+
         HealthProfileEntity entity;
         if (existing == null) {
-            entity = new HealthProfileEntity(
-                    userId,
-                    birthYear,
-                    gender,
-                    heightCm,
-                    baselineActivityLevel,
-                    now,
-                    now);
+            entity = new HealthProfileEntity(userId, birthYear, gender, heightCm, baselineActivityLevel, now, now);
         } else {
             entity = existing;
             entity.setBirthYear(birthYear);
@@ -85,7 +67,7 @@ public class HealthProfileService {
         // Note: BMI is calculated when weight is added via WeightService.
         // If you want to trigger BMI calculation here with a weight value,
         // pass it as a parameter or fetch latest weight from WeightService
-        
+
         return saved;
     }
 }

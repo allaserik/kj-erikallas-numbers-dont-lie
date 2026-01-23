@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Request/Response DTO for health profile data.
- * Contains all user health information: demographics, fitness, dietary.
+ * Request/Response DTO for health profile data. Contains all user health
+ * information: demographics, fitness, dietary.
  */
 public class HealthProfileRequest {
-    
+
     // Demographics
     @JsonProperty("birth_year")
     public Integer birthYear;
@@ -25,8 +25,7 @@ public class HealthProfileRequest {
 
     // Activity
     @NotBlank(message = "baselineActivityLevel is required")
-    @Pattern(regexp = "^(sedentary|light|moderate|active|very_active)$", 
-            message = "baselineActivityLevel must be one of: sedentary, light, moderate, active, very_active")
+    @Pattern(regexp = "^(sedentary|light|moderate|active|very_active)$", message = "baselineActivityLevel must be one of: sedentary, light, moderate, active, very_active")
     @JsonProperty("baseline_activity_level")
     public String baselineActivityLevel;
 
