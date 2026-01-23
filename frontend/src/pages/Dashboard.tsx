@@ -14,7 +14,7 @@ import { getCurrentInsight } from "../api/insights";
 import { explainApiError } from "../shared/api/errors";
 import { isSetupRequired } from "../features/setup/isSetupRequired";
 import { Link } from "react-router-dom";
-import { SetupRequiredCard } from "../features/dashboard/components/SetupRequiredCard";
+import { SetupRequiredCard } from "../features/setup/components/SetupRequiredCard";
 import { DashboardErrorAlert } from "../features/dashboard/components/DashboardErrorAlert";
 import { DashboardLoadingCard } from "../features/dashboard/components/DashboardLoadingCard";
 
