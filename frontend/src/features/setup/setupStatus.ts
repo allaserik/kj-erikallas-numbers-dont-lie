@@ -1,4 +1,4 @@
-import { api } from "../api/http";
+import { api } from "../../api/http";
 
 type Goal = { id: string };
 type Profile = { heightCm: number };

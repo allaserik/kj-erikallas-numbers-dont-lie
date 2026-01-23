@@ -12,7 +12,7 @@ import { getActiveGoal } from "../api/goals";
 import { getWeights } from "../api/weight";
 import { getCurrentInsight } from "../api/insights";
 import { explainApiError } from "../shared/api/errors";
-import { isSetupRequired } from "../setup/isSetupRequired";
+import { isSetupRequired } from "../features/setup/isSetupRequired";
 import { Link } from "react-router-dom";
 import { SetupRequiredCard } from "../features/dashboard/components/SetupRequiredCard";
 import { DashboardErrorAlert } from "../features/dashboard/components/DashboardErrorAlert";
