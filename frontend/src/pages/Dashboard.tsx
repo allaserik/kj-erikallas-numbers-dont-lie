@@ -12,6 +12,9 @@ import { getActiveGoal } from "../api/goals";
 import { getWeights } from "../api/weight";
 import { getCurrentInsight } from "../api/insights";
 import { explainApiError } from "../shared/api/errors";
+import { isSetupRequired } from "../setup/isSetupRequired";
+import { Link } from "react-router-dom";
+
 
 function calcBmi(heightCm: number, weightKg: number) {
   const h = heightCm / 100;
@@ -27,6 +30,8 @@ export default function Dashboard() {
   const goalQ = useAuthedQuery("activeGoal", getActiveGoal);
   const weightsQ = useAuthedQuery("weights", getWeights);
   const insightQ = useAuthedQuery("currentInsight", getCurrentInsight);
+
+  const setupRequired = isSetupRequired(profileQ.error);
 
   const anyLoading =
     meQ.loading || profileQ.loading || goalQ.loading || weightsQ.loading || insightQ.loading;
@@ -78,99 +83,119 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {isAuthenticated && anyLoading && (
-        <>
-          <Spinner label="Loading dashboard..." />
-          <Card>
-            <CardTitle>Loading data</CardTitle>
-            <CardBody>
-              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-                {meQ.loading && <li>Loading user info...</li>}
-                {profileQ.loading && <li>Loading profile...</li>}
-                {goalQ.loading && <li>Loading active goal...</li>}
-                {weightsQ.loading && <li>Loading weight entries...</li>}
-                {insightQ.loading && <li>Loading AI insights...</li>}
-              </ul>
-            </CardBody>
-          </Card>
-        </>
+      {isAuthenticated && setupRequired && (
+        <Card>
+          <CardTitle>Finish setup</CardTitle>
+          <CardSubtitle>
+            We need a bit more information before we can show insights.
+          </CardSubtitle>
+          <CardBody>
+            <Link to="/profile">
+              <Button variant="primary" fullWidth>
+                Complete profile
+              </Button>
+            </Link>
+          </CardBody>
+        </Card>
       )}
 
-      {isAuthenticated && firstError && (
-        <Alert title="API error" message={firstErrorMessage} tone="warning" />
-      )}
-
-      {isAuthenticated && !firstError && (
+      {!setupRequired && (
         <>
-          <Card>
-            <CardTitle>Profile</CardTitle>
-            <CardSubtitle>Identity + basics</CardSubtitle>
-            <CardBody>
-              <div className="text-sm space-y-1">
-                <div><span className="text-gray-600">sub:</span> {meQ.data?.sub ?? "-"}</div>
-                <div><span className="text-gray-600">email:</span> {meQ.data?.email ?? user?.email ?? "-"}</div>
-                <div><span className="text-gray-600">height:</span> {heightCm ? `${heightCm} cm` : "-"}</div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardTitle>Numbers don’t lie</CardTitle>
-            <CardSubtitle>Latest stats</CardSubtitle>
-            <CardBody>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg border p-3">
-                  <div className="text-gray-600">Latest weight</div>
-                  <div className="text-lg font-semibold">
-                    {latestWeight ? `${latestWeight.toFixed(1)} kg` : "-"}
-                  </div>
-                </div>
-
-                <div className="rounded-lg border p-3">
-                  <div className="text-gray-600">BMI</div>
-                  <div className="text-lg font-semibold">
-                    {bmi ? bmi.toFixed(1) : "-"}
-                  </div>
-                </div>
-              </div>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle>AI insight</CardTitle>
-                <CardSubtitle>Personal recommendations</CardSubtitle>
-              </div>
-              <span className="rounded-full border px-2 py-1 text-xs text-gray-700">
-                {insightQ.data?.source ?? "—"}
-              </span>
-            </div>
-
-            <CardBody>
-              {insightQ.data?.payload ? (
-                <div className="text-sm space-y-3">
-                  <ul className="list-disc pl-5 space-y-1">
-                    {insightQ.data.payload.recommendations.map((r, i) => (
-                      <li key={i}>{r}</li>
-                    ))}
+          {isAuthenticated && anyLoading && (
+            <>
+              <Spinner label="Loading dashboard..." />
+              <Card>
+                <CardTitle>Loading data</CardTitle>
+                <CardBody>
+                  <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                    {meQ.loading && <li>Loading user info...</li>}
+                    {profileQ.loading && <li>Loading profile...</li>}
+                    {goalQ.loading && <li>Loading active goal...</li>}
+                    {weightsQ.loading && <li>Loading weight entries...</li>}
+                    {insightQ.loading && <li>Loading AI insights...</li>}
                   </ul>
+                </CardBody>
+              </Card>
+            </>
+          )}
 
-                  <div>
-                    <div className="text-gray-600">Reflection question</div>
-                    <div className="font-medium">{insightQ.data.payload.reflection_question}</div>
-                  </div>
+          {isAuthenticated && firstError && (
+            <Alert title="API error" message={firstErrorMessage} tone="warning" />
+          )}
 
-                  <div>
-                    <div className="text-gray-600">Summary</div>
-                    <div>{insightQ.data.payload.summary}</div>
+          {isAuthenticated && !firstError && (
+            <>
+              <Card>
+                <CardTitle>Profile</CardTitle>
+                <CardSubtitle>Identity + basics</CardSubtitle>
+                <CardBody>
+                  <div className="text-sm space-y-1">
+                    <div><span className="text-gray-600">sub:</span> {meQ.data?.sub ?? "-"}</div>
+                    <div><span className="text-gray-600">email:</span> {meQ.data?.email ?? user?.email ?? "-"}</div>
+                    <div><span className="text-gray-600">height:</span> {heightCm ? `${heightCm} cm` : "-"}</div>
                   </div>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardTitle>Numbers don’t lie</CardTitle>
+                <CardSubtitle>Latest stats</CardSubtitle>
+                <CardBody>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-lg border p-3">
+                      <div className="text-gray-600">Latest weight</div>
+                      <div className="text-lg font-semibold">
+                        {latestWeight ? `${latestWeight.toFixed(1)} kg` : "-"}
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border p-3">
+                      <div className="text-gray-600">BMI</div>
+                      <div className="text-lg font-semibold">
+                        {bmi ? bmi.toFixed(1) : "-"}
+                      </div>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardTitle>AI insight</CardTitle>
+                    <CardSubtitle>Personal recommendations</CardSubtitle>
+                  </div>
+                  <span className="rounded-full border px-2 py-1 text-xs text-gray-700">
+                    {insightQ.data?.source ?? "—"}
+                  </span>
                 </div>
-              ) : (
-                <div className="text-sm text-gray-600">No insight yet.</div>
-              )}
-            </CardBody>
-          </Card>
+
+                <CardBody>
+                  {insightQ.data?.payload ? (
+                    <div className="text-sm space-y-3">
+                      <ul className="list-disc pl-5 space-y-1">
+                        {insightQ.data.payload.recommendations.map((r, i) => (
+                          <li key={i}>{r}</li>
+                        ))}
+                      </ul>
+
+                      <div>
+                        <div className="text-gray-600">Reflection question</div>
+                        <div className="font-medium">{insightQ.data.payload.reflection_question}</div>
+                      </div>
+
+                      <div>
+                        <div className="text-gray-600">Summary</div>
+                        <div>{insightQ.data.payload.summary}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-600">No insight yet.</div>
+                  )}
+                </CardBody>
+              </Card>
+            </>
+          )}
         </>
       )}
     </div>
