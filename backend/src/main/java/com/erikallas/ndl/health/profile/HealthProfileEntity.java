@@ -4,8 +4,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "health_profiles")
@@ -26,6 +31,27 @@ public class HealthProfileEntity {
 
     @Column(name = "baseline_activity_level", nullable = false)
     private String baselineActivityLevel;
+
+    @Column(name = "dietary_preferences", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> dietaryPreferences;
+
+    @Column(name = "dietary_restrictions", columnDefinition = "text[]")
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    private List<String> dietaryRestrictions;
+
+    @Column(name = "fitness_assessment", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private Map<String, Object> fitnessAssessment;
+
+    @Column(name = "fitness_assessment_completed")
+    private Boolean fitnessAssessmentCompleted = false;
+
+    @Column(name = "bmi_value")
+    private BigDecimal bmiValue;
+
+    @Column(name = "bmi_classification")
+    private String bmiClassification;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -51,8 +77,10 @@ public class HealthProfileEntity {
         this.baselineActivityLevel = baselineActivityLevel;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.fitnessAssessmentCompleted = false;
     }
 
+    // Getters
     public UUID getUserId() {
         return userId;
     }
@@ -73,11 +101,109 @@ public class HealthProfileEntity {
         return baselineActivityLevel;
     }
 
+    public List<String> getDietaryPreferences() {
+        return dietaryPreferences;
+    }
+
+    public List<String> getDietaryRestrictions() {
+        return dietaryRestrictions;
+    }
+
+    public Map<String, Object> getFitnessAssessment() {
+        return fitnessAssessment;
+    }
+
+    public Boolean getFitnessAssessmentCompleted() {
+        return fitnessAssessmentCompleted;
+    }
+
+    public BigDecimal getBmiValue() {
+        return bmiValue;
+    }
+
+    public String getBmiClassification() {
+        return bmiClassification;
+    }
+
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    // Setters
+    public void setBirthYear(Integer birthYear) {
+        this.birthYear = birthYear;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setHeightCm(int heightCm) {
+        this.heightCm = heightCm;
+    }
+
+    public void setBaselineActivityLevel(String baselineActivityLevel) {
+        this.baselineActivityLevel = baselineActivityLevel;
+    }
+
+    public void setDietaryPreferences(List<String> dietaryPreferences) {
+        this.dietaryPreferences = dietaryPreferences;
+    }
+
+    public void setDietaryRestrictions(List<String> dietaryRestrictions) {
+        this.dietaryRestrictions = dietaryRestrictions;
+    }
+
+    public void setFitnessAssessment(Map<String, Object> fitnessAssessment) {
+        this.fitnessAssessment = fitnessAssessment;
+    }
+
+    public void setFitnessAssessmentCompleted(Boolean completed) {
+        this.fitnessAssessmentCompleted = completed;
+    }
+
+    public void setBmiValue(BigDecimal bmiValue) {
+        this.bmiValue = bmiValue;
+    }
+
+    public void setBmiClassification(String bmiClassification) {
+        this.bmiClassification = bmiClassification;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    /**
+     * Calculate and set BMI value and classification from weight and height.
+     * This should be called whenever weight or height changes.
+     */
+    public void calculateBMI(double weightKg) {
+        try {
+            BigDecimal bmi = BMICalculator.calculateBMI(weightKg, this.heightCm);
+            this.bmiValue = bmi;
+            this.bmiClassification = BMICalculator.classifyBMI(bmi);
+        } catch (IllegalArgumentException e) {
+            // If calculation fails, clear BMI values
+            this.bmiValue = null;
+            this.bmiClassification = null;
+        }
+    }
+    @Override
+    public String toString() {
+        return "HealthProfileEntity{" +
+                "userId=" + userId +
+                ", birthYear=" + birthYear +
+                ", gender='" + gender + '\'' +
+                ", heightCm=" + heightCm +
+                ", baselineActivityLevel='" + baselineActivityLevel + '\'' +
+                ", dietaryPreferences=" + dietaryPreferences +
+                ", dietaryRestrictions=" + dietaryRestrictions +
+                ", fitnessAssessmentCompleted=" + fitnessAssessmentCompleted +
+                '}';
     }
 }
