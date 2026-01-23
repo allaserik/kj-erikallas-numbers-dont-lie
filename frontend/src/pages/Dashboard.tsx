@@ -14,6 +14,7 @@ import { getCurrentInsight } from "../api/insights";
 import { explainApiError } from "../shared/api/errors";
 import { isSetupRequired } from "../setup/isSetupRequired";
 import { Link } from "react-router-dom";
+import { SetupRequiredCard } from "../features/dashboard/components/SetupRequiredCard";
 
 
 function calcBmi(heightCm: number, weightKg: number) {
@@ -83,21 +84,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {isAuthenticated && setupRequired && (
-        <Card>
-          <CardTitle>Finish setup</CardTitle>
-          <CardSubtitle>
-            We need a bit more information before we can show insights.
-          </CardSubtitle>
-          <CardBody>
-            <Link to="/profile">
-              <Button variant="primary" fullWidth>
-                Complete profile
-              </Button>
-            </Link>
-          </CardBody>
-        </Card>
-      )}
+      {isAuthenticated && setupRequired && <SetupRequiredCard />}
 
       {!setupRequired && (
         <>
