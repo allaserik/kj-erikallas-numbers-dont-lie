@@ -6,4 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AppUserRepository extends JpaRepository<AppUserEntity, UUID> {
     Optional<AppUserEntity> findByAuth0Sub(String auth0Sub);
+
+    Optional<AppUserEntity> findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
 }
