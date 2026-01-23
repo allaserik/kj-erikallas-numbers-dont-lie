@@ -1,7 +1,7 @@
 package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
-import com.erikallas.ndl.user.UserService;
+import com.erikallas.ndl.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 

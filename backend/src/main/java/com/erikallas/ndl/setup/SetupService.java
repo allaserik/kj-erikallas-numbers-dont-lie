@@ -3,7 +3,7 @@ package com.erikallas.ndl.setup;
 import com.erikallas.ndl.health.goal.GoalRepository;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
-import com.erikallas.ndl.user.AppUserEntity;
+import com.erikallas.ndl.user.model.UserEntity;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class SetupService {
      * Requirements: 1. Health profile (height, gender, etc.) 2. Active goal (weight
      * target) 3. At least one weight entry (baseline measurement)
      */
-    public SetupStatusDto getSetupStatus(AppUserEntity user) {
+    public SetupStatusDto getSetupStatus(UserEntity user) {
         List<String> missing = new ArrayList<>();
 
         // Check profile exists

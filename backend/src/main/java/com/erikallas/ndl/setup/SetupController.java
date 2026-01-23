@@ -1,6 +1,6 @@
 package com.erikallas.ndl.setup;
 
-import com.erikallas.ndl.user.UserService;
+import com.erikallas.ndl.user.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;

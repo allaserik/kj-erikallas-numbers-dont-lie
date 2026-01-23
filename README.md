@@ -29,6 +29,8 @@ Run the backend
 cd backend
 ./mvnw -U clean test
 ./mvnw spring-boot:run
+
+./mvnw clean test 2>&1 | grep -A 10 "Caused by"
 ```
 
 Run the frontend

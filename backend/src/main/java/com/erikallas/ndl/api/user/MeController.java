@@ -1,12 +1,10 @@
-package com.erikallas.ndl.api;
+package com.erikallas.ndl.api.user;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 @SecurityRequirement(name = "bearerAuth")

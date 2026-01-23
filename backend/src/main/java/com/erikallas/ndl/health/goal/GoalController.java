@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
-import com.erikallas.ndl.user.UserService;
+import com.erikallas.ndl.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -59,25 +59,15 @@ public class GoalController {
             throw new IllegalArgumentException("goalType is required");
         }
 
-        return goalService.createAndActivate(
-                user.getId(),
-                body.goalType,
-                body.targetWeightKg,
-                body.targetActivityDaysPerWeek,
-                body.notes);
+        return goalService.createAndActivate(user.getId(), body.goalType, body.targetWeightKg,
+                body.targetActivityDaysPerWeek, body.notes);
     }
 
     @PatchMapping("/api/goals/{id}")
     public GoalEntity update(@PathVariable("id") String id, @Valid @RequestBody UpdateGoalRequest body,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
-        return goalService.update(
-                user.getId(),
-                java.util.UUID.fromString(id),
-                body.goalType,
-                body.targetWeightKg,
-                body.targetActivityDaysPerWeek,
-                body.notes,
-                body.isActive);
+        return goalService.update(user.getId(), java.util.UUID.fromString(id), body.goalType, body.targetWeightKg,
+                body.targetActivityDaysPerWeek, body.notes, body.isActive);
     }
 }

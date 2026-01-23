@@ -1,4 +1,4 @@
-package com.erikallas.ndl.user;
+package com.erikallas.ndl.user.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-public class AppUserEntity {
+public class UserEntity {
 
     @Id
     private UUID id;
@@ -32,10 +32,10 @@ public class AppUserEntity {
     @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
-    protected AppUserEntity() {
+    public UserEntity() {
     }
 
-    public AppUserEntity(UUID id, String auth0Sub, String email, OffsetDateTime createdAt) {
+    public UserEntity(UUID id, String auth0Sub, String email, OffsetDateTime createdAt) {
         this.id = id;
         this.auth0Sub = auth0Sub;
         this.email = email;
@@ -45,6 +45,10 @@ public class AppUserEntity {
 
     public UUID getId() {
         return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getAuth0Sub() {
@@ -83,6 +87,10 @@ public class AppUserEntity {
         return createdAt;
     }
 
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
@@ -91,12 +99,9 @@ public class AppUserEntity {
         this.updatedAt = updatedAt;
     }
 
-    // Helper methods
-    public boolean isAuth0User() {
-        return auth0Sub != null;
-    }
-
-    public boolean isEmailPasswordUser() {
-        return email != null && passwordHash != null;
+    @Override
+    public String toString() {
+        return "UserEntity{" + "id=" + id + ", auth0Sub='" + auth0Sub + '\'' + ", email='" + email + '\''
+                + ", emailVerified=" + emailVerified + ", createdAt=" + createdAt + ", updatedAt=" + updatedAt + '}';
     }
 }

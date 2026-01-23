@@ -1,10 +1,9 @@
 package com.erikallas.ndl.health.summary;
 
-
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
-import com.erikallas.ndl.user.UserService;
+import com.erikallas.ndl.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -21,11 +20,8 @@ public class HealthSummaryController {
     private final WeightEntryRepository weightRepo;
     private final HealthSummaryService summaryService;
 
-    public HealthSummaryController(
-            UserService userService,
-            HealthProfileService profileService,
-            WeightEntryRepository weightRepo,
-            HealthSummaryService summaryService) {
+    public HealthSummaryController(UserService userService, HealthProfileService profileService,
+            WeightEntryRepository weightRepo, HealthSummaryService summaryService) {
         this.userService = userService;
         this.profileService = profileService;
         this.weightRepo = weightRepo;
@@ -48,10 +44,7 @@ public class HealthSummaryController {
         double bmi = summaryService.bmi(profile.getHeightCm(), latest.getWeightKg());
         Double delta7d = summaryService.weightDelta7d(weights);
 
-        return new HealthSummaryDto(
-                profile.getHeightCm(),
-                latest.getWeightKg(),
-                Math.round(bmi * 10.0) / 10.0,
+        return new HealthSummaryDto(profile.getHeightCm(), latest.getWeightKg(), Math.round(bmi * 10.0) / 10.0,
                 delta7d);
     }
 }

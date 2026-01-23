@@ -1,6 +1,5 @@
-package com.erikallas.ndl.api;
+package com.erikallas.ndl.common.controller;
 
-// GET api/ping returns{"status":"ok"}
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

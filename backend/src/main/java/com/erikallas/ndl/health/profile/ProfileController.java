@@ -1,6 +1,6 @@
 package com.erikallas.ndl.health.profile;
 
-import com.erikallas.ndl.user.UserService;
+import com.erikallas.ndl.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -42,15 +42,10 @@ public class ProfileController {
     }
 
     @PostMapping("/api/profile")
-    public HealthProfileEntity upsertProfile(
-            @Valid @RequestBody UpsertProfileRequest body,
+    public HealthProfileEntity upsertProfile(@Valid @RequestBody UpsertProfileRequest body,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
-        return profileService.upsert(
-                user.getId(),
-                body.birthYear,
-                body.gender,
-                body.heightCm,
+        return profileService.upsert(user.getId(), body.birthYear, body.gender, body.heightCm,
                 body.baselineActivityLevel);
     }
 }
