@@ -22,11 +22,11 @@ function calcBmi(heightCm: number, weightKg: number) {
 export default function Dashboard() {
   const { loginWithRedirect, logout, isAuthenticated, isLoading, user } = useAuth0();
 
-  const meQ = useAuthedQuery(getMe);
-  const profileQ = useAuthedQuery(getProfile);
-  const goalQ = useAuthedQuery(getActiveGoal);
-  const weightsQ = useAuthedQuery(getWeights);
-  const insightQ = useAuthedQuery(getCurrentInsight);
+  const meQ = useAuthedQuery("me", getMe);
+  const profileQ = useAuthedQuery("profile", getProfile);
+  const goalQ = useAuthedQuery("activeGoal", getActiveGoal);
+  const weightsQ = useAuthedQuery("weights", getWeights);
+  const insightQ = useAuthedQuery("currentInsight", getCurrentInsight);
 
   const anyLoading =
     meQ.loading || profileQ.loading || goalQ.loading || weightsQ.loading || insightQ.loading;
