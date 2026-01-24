@@ -18,8 +18,6 @@ export function useApiQuery<T>(key: string, fn: () => Promise<T>, enabled: boole
         setLoading(true);
         setError(null);
 
-        // console.log("[useApiQuery] run", { enabled });
-
         fn()
             .then((d) => {
                 if (!cancelled) setData(d);

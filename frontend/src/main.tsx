@@ -5,12 +5,12 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import "./index.css";
 
 import AppShell from "./layout/AppShell";
-import Dashboard from "./pages/Dashboard";
-import Trends from "./pages/Trends";
-import Goals from "./pages/Goals";
-import CheckIn from "./pages/CheckIn";
-import ProfilePage from "./pages/Profile";
-import Settings from "./pages/Settings";
+import Dashboard from "./features/dashboard/Dashboard";
+import Trends from "./features/trends/Trends";
+import Goals from "./features/goals/Goals";
+import CheckIn from "./features/checkin/CheckIn";
+import ProfilePage from "./features/profile/Profile";
+import Settings from "./features/settings/Settings";
 
 const router = createBrowserRouter([
   {

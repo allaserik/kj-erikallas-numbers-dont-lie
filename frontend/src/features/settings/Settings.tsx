@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { Card, CardBody, CardSubtitle, CardTitle } from "../shared/ui/Card";
-import { Button } from "../shared/ui/Button";
+import { Card, CardBody, CardSubtitle, CardTitle } from "../../shared/ui/Card";
+import { Button } from "../../shared/ui/Button";
 
 export default function Settings() {
     return (
@@ -29,3 +29,4 @@ export default function Settings() {
         </div>
     );
 }
+// ...existing code from pages/Settings.tsx will be moved here
