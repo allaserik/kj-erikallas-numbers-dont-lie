@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import BottomNav from "./BottomNav";
 
 // AppShell is a layout route component for React Router v6+.
 // It provides the shared app structure (header, nav, etc.) and renders routed content via <Outlet />.
@@ -10,15 +11,8 @@ export default function AppShell() {
                 {/* Routed page content will be rendered here by React Router */}
                 <Outlet />
             </main>
-            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-sm">
-                <div className="max-w-md mx-auto flex justify-around py-2">
-                    {/* TODO: Replace with <NavLink> icons/buttons for navigation */}
-                    <button>🏠</button>
-                    <button>➕</button>
-                    <button>📈</button>
-                    <button>👤</button>
-                </div>
-            </nav>
+            {/* Decoupled bottom navigation bar */}
+            <BottomNav />
         </div>
     );
 }
