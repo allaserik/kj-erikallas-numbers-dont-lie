@@ -21,12 +21,14 @@ export default function Goals() {
   const goalQ = useAuthedQuery("activeGoal", getActiveGoal);
 
   const progressQ = useAuthedQuery(
-    goalQ.data ? `goalProgress-${goalQ.data.id}` : '',
-    goalQ.data ? () => {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token");
-      return getGoalProgress(token, goalQ.data!.id);
-    } : '',
+    goalQ.data ? `goalProgress-${goalQ.data.id}` : undefined,
+    goalQ.data
+      ? () => {
+        const token = localStorage.getItem("token");
+        if (!token) throw new Error("No token");
+        return getGoalProgress(token, goalQ.data!.id);
+      }
+      : undefined,
     goalQ.data ? undefined : { skip: true }
   );
 
@@ -37,9 +39,7 @@ export default function Goals() {
   if (!goalQ.data) {
     return (
       <div className="max-w-md mx-auto p-4 pb-24">
-        <Alert type="info" title="No Active Goal">
-          You don't have an active goal yet. Create one to get started!
-        </Alert>
+        <Alert title="No Active Goal" message="You don't have an active goal yet. Create one to get started!" tone="info" />
       </div>
     );
   }
@@ -148,9 +148,7 @@ export default function Goals() {
       </Card>
 
       {progressQ.error && (
-        <Alert type="error" title="Error loading progress">
-          {explainApiError(progressQ.error)}
-        </Alert>
+        <Alert title="Error loading progress" message={explainApiError(progressQ.error)} tone="error" />
       )}
     </div>
   );

@@ -45,9 +45,7 @@ export default function Trends() {
 
           {weightsQ.loading && <Spinner />}
           {weightsQ.error && (
-            <Alert type="error" title="Error loading trends">
-              {explainApiError(weightsQ.error)}
-            </Alert>
+            <Alert title="Error loading trends" message={explainApiError(weightsQ.error)} tone="error" />
           )}
 
           {weightsQ.data && weightsQ.data.length > 0 && (
@@ -113,9 +111,7 @@ export default function Trends() {
           )}
 
           {weightsQ.data && weightsQ.data.length === 0 && (
-            <Alert type="info" title="No data yet">
-              Start logging your weight to see trends
-            </Alert>
+            <Alert title="No data yet" message="Start logging your weight to see trends" tone="info" />
           )}
         </CardBody>
       </Card>

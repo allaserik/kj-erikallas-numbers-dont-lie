@@ -44,7 +44,7 @@ export default function CheckIn() {
       setMeasuredAt(new Date().toISOString().split("T")[0]);
 
       // Refetch weights
-      weightsQ.refetch?.();
+      // weightsQ.refetch?.(); // Removed: refetch does not exist on weightsQ
     } catch (err) {
       setMessage({ type: "error", text: explainApiError(err) });
     } finally {
@@ -85,11 +85,10 @@ export default function CheckIn() {
 
             {message && (
               <Alert
-                type={message.type}
                 title={message.type === "success" ? "Success" : "Error"}
-              >
-                {message.text}
-              </Alert>
+                message={message.text}
+                tone={message.type === "success" ? "info" : message.type}
+              />
             )}
 
             <Button
@@ -129,9 +128,7 @@ export default function CheckIn() {
 
       {weightsQ.loading && <Spinner />}
       {weightsQ.error && (
-        <Alert type="error" title="Error loading data">
-          {explainApiError(weightsQ.error)}
-        </Alert>
+        <Alert title="Error loading data" message={explainApiError(weightsQ.error)} tone="error" />
       )}
     </div>
   );
