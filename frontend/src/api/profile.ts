@@ -5,6 +5,17 @@ export type ProfileResponse = {
   gender?: string | null;
   heightCm: number;
   baselineActivityLevel: "sedentary" | "light" | "moderate" | "active" | "very_active";
+  bmiValue?: number | null;
+  bmiClassification?: string | null;
+  wellnessScore?: number | null;
+  dietaryPreferences?: string[] | null;
+  dietaryRestrictions?: string[] | null;
+  fitnessAssessment?: {
+    weekly_exercise_days?: number;
+    exercise_preference?: string;
+    current_fitness_level?: string;
+  } | null;
+  fitnessAssessmentCompleted?: boolean | null;
 };
 
 export type UpsertProfileRequest = {
@@ -12,6 +23,14 @@ export type UpsertProfileRequest = {
   gender?: string | null;
   heightCm: number;
   baselineActivityLevel: "sedentary" | "light" | "moderate" | "active" | "very_active";
+  dietaryPreferences?: string[] | null;
+  dietaryRestrictions?: string[] | null;
+  fitnessAssessment?: {
+    weekly_exercise_days?: number;
+    exercise_preference?: string;
+    current_fitness_level?: string;
+  } | null;
+  fitnessAssessmentCompleted?: boolean | null;
 };
 
 export function getProfile(token: string) {

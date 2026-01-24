@@ -28,3 +28,20 @@ export type SetupStatus = {
   isComplete: boolean;
   missing: Array<"profile" | "goal" | "weight">;
 };
+
+export type WellnessScoreResponse = {
+  wellness_score: number;
+  wellness_level: "Excellent" | "Very Good" | "Good" | "Fair" | "Needs Improvement";
+};
+
+export type GoalProgressResponse = {
+  current_value: number;
+  progress_percentage: number;
+  is_on_track: boolean;
+  days_remaining?: number;
+  milestones_completed: number;
+  milestone_details?: Array<{ percentage: number; completed_at: string }>;
+  recorded_at: string;
+  created_at: string;
+  updated_at: string;
+};

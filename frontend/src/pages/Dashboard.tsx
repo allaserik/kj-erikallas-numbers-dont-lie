@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { PageHeader } from "../components/layout/PageHeader"; // if you don't have this yet, we’ll add below
+import { PageHeader } from "../components/layout/PageHeader";
 import { Button } from "../shared/ui/Button";
 import { Alert } from "../shared/ui/Alert";
 import { Card, CardBody, CardSubtitle, CardTitle } from "../shared/ui/Card";
@@ -8,9 +8,10 @@ import { Spinner } from "../shared/ui/Spinner";
 import { useAuthedQuery } from "../shared/auth/useAuthedQuery";
 import { getMe } from "../api/me";
 import { getProfile } from "../api/profile";
-import { getActiveGoal } from "../api/goals";
+import { getActiveGoal, getGoalProgress } from "../api/goals";
 import { getWeights } from "../api/weight";
 import { getCurrentInsight } from "../api/insights";
+import { getWellnessScore } from "../api/wellness";
 import { explainApiError } from "../shared/api/errors";
 import { isSetupRequired } from "../features/setup/isSetupRequired";
 import { Link } from "react-router-dom";
@@ -34,14 +35,25 @@ export default function Dashboard() {
   const goalQ = useAuthedQuery("activeGoal", getActiveGoal);
   const weightsQ = useAuthedQuery("weights", getWeights);
   const insightQ = useAuthedQuery("currentInsight", getCurrentInsight);
+  const wellnessQ = useAuthedQuery("wellness", getWellnessScore);
+
+  const progressQ = useAuthedQuery(
+    goalQ.data ? `goalProgress-${goalQ.data.id}` : null,
+    goalQ.data ? () => {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No token");
+      return getGoalProgress(token, goalQ.data!.id);
+    } : null,
+    goalQ.data ? undefined : { skip: true }
+  );
 
   const setupRequired = isSetupRequired(profileQ.error);
 
   const anyLoading =
-    meQ.loading || profileQ.loading || goalQ.loading || weightsQ.loading || insightQ.loading;
+    meQ.loading || profileQ.loading || goalQ.loading || weightsQ.loading || insightQ.loading || wellnessQ.loading;
 
   const firstError =
-    meQ.error || profileQ.error || goalQ.error || weightsQ.error || insightQ.error;
+    meQ.error || profileQ.error || goalQ.error || weightsQ.error || insightQ.error || wellnessQ.error;
 
   const firstErrorMessage = firstError ? explainApiError(firstError) : "";
 
@@ -52,7 +64,7 @@ export default function Dashboard() {
     heightCm && latestWeight ? calcBmi(heightCm, latestWeight) : null;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 pb-24">
       <PageHeader
         title="Today"
         subtitle={
@@ -96,13 +108,73 @@ export default function Dashboard() {
             profile: profileQ.loading,
             goal: goalQ.loading,
             weights: weightsQ.loading,
-            insight: insightQ.loading
+            insight: insightQ.loading,
+            wellness: wellnessQ.loading
           }} />}
 
           {isAuthenticated && firstError && <DashboardErrorAlert message={firstErrorMessage} />}
 
           {isAuthenticated && !firstError && (
             <>
+              {/* Wellness Score Card */}
+              {wellnessQ.data && (
+                <Card>
+                  <CardTitle>Wellness Score</CardTitle>
+                  <CardSubtitle>Your overall health metric</CardSubtitle>
+                  <CardBody>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-4xl font-bold text-blue-600">
+                          {wellnessQ.data.wellness_score}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {wellnessQ.data.wellness_level}
+                        </div>
+                      </div>
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {wellnessQ.data.wellness_score}
+                          </div>
+                          <div className="text-xs text-gray-600">/100</div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+
+              {/* Goal Progress Card */}
+              {goalQ.data && progressQ.data && (
+                <Card>
+                  <CardTitle>Active Goal Progress</CardTitle>
+                  <CardSubtitle>Track your journey</CardSubtitle>
+                  <CardBody>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-semibold">Progress</span>
+                          <span className="text-sm font-bold text-blue-600">
+                            {progressQ.data.progress_percentage}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className={`h-2 rounded-full transition-all ${
+                              progressQ.data.is_on_track ? "bg-green-500" : "bg-orange-500"
+                            }`}
+                            style={{ width: `${Math.min(progressQ.data.progress_percentage, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {progressQ.data.is_on_track ? "✓ On track" : "⚠ Behind schedule"}
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+
               <Card>
                 <CardTitle>Profile</CardTitle>
                 <CardSubtitle>Identity + basics</CardSubtitle>
@@ -116,7 +188,7 @@ export default function Dashboard() {
               </Card>
 
               <Card>
-                <CardTitle>Numbers don’t lie</CardTitle>
+                <CardTitle>Numbers don't lie</CardTitle>
                 <CardSubtitle>Latest stats</CardSubtitle>
                 <CardBody>
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -133,6 +205,15 @@ export default function Dashboard() {
                         {bmi ? bmi.toFixed(1) : "-"}
                       </div>
                     </div>
+
+                    {profileQ.data?.bmiClassification && (
+                      <div className="rounded-lg border p-3 col-span-2">
+                        <div className="text-gray-600">Category</div>
+                        <div className="text-lg font-semibold capitalize">
+                          {profileQ.data.bmiClassification.toLowerCase()}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardBody>
               </Card>
@@ -151,19 +232,22 @@ export default function Dashboard() {
                 <CardBody>
                   {insightQ.data?.payload ? (
                     <div className="text-sm space-y-3">
-                      <ul className="list-disc pl-5 space-y-1">
-                        {insightQ.data.payload.recommendations.map((r, i) => (
-                          <li key={i}>{r}</li>
-                        ))}
-                      </ul>
-
                       <div>
-                        <div className="text-gray-600">Reflection question</div>
-                        <div className="font-medium">{insightQ.data.payload.reflection_question}</div>
+                        <div className="text-gray-600 text-xs font-semibold mb-2">Recommendations</div>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {insightQ.data.payload.recommendations.map((r, i) => (
+                            <li key={i}>{r}</li>
+                          ))}
+                        </ul>
                       </div>
 
                       <div>
-                        <div className="text-gray-600">Summary</div>
+                        <div className="text-gray-600 text-xs font-semibold mb-1">Reflection question</div>
+                        <div className="font-medium italic">{insightQ.data.payload.reflection_question}</div>
+                      </div>
+
+                      <div>
+                        <div className="text-gray-600 text-xs font-semibold mb-1">Summary</div>
                         <div>{insightQ.data.payload.summary}</div>
                       </div>
                     </div>
