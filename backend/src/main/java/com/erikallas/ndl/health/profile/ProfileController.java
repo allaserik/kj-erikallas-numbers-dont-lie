@@ -1,5 +1,6 @@
 package com.erikallas.ndl.health.profile;
 
+import com.erikallas.ndl.health.wellness.WellnessScoreService;
 import com.erikallas.ndl.user.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -12,10 +13,13 @@ public class ProfileController {
 
     private final UserService userService;
     private final HealthProfileService profileService;
+    private final WellnessScoreService wellnessScoreService;
 
-    public ProfileController(UserService userService, HealthProfileService profileService) {
+    public ProfileController(UserService userService, HealthProfileService profileService,
+            WellnessScoreService wellnessScoreService) {
         this.userService = userService;
         this.profileService = profileService;
+        this.wellnessScoreService = wellnessScoreService;
     }
 
     /**
@@ -30,13 +34,21 @@ public class ProfileController {
     /**
      * Create or update user's health profile. Accepts all health data:
      * demographics, activity, dietary, fitness assessment.
+     * 
+     * Automatically recalculates wellness score after profile update.
      */
     @PostMapping("/api/profile")
     public HealthProfileEntity upsertProfile(@Valid @RequestBody HealthProfileRequest request,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
-        return profileService.upsert(user.getId(), request.getBirthYear(), request.getGender(), request.getHeightCm(),
-                request.getBaselineActivityLevel(), request.getDietaryPreferences(), request.getDietaryRestrictions(),
-                request.getFitnessAssessment(), request.getFitnessAssessmentCompleted());
+        var profile = profileService.upsert(user.getId(), request.getBirthYear(), request.getGender(),
+                request.getHeightCm(), request.getBaselineActivityLevel(), request.getDietaryPreferences(),
+                request.getDietaryRestrictions(), request.getFitnessAssessment(),
+                request.getFitnessAssessmentCompleted());
+
+        // Auto-calculate wellness score after profile update
+        wellnessScoreService.calculateAndUpdateWellnessScore(user.getId());
+
+        return profile;
     }
 }

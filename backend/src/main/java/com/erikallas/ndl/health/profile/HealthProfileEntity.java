@@ -53,6 +53,9 @@ public class HealthProfileEntity {
     @Column(name = "bmi_classification")
     private String bmiClassification;
 
+    @Column(name = "wellness_score")
+    private Integer wellnessScore = 0;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -166,6 +169,14 @@ public class HealthProfileEntity {
 
     public void setBmiClassification(String bmiClassification) {
         this.bmiClassification = bmiClassification;
+    }
+
+    public Integer getWellnessScore() {
+        return wellnessScore;
+    }
+
+    public void setWellnessScore(Integer wellnessScore) {
+        this.wellnessScore = wellnessScore;
     }
 
     public void setUpdatedAt(OffsetDateTime updatedAt) {

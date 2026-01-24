@@ -17,8 +17,7 @@ import { Link } from "react-router-dom";
 import { SetupRequiredCard } from "../features/setup/components/SetupRequiredCard";
 import { DashboardErrorAlert } from "../features/dashboard/components/DashboardErrorAlert";
 import { DashboardLoadingCard } from "../features/dashboard/components/DashboardLoadingCard";
-import { useSetupStatus } from "../features/setup/useSetupStatus";
-import { SetupChecklistCard } from "../features/setup/components/SetupChecklistCard";
+
 
 
 function calcBmi(heightCm: number, weightKg: number) {
@@ -29,7 +28,6 @@ function calcBmi(heightCm: number, weightKg: number) {
 
 export default function Dashboard() {
   const { loginWithRedirect, logout, isAuthenticated, isLoading, user } = useAuth0();
-  const setup = useSetupStatus(isAuthenticated)
 
   const meQ = useAuthedQuery("me", getMe);
   const profileQ = useAuthedQuery("profile", getProfile);

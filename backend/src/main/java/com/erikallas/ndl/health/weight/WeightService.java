@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.weight;
 
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
+import com.erikallas.ndl.health.wellness.WellnessScoreService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -12,10 +13,13 @@ public class WeightService {
 
     private final WeightEntryRepository repo;
     private final HealthProfileRepository profileRepo;
+    private final WellnessScoreService wellnessScoreService;
 
-    public WeightService(WeightEntryRepository repo, HealthProfileRepository profileRepo) {
+    public WeightService(WeightEntryRepository repo, HealthProfileRepository profileRepo,
+            WellnessScoreService wellnessScoreService) {
         this.repo = repo;
         this.profileRepo = profileRepo;
+        this.wellnessScoreService = wellnessScoreService;
     }
 
     @Transactional
@@ -31,6 +35,9 @@ public class WeightService {
             healthProfile.calculateBMI(weightKg);
             healthProfile.setUpdatedAt(OffsetDateTime.now());
             profileRepo.save(healthProfile);
+
+            // Auto-calculate wellness score after BMI update
+            wellnessScoreService.calculateAndUpdateWellnessScore(userId);
         }
 
         return entry;
