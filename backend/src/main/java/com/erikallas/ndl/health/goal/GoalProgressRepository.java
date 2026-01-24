@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 /**
  * Repository for GoalProgress data access.
  * 
- * Provides queries for tracking progress towards health goals,
- * including historical data for trend analysis and visualization.
+ * Provides queries for tracking progress towards health goals, including
+ * historical data for trend analysis and visualization.
  */
 @Repository
 public interface GoalProgressRepository extends JpaRepository<GoalProgressEntity, UUID> {
@@ -46,12 +46,13 @@ public interface GoalProgressRepository extends JpaRepository<GoalProgressEntity
     Optional<GoalProgressEntity> findFirstByGoalIdOrderByRecordedAtDesc(UUID goalId);
 
     /**
-     * Get progress records for a goal in descending time order, limited to N most recent.
+     * Get progress records for a goal in descending time order, limited to N most
+     * recent.
      * 
      * Used for pagination and limiting historical data returned to frontend.
      * 
      * @param goalId the goal ID
-     * @param limit maximum number of records to return
+     * @param limit  maximum number of records to return
      * @return list of most recent progress records
      */
     List<GoalProgressEntity> findTop30ByGoalIdOrderByRecordedAtDesc(UUID goalId);
