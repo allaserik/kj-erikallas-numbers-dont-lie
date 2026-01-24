@@ -1,7 +1,7 @@
 import { useCallback } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthToken } from "./useAuthToken";
-import { useApiQuery } from "../../hooks/useApiQuery";
+import { useApiQuery } from "../hooks/useApiQuery";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export function useAuthedQuery<T>(key: string, fn: (token: string) => Promise<T>, enabledOverride?: boolean) {
   const { isAuthenticated } = useAuth0();
