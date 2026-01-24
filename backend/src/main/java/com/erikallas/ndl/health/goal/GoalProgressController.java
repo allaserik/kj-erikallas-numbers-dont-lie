@@ -18,9 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * REST controller for goal progress tracking endpoints.
  * 
- * Provides endpoints for:
- * - Retrieving current goal progress (percentage, on-track status, milestones)
- * - Accessing historical progress data for trends
+ * Provides endpoints for: - Retrieving current goal progress (percentage,
+ * on-track status, milestones) - Accessing historical progress data for trends
  * - Recording new progress data points
  */
 @RestController
@@ -38,8 +37,8 @@ public class GoalProgressController {
     /**
      * Get the current progress for a specific goal.
      * 
-     * Returns the latest progress record including percentage, on-track status, days
-     * remaining, and milestone tracking.
+     * Returns the latest progress record including percentage, on-track status,
+     * days remaining, and milestone tracking.
      * 
      * @param goalId the ID of the goal
      * @return current progress, or 404 if goal not found or no progress recorded
@@ -49,7 +48,7 @@ public class GoalProgressController {
     @Operation(summary = "Get current goal progress", description = "Returns the latest progress record for a goal")
     public ResponseEntity<GoalProgressResponse> getCurrentProgress(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
-        
+
         // Verify goal exists and belongs to user
         var goalOpt = goalRepository.findById(goalId);
         if (goalOpt.isEmpty()) {
@@ -78,16 +77,14 @@ public class GoalProgressController {
     @Operation(summary = "Get progress history", description = "Returns historical progress records for a goal (last 30)")
     public ResponseEntity<List<GoalProgressResponse>> getProgressHistory(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
-        
+
         // Verify goal exists
         if (!goalRepository.existsById(goalId)) {
             return ResponseEntity.notFound().build();
         }
 
         var progressHistory = goalProgressService.getProgressHistory(goalId);
-        var response = progressHistory.stream()
-                .map(GoalProgressResponse::new)
-                .collect(Collectors.toList());
+        var response = progressHistory.stream().map(GoalProgressResponse::new).collect(Collectors.toList());
 
         return ResponseEntity.ok(response);
     }
@@ -108,7 +105,7 @@ public class GoalProgressController {
     @Operation(summary = "Record goal progress", description = "Records a new progress point and calculates all metrics")
     public ResponseEntity<GoalProgressResponse> recordProgress(@PathVariable("id") UUID goalId,
             @RequestParam BigDecimal currentValue, JwtAuthenticationToken auth) {
-        
+
         // Verify goal exists
         if (!goalRepository.existsById(goalId)) {
             return ResponseEntity.notFound().build();

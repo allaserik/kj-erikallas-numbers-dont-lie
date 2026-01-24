@@ -10,11 +10,9 @@ import java.util.Map;
 /**
  * DTO representing current and historical goal progress.
  * 
- * Used in API responses to provide structured progress information including:
- * - Progress percentage (0-100)
- * - On-track status and days remaining
- * - Milestone tracking
- * - Timestamp of last update
+ * Used in API responses to provide structured progress information including: -
+ * Progress percentage (0-100) - On-track status and days remaining - Milestone
+ * tracking - Timestamp of last update
  */
 public class GoalProgressResponse implements Serializable {
 
@@ -138,13 +136,8 @@ public class GoalProgressResponse implements Serializable {
 
     @Override
     public String toString() {
-        return "GoalProgressResponse{" +
-                "currentValue=" + currentValue +
-                ", progressPercentage=" + progressPercentage +
-                ", isOnTrack=" + isOnTrack +
-                ", daysRemaining=" + daysRemaining +
-                ", milestonesCompleted=" + milestonesCompleted +
-                ", recordedAt=" + recordedAt +
-                '}';
+        return "GoalProgressResponse{" + "currentValue=" + currentValue + ", progressPercentage=" + progressPercentage
+                + ", isOnTrack=" + isOnTrack + ", daysRemaining=" + daysRemaining + ", milestonesCompleted="
+                + milestonesCompleted + ", recordedAt=" + recordedAt + '}';
     }
 }
