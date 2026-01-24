@@ -14,5 +14,5 @@ export function useAuthedQuery<T>(key: string, fn: (token: string) => Promise<T>
     return fn(token);
   }, [fn, getToken]);
 
-  return useApiQuery(key,runner, enabled);
+  return useApiQuery(key, runner, enabled);
 }
