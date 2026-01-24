@@ -29,6 +29,11 @@ public class WeightService {
                 measuredAt != null ? measuredAt : OffsetDateTime.now(), weightKg, note));
 
         // Update BMI in health profile if it exists
+        // Just a note on using var vs explicit types:
+        // I prefer explicit types for method signatures and
+        // public APIs for clarity, but use var for local variables
+        // to reduce boilerplate and improve readability.
+        // Note that we are checking for presence before calling get().
         var profile = profileRepo.findById(userId);
         if (profile.isPresent()) {
             var healthProfile = profile.get();
