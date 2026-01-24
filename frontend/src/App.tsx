@@ -1,35 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import AppShell from './layout/AppShell';
+import DashboardPage from './features/dashboard/DashboardPage';
+import TrendsPage from './features/trends/TrendsPage';
+import GoalsPage from './features/goals/GoalsPage';
+import CheckInPage from './features/checkin/CheckInPage';
+import ProfilePage from './features/profile/ProfilePage';
 
+
+// App.tsx sets up routing and uses AppShell as a layout route.
+// All main pages are nested as children of AppShell, which renders <Outlet />.
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        {/* AppShell is the layout route; all pages are nested here */}
+        <Route path="/" element={<AppShell />}>
+          {/* index means the default route for this layout */}
+          <Route index element={<DashboardPage />} />
+          <Route path="trends" element={<TrendsPage />} />
+          <Route path="goals" element={<GoalsPage />} />
+          <Route path="checkin" element={<CheckInPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
