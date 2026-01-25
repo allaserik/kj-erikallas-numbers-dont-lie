@@ -33,31 +33,24 @@ public class EmailVerificationController {
     public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
-
         if (request.getCode() == null || request.getCode().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Code is required"));
+            throw new IllegalArgumentException("Code is required");
         }
-
         // Find user by email
         UserEntity user = userRepository.findByEmailIgnoreCase(request.getEmail()).orElse(null);
-
         if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+            throw new IllegalArgumentException("User not found");
         }
-
         // Verify code
         boolean verified = emailService.verifyCode(request.getCode(), user);
-
         if (!verified) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Invalid or expired code"));
+            throw new IllegalArgumentException("Invalid or expired code");
         }
-
         // Mark email as verified in user entity
         user.setEmailVerified(true);
         userRepository.save(user);
-
         return ResponseEntity.ok(Map.of("message", "Email verified successfully", "emailVerified", true));
     }
 
@@ -73,7 +66,7 @@ public class EmailVerificationController {
     public ResponseEntity<?> resendCode(@RequestBody ResendCodeRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
 
         // Find user by email

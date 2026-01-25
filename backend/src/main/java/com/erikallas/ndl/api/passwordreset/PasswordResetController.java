@@ -33,7 +33,7 @@ public class PasswordResetController {
     public ResponseEntity<?> requestReset(@RequestBody PasswordResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
 
         // Request reset (generates token, no error if email doesn't exist)
@@ -55,38 +55,25 @@ public class PasswordResetController {
     public ResponseEntity<?> completeReset(@RequestBody CompleteResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
-
         if (request.getToken() == null || request.getToken().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Token is required"));
+            throw new IllegalArgumentException("Token is required");
         }
-
         if (request.getNewPassword() == null || request.getNewPassword().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "New password is required"));
+            throw new IllegalArgumentException("New password is required");
         }
-
         // Find user by email
         UserEntity user = userRepository.findByEmailIgnoreCase(request.getEmail()).orElse(null);
-
         if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+            throw new IllegalArgumentException("User not found");
         }
-
-        try {
-            // Complete password reset
-            boolean success = passwordResetService.completePasswordReset(request.getToken(), request.getNewPassword(),
-                    request.getEmail());
-
-            if (!success) {
-                return ResponseEntity.badRequest().body(Map.of("message", "Invalid or expired token"));
-            }
-
-            return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
-
-        } catch (IllegalArgumentException e) {
-            // Password validation error
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        // Complete password reset
+        boolean success = passwordResetService.completePasswordReset(request.getToken(), request.getNewPassword(),
+                request.getEmail());
+        if (!success) {
+            throw new IllegalArgumentException("Invalid or expired token");
         }
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
     }
 }

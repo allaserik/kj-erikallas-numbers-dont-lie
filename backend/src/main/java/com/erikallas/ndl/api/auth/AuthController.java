@@ -36,27 +36,18 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody AuthRegisterRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
-
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Password is required"));
+            throw new IllegalArgumentException("Password is required");
         }
-
-        try {
-            // Register user
-            UserEntity user = authService.registerUser(request.getEmail(), request.getPassword());
-
-            // Generate and send verification code
-            emailService.generateVerificationCode(user);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("id", user.getId(), "email", user.getEmail(), "emailVerified", user.getEmailVerified(),
-                            "message", "User registered. Check email for verification code."));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        // Register user
+        UserEntity user = authService.registerUser(request.getEmail(), request.getPassword());
+        // Generate and send verification code
+        emailService.generateVerificationCode(user);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("id", user.getId(), "email", user.getEmail(), "emailVerified", user.getEmailVerified(),
+                        "message", "User registered. Check email for verification code."));
     }
 
     /**
@@ -70,20 +61,16 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthLoginRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
+            throw new IllegalArgumentException("Email is required");
         }
-
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Password is required"));
+            throw new IllegalArgumentException("Password is required");
         }
-
         // Authenticate user
         UserEntity user = authService.authenticateUser(request.getEmail(), request.getPassword());
-
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Invalid email or password"));
+            throw new IllegalArgumentException("Invalid email or password");
         }
-
         // TODO: Generate JWT token and return it
         // For now, return user info
         return ResponseEntity.ok(Map.of("id", user.getId(), "email", user.getEmail(), "emailVerified",
