@@ -1,25 +1,24 @@
-import { useState } from "react";
-import { Modal } from "../../shared/ui/Modal";
-import { LoginForm } from "./LoginForm";
+import { useAuth0 } from "@auth0/auth0-react";
 
-export function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+// LoginModal: Full-screen calming overlay for unauthenticated users
+export function LoginModal() {
+    const { loginWithRedirect, isLoading } = useAuth0();
 
-    const handleLogin = async (email: string, password: string) => {
-        setLoading(true);
-        setError(null);
-        // TODO: Call your backend API for login
-        setTimeout(() => {
-            setLoading(false);
-            // setError("Invalid credentials"); // Example error
-            onClose(); // Close modal on success
-        }, 1000);
-    };
+    if (isLoading) return null;
 
     return (
-        <Modal open={open} onClose={onClose} title="Login">
-            <LoginForm onSubmit={handleLogin} loading={loading} error={error || undefined} />
-        </Modal>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-blue-100/80 backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center max-w-xs w-full">
+                {/* App logo or icon can go here */}
+                <span className="font-bold text-2xl text-blue-700 mb-2 select-none">Numbers Don't Lie</span>
+                <p className="text-gray-600 mb-6 text-center">Welcome! Please log in to continue.</p>
+                <button
+                    className="px-6 py-2 rounded bg-blue-600 text-white font-semibold text-lg shadow hover:bg-blue-700 transition"
+                    onClick={() => loginWithRedirect()}
+                >
+                    Log In
+                </button>
+            </div>
+        </div>
     );
 }
