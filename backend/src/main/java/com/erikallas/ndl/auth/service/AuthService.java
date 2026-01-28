@@ -196,8 +196,8 @@ public class AuthService {
     }
 
     /**
-     * Generate a refresh token and return the entity.
-     * Refresh tokens are valid for 7 days.
+     * Generate a refresh token and return the entity. Refresh tokens are valid for
+     * 7 days.
      */
     public RefreshTokenEntity generateRefreshToken(UserEntity user) {
         return refreshTokenService.createRefreshToken(user);

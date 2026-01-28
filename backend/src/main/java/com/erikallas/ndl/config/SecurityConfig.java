@@ -29,31 +29,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(csrf -> csrf.disable())
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+        http.csrf(csrf -> csrf.disable()).cors(Customizer.withDefaults())
+                .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // allow health and swagger in local
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         // allow ping for quick checks
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
                         // everything else under /api requires auth
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll())
+                        .requestMatchers("/api/**").authenticated().anyRequest().permitAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
         return http.build();
     }
 
     /**
-     * Validates that the JWT contains the expected audience.
-     * Auth0 access tokens include "aud" and this prevents accepting tokens meant
-     * for a different API.
+     * Validates that the JWT contains the expected audience. Auth0 access tokens
+     * include "aud" and this prevents accepting tokens meant for a different API.
      */
     @Bean
-    public JwtDecoder jwtDecoder(
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
+    public JwtDecoder jwtDecoder(@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
         NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
@@ -73,9 +67,9 @@ public class SecurityConfig {
     }
 
     /**
-     * Bean for encoding (generating) JWTs for email/password login.
-     * Creates a new RSA key pair on startup for signing tokens.
-     * For production, use a persistent key from a key store.
+     * Bean for encoding (generating) JWTs for email/password login. Creates a new
+     * RSA key pair on startup for signing tokens. For production, use a persistent
+     * key from a key store.
      */
     @Bean
     public JwtEncoder jwtEncoder() throws Exception {

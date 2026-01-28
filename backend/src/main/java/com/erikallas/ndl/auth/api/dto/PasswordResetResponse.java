@@ -5,8 +5,5 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Response returned for password reset operations.
  */
-public record PasswordResetResponse(
-    @JsonProperty("message")
-    String message
-) {
+public record PasswordResetResponse(@JsonProperty("message") String message) {
 }
