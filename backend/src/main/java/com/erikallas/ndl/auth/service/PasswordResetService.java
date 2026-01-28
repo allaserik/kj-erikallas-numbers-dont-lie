@@ -6,8 +6,6 @@ import com.erikallas.ndl.user.model.PasswordResetTokenEntity;
 import com.erikallas.ndl.user.model.PasswordResetTokenRepository;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import java.time.OffsetDateTime;
-import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

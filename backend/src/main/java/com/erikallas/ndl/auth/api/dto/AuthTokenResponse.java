@@ -1,4 +1,4 @@
-package com.erikallas.ndl.api.auth;
+package com.erikallas.ndl.auth.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

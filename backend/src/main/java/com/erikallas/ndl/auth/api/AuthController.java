@@ -1,9 +1,13 @@
-package com.erikallas.ndl.api.auth;
+package com.erikallas.ndl.auth.api;
 
 import com.erikallas.ndl.auth.service.AuthService;
 import com.erikallas.ndl.auth.service.EmailService;
+import com.erikallas.ndl.auth.api.dto.LoginResponse;
+import com.erikallas.ndl.auth.api.dto.RegisterResponse;
+import com.erikallas.ndl.auth.api.dto.AuthLoginRequest;
+import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
+import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.user.model.UserEntity;
-import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +37,7 @@ public class AuthController {
      * validation error
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@RequestBody AuthRegisterRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -46,8 +50,7 @@ public class AuthController {
         // Generate and send verification code
         emailService.generateVerificationCode(user);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("id", user.getId(), "email", user.getEmail(), "emailVerified", user.getEmailVerified(),
-                        "message", "User registered. Check email for verification code."));
+                .body(new RegisterResponse(user.getId(), user.getEmail()));
     }
 
     /**
@@ -58,7 +61,7 @@ public class AuthController {
      * "emailVerified": true } - 401: { "message": "Invalid email or password" }
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthLoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody AuthLoginRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -71,9 +74,11 @@ public class AuthController {
         if (user == null) {
             throw new IllegalArgumentException("Invalid email or password");
         }
-        // TODO: Generate JWT token and return it
-        // For now, return user info
-        return ResponseEntity.ok(Map.of("id", user.getId(), "email", user.getEmail(), "emailVerified",
-                user.getEmailVerified(), "message", "Login successful. JWT token will be returned here."));
+        // Generate JWT access token
+        String accessToken = authService.generateAccessToken(user);
+        // Generate refresh token
+        RefreshTokenEntity refreshToken = authService.generateRefreshToken(user);
+        // Return tokens
+        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken.getToken()));
     }
 }

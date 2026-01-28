@@ -46,6 +46,20 @@ public class RefreshTokenService {
     }
 
     /**
+     * Create and save a new refresh token for a user. Returns the token entity.
+     */
+    @Transactional
+    public RefreshTokenEntity createRefreshToken(com.erikallas.ndl.user.model.UserEntity user) {
+        var entity = new RefreshTokenEntity();
+        entity.setUserId(user.getId());
+        entity.setToken(UUID.randomUUID().toString());
+        entity.setCreatedAt(OffsetDateTime.now());
+        entity.setExpiresAt(OffsetDateTime.now().plusDays(TOKEN_VALIDITY_DAYS));
+
+        return tokenRepository.save(entity);
+    }
+
+    /**
      * Validate and retrieve a refresh token. Returns the token entity if valid, or
      * null if invalid/expired/revoked.
      */

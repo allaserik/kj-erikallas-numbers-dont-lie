@@ -1,4 +1,4 @@
-package com.erikallas.ndl.api.user;
+package com.erikallas.ndl.auth.api;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

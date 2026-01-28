@@ -1,4 +1,4 @@
-package com.erikallas.ndl.api.passwordreset;
+package com.erikallas.ndl.auth.api.dto;
 
 public class CompleteResetRequest {
     private String email;

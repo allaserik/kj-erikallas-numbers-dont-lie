@@ -5,8 +5,6 @@ import com.erikallas.ndl.user.model.EmailVerificationCodeEntity;
 import com.erikallas.ndl.user.model.EmailVerificationCodeRepository;
 import java.time.OffsetDateTime;
 import java.util.Random;
-import java.time.OffsetDateTime;
-import java.util.Random;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

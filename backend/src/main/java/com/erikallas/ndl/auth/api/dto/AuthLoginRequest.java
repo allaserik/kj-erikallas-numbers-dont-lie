@@ -1,4 +1,4 @@
-package com.erikallas.ndl.api.auth;
+package com.erikallas.ndl.auth.api.dto;
 
 public class AuthLoginRequest {
     private String email;

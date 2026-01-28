@@ -1,4 +1,4 @@
-package com.erikallas.ndl.api.emailverification;
+package com.erikallas.ndl.auth.api.dto;
 
 public class VerifyEmailRequest {
     private String email;

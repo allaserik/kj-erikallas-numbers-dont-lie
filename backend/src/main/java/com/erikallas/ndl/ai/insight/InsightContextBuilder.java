@@ -9,7 +9,6 @@ import com.erikallas.ndl.health.profile.HealthProfileService;
 import com.erikallas.ndl.health.summary.HealthSummaryService;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;

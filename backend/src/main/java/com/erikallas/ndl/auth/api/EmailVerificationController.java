@@ -1,9 +1,12 @@
-package com.erikallas.ndl.api.emailverification;
+package com.erikallas.ndl.auth.api;
 
+import com.erikallas.ndl.auth.api.dto.ResendCodeRequest;
+import com.erikallas.ndl.auth.api.dto.ResendCodeResponse;
+import com.erikallas.ndl.auth.api.dto.VerifyEmailRequest;
+import com.erikallas.ndl.auth.api.dto.VerifyEmailResponse;
 import com.erikallas.ndl.auth.service.EmailService;
 import com.erikallas.ndl.user.model.UserEntity;
 import com.erikallas.ndl.user.model.UserRepository;
-import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +33,7 @@ public class EmailVerificationController {
      * "message": "Invalid or expired code" } - 404: { "message": "User not found" }
      */
     @PostMapping("/verify")
-    public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequest request) {
+    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -51,7 +54,7 @@ public class EmailVerificationController {
         // Mark email as verified in user entity
         user.setEmailVerified(true);
         userRepository.save(user);
-        return ResponseEntity.ok(Map.of("message", "Email verified successfully", "emailVerified", true));
+        return ResponseEntity.ok(new VerifyEmailResponse());
     }
 
     /**
@@ -63,7 +66,7 @@ public class EmailVerificationController {
      * found" }
      */
     @PostMapping("/resend-code")
-    public ResponseEntity<?> resendCode(@RequestBody ResendCodeRequest request) {
+    public ResponseEntity<ResendCodeResponse> resendCode(@RequestBody ResendCodeRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -73,19 +76,18 @@ public class EmailVerificationController {
         UserEntity user = userRepository.findByEmailIgnoreCase(request.getEmail()).orElse(null);
 
         if (user == null) {
-            return ResponseEntity.status(404).body(Map.of("message", "User not found"));
+            throw new IllegalArgumentException("User not found");
         }
 
         // Check if user can resend
         if (!emailService.canResendCode(user)) {
             long cooldown = emailService.getResendCooldownSeconds(user);
-            return ResponseEntity.badRequest().body(
-                    Map.of("message", "Cannot resend yet. Wait " + cooldown + " seconds", "cooldownSeconds", cooldown));
+            throw new IllegalArgumentException("Cannot resend yet. Wait " + cooldown + " seconds");
         }
 
         // Generate and send new code
         emailService.generateVerificationCode(user);
 
-        return ResponseEntity.ok(Map.of("message", "Code sent to email", "cooldownSeconds", 0));
+        return ResponseEntity.ok(new ResendCodeResponse("Code sent to email"));
     }
 }

@@ -39,3 +39,7 @@ springdoc:
 
 auth0:
   audience: ${AUTH0_AUDIENCE:https://numbers-dont-lie-api}
+app:
+  jwt:
+    access-token-expiry-minutes: 15
+    issuer: ndl-api

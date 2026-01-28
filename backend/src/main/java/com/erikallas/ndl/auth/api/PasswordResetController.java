@@ -1,9 +1,11 @@
-package com.erikallas.ndl.api.passwordreset;
+package com.erikallas.ndl.auth.api;
 
+import com.erikallas.ndl.auth.api.dto.PasswordResetResponse;
+import com.erikallas.ndl.auth.api.dto.CompleteResetRequest;
+import com.erikallas.ndl.auth.api.dto.PasswordResetRequest;
 import com.erikallas.ndl.auth.service.PasswordResetService;
 import com.erikallas.ndl.user.model.UserEntity;
 import com.erikallas.ndl.user.model.UserRepository;
-import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,7 +32,7 @@ public class PasswordResetController {
      * (don't reveal if email exists)
      */
     @PostMapping("/request")
-    public ResponseEntity<?> requestReset(@RequestBody PasswordResetRequest request) {
+    public ResponseEntity<PasswordResetResponse> requestReset(@RequestBody PasswordResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -40,7 +42,7 @@ public class PasswordResetController {
         passwordResetService.requestPasswordReset(request.getEmail());
 
         // Always return success for security
-        return ResponseEntity.ok(Map.of("message", "Password reset link sent to email (if account exists)"));
+        return ResponseEntity.ok(new PasswordResetResponse("Password reset link sent to email (if account exists)"));
     }
 
     /**
@@ -52,7 +54,7 @@ public class PasswordResetController {
      * validation error - 404: { "message": "User not found" }
      */
     @PostMapping("/complete")
-    public ResponseEntity<?> completeReset(@RequestBody CompleteResetRequest request) {
+    public ResponseEntity<PasswordResetResponse> completeReset(@RequestBody CompleteResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -74,6 +76,6 @@ public class PasswordResetController {
         if (!success) {
             throw new IllegalArgumentException("Invalid or expired token");
         }
-        return ResponseEntity.ok(Map.of("message", "Password reset successfully"));
+        return ResponseEntity.ok(new PasswordResetResponse("Password reset successfully"));
     }
 }

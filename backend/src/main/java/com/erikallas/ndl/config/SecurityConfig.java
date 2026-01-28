@@ -14,6 +14,12 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.proc.SecurityContext;
 
 @Configuration
 public class SecurityConfig {
@@ -64,5 +70,17 @@ public class SecurityConfig {
         }
         OAuth2Error err = new OAuth2Error("invalid_token", "The required audience is missing", null);
         return OAuth2TokenValidatorResult.failure(err);
+    }
+
+    /**
+     * Bean for encoding (generating) JWTs for email/password login.
+     * Creates a new RSA key pair on startup for signing tokens.
+     * For production, use a persistent key from a key store.
+     */
+    @Bean
+    public JwtEncoder jwtEncoder() throws Exception {
+        RSAKey key = new RSAKeyGenerator(2048).generate();
+        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(key));
+        return new NimbusJwtEncoder(jwks);
     }
 }

@@ -1,9 +1,9 @@
-package com.erikallas.ndl.api.passwordreset;
+package com.erikallas.ndl.auth.api.dto;
 
-public class PasswordResetRequest {
+public class ResendCodeRequest {
     private String email;
 
-    public PasswordResetRequest() {
+    public ResendCodeRequest() {
     }
 
     public String getEmail() {

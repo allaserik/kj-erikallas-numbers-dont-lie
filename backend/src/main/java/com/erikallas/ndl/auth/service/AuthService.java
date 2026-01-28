@@ -1,5 +1,6 @@
 package com.erikallas.ndl.auth.service;
 
+import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.user.model.UserEntity;
 import com.erikallas.ndl.user.model.UserRepository;
 import java.time.OffsetDateTime;
@@ -15,13 +16,16 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetService passwordResetService;
     private final RefreshTokenService refreshTokenService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-            PasswordResetService passwordResetService, RefreshTokenService refreshTokenService) {
+            PasswordResetService passwordResetService, RefreshTokenService refreshTokenService,
+            JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.passwordResetService = passwordResetService;
         this.refreshTokenService = refreshTokenService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     /**
@@ -177,18 +181,25 @@ public class AuthService {
     }
 
     /**
-     * Generate a refresh token for a user (issued on login/registration). Refresh
-     * tokens are valid for 7 days.
-     */
-    public String generateRefreshToken(UserEntity user) {
-        return refreshTokenService.generateRefreshToken(user.getId());
-    }
-
-    /**
      * Validate and retrieve a refresh token. Returns the token entity if valid,
      * null otherwise.
      */
     public com.erikallas.ndl.auth.model.RefreshTokenEntity validateRefreshToken(String token) {
         return refreshTokenService.validateToken(token);
+    }
+
+    /**
+     * Generate an access token (JWT) for a user.
+     */
+    public String generateAccessToken(UserEntity user) {
+        return jwtTokenProvider.generateAccessToken(user);
+    }
+
+    /**
+     * Generate a refresh token and return the entity.
+     * Refresh tokens are valid for 7 days.
+     */
+    public RefreshTokenEntity generateRefreshToken(UserEntity user) {
+        return refreshTokenService.createRefreshToken(user);
     }
 }

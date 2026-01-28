@@ -40,3 +40,6 @@ cd frontend
 npm install
 npm run dev
 ```
+
+install ollama
+[host ALL your AI locally](https://www.youtube.com/watch?v=Wjrdr0NU4Sk)
