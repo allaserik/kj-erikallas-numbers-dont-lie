@@ -31,6 +31,8 @@ cd backend
 ./mvnw spring-boot:run
 
 ./mvnw clean test 2>&1 | grep -A 10 "Caused by"
+
+./mvnw clean compile -DskipTests 2>&1 | tail -60
 ```
 
 Run the frontend

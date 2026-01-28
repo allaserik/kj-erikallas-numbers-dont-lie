@@ -1,9 +1,9 @@
 package com.erikallas.ndl.auth.service;
 
+import com.erikallas.ndl.auth.config.AuthProperties;
 import com.erikallas.ndl.user.model.UserEntity;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -11,21 +11,18 @@ import org.springframework.stereotype.Service;
 
 /**
  * Service for generating JWT tokens for email/password authentication. Uses
- * Spring Security's JwtEncoder for token generation.
+ * Spring Security's JwtEncoder for token generation. Configuration is
+ * centralized in AuthProperties.
  */
 @Service
 public class JwtTokenProvider {
 
     private final JwtEncoder jwtEncoder;
+    private final AuthProperties authProperties;
 
-    @Value("${app.jwt.access-token-expiry-minutes:15}")
-    private long accessTokenExpiryMinutes;
-
-    @Value("${app.jwt.issuer:ndl-api}")
-    private String issuer;
-
-    public JwtTokenProvider(JwtEncoder jwtEncoder) {
+    public JwtTokenProvider(JwtEncoder jwtEncoder, AuthProperties authProperties) {
         this.jwtEncoder = jwtEncoder;
+        this.authProperties = authProperties;
     }
 
     /**
@@ -34,10 +31,12 @@ public class JwtTokenProvider {
      */
     public String generateAccessToken(UserEntity user) {
         Instant now = Instant.now();
-        Instant expiresAt = now.plus(accessTokenExpiryMinutes, ChronoUnit.MINUTES);
+        long expiryMinutes = authProperties.getJwt().getAccessTokenExpiryMinutes();
+        Instant expiresAt = now.plus(expiryMinutes, ChronoUnit.MINUTES);
 
-        JwtClaimsSet claims = JwtClaimsSet.builder().issuer(issuer).subject(user.getId().toString())
-                .claim("email", user.getEmail()).issuedAt(now).expiresAt(expiresAt).build();
+        JwtClaimsSet claims = JwtClaimsSet.builder().issuer(authProperties.getJwt().getIssuer())
+                .subject(user.getId().toString()).claim("email", user.getEmail()).issuedAt(now).expiresAt(expiresAt)
+                .build();
 
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
