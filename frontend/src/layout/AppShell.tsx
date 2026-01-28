@@ -7,7 +7,7 @@ import Header from "./Header";
 // It provides the shared app structure (header, nav, etc.) and renders routed content via <Outlet />.
 export default function AppShell() {
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+        <div className="min-h-screen bg-white flex flex-col md:flex-row">
             {/* Sidebar: visible on md+ screens, hidden on mobile */}
             <Sidebar />
             <div className="flex-1 max-w-md md:max-w-full mx-auto w-full p-4 pb-20 md:ml-56">
