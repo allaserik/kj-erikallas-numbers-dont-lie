@@ -3,7 +3,11 @@ package com.erikallas.ndl.health.goal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -64,4 +68,17 @@ public interface GoalProgressRepository extends JpaRepository<GoalProgressEntity
      * @return true if at least one progress record exists
      */
     boolean existsByGoalId(UUID goalId);
+
+    // Paginated queries
+    Page<GoalProgressEntity> findByGoalIdOrderByRecordedAtDesc(UUID goalId, Pageable pageable);
+
+    Page<GoalProgressEntity> findByUserIdOrderByRecordedAtDesc(UUID userId, Pageable pageable);
+
+    // Ownership verification
+    @Query("SELECT gp FROM GoalProgressEntity gp WHERE gp.id = :id AND gp.userId = :userId AND gp.deletedAt IS NULL")
+    Optional<GoalProgressEntity> findByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);
+
+    // Count for ownership check
+    @Query("SELECT COUNT(gp) FROM GoalProgressEntity gp WHERE gp.id = :id AND gp.userId = :userId AND gp.deletedAt IS NULL")
+    long countByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);
 }

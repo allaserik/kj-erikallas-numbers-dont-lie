@@ -71,4 +71,16 @@ public class WeightEntryEntity {
     public void setDeletedAt(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
+
+    public void setWeightKg(double weightKg) {
+        this.weightKg = weightKg;
+    }
+
+    public void setMeasuredAt(OffsetDateTime measuredAt) {
+        this.measuredAt = measuredAt;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
 }
