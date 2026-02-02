@@ -6,9 +6,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "weight_entries")
+@SQLDelete(sql = "UPDATE weight_entries SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class WeightEntryEntity {
 
     @Id
@@ -25,6 +29,9 @@ public class WeightEntryEntity {
 
     @Column(name = "note")
     private String note;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 
     protected WeightEntryEntity() {
     }
@@ -55,5 +62,13 @@ public class WeightEntryEntity {
 
     public String getNote() {
         return note;
+    }
+
+    public OffsetDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(OffsetDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

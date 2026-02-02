@@ -3,9 +3,13 @@ package com.erikallas.ndl.health.goal;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "goals")
+@SQLDelete(sql = "UPDATE goal SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class GoalEntity {
 
     @Id
@@ -36,19 +40,14 @@ public class GoalEntity {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
+
     protected GoalEntity() {
     }
 
-    public GoalEntity(
-            UUID id,
-            UUID userId,
-            GoalType goalType,
-            Double targetWeightKg,
-            Integer targetActivityDaysPerWeek,
-            String notes,
-            boolean active,
-            OffsetDateTime createdAt,
-            OffsetDateTime updatedAt) {
+    public GoalEntity(UUID id, UUID userId, GoalType goalType, Double targetWeightKg, Integer targetActivityDaysPerWeek,
+            String notes, boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.goalType = goalType;
@@ -94,5 +93,13 @@ public class GoalEntity {
 
     public OffsetDateTime getUpdatedAt() {
         return updatedAt;
+    }
+
+    public OffsetDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(OffsetDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

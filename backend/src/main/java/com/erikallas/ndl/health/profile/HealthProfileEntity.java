@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "health_profiles")
+@SQLDelete(sql = "UPDATE health_profile SET deleted_at = CURRENT_TIMESTAMP WHERE user_id = ?")
+@SQLRestriction("deleted_at IS NULL")
 public class HealthProfileEntity {
 
     @Id
@@ -61,6 +65,9 @@ public class HealthProfileEntity {
 
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
 
     protected HealthProfileEntity() {
     }
@@ -181,6 +188,14 @@ public class HealthProfileEntity {
 
     public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public OffsetDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(OffsetDateTime deletedAt) {
+        this.deletedAt = deletedAt;
     }
 
     /**
