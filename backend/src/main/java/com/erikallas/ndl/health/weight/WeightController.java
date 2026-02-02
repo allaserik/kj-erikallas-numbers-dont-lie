@@ -1,5 +1,6 @@
 package com.erikallas.ndl.health.weight;
 
+import com.erikallas.ndl.common.api.dto.PaginatedResponse;
 import com.erikallas.ndl.common.api.dto.WeightEntryResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
@@ -10,6 +11,8 @@ import jakarta.validation.constraints.DecimalMin;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -113,8 +116,29 @@ public class WeightController {
             entity.setNote(body.note);
         }
 
-        var updated = weightRepository.save(entity);
+        var updated = weightService.update(user.getId(), entity);
         return ResponseMapper.toWeightEntryResponse(updated);
+    }
+
+    /**
+     * Get paginated weight history for the authenticated user.
+     * 
+     * @param page the page number (0-indexed)
+     * @param size the page size
+     * @param auth JWT authentication token
+     * @return paginated weight entries
+     */
+    @GetMapping("/api/weight/history")
+    public PaginatedResponse<WeightEntryResponse> getHistory(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "30") int size, JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var pageRequest = PageRequest.of(page, size, Sort.by("measuredAt").descending());
+        var weightPage = weightService.getHistory(user.getId(), pageRequest);
+
+        var content = weightPage.getContent().stream().map(ResponseMapper::toWeightEntryResponse).toList();
+
+        return new PaginatedResponse<>(content, weightPage.getNumber(), weightPage.getSize(),
+                weightPage.getTotalElements(), weightPage.getTotalPages(), weightPage.isFirst(), weightPage.isLast());
     }
 
     /**

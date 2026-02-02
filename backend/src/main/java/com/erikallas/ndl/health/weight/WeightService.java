@@ -5,6 +5,8 @@ import com.erikallas.ndl.health.wellness.WellnessScoreService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,5 +52,42 @@ public class WeightService {
 
     public List<WeightEntryEntity> latest(UUID userId) {
         return repo.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
+    }
+
+    /**
+     * Get paginated weight history for a user.
+     * 
+     * @param userId   the user ID
+     * @param pageable pagination settings
+     * @return paginated weight entries
+     */
+    public Page<WeightEntryEntity> getHistory(UUID userId, Pageable pageable) {
+        return repo.findByUserIdOrderByMeasuredAtDesc(userId, pageable);
+    }
+
+    /**
+     * Update an existing weight entry and recalculate BMI if needed.
+     * 
+     * @param userId the user ID (for ownership verification)
+     * @param entry  the weight entry to update
+     * @return the updated entry
+     */
+    @Transactional
+    public WeightEntryEntity update(UUID userId, WeightEntryEntity entry) {
+        var saved = repo.save(entry);
+
+        // Recalculate BMI in health profile if it exists
+        var profile = profileRepo.findByUserId(userId);
+        if (profile.isPresent()) {
+            var healthProfile = profile.get();
+            healthProfile.calculateBMI(saved.getWeightKg());
+            healthProfile.setUpdatedAt(OffsetDateTime.now());
+            profileRepo.save(healthProfile);
+
+            // Auto-calculate wellness score after BMI update
+            wellnessScoreService.calculateAndUpdateWellnessScore(userId);
+        }
+
+        return saved;
     }
 }
