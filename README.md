@@ -45,3 +45,7 @@ npm run dev
 
 install ollama
 [host ALL your AI locally](https://www.youtube.com/watch?v=Wjrdr0NU4Sk)
+
+
+OpenAPI Swagger documentation
+[OpenAPI Swagger URL](http://localhost:8080/swagger-ui/index.html)
