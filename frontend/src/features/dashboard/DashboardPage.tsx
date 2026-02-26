@@ -1,66 +1,35 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
+import { getMe, getHealthProfile } from "../../shared/api/profile";
 import { getLatestWeight } from "../../shared/api/weight";
 import { getLatestInsight } from "../../shared/api/insights";
-import { getDashboardSummary } from "../../shared/api/dashboard";
+import { getActiveGoals } from "../../shared/api/goals";
 import { Button } from "../../shared/ui/Button";
 import { Card, CardBody, CardTitle, CardSubtitle } from "../../shared/ui/Card";
 import { Alert } from "../../shared/ui/Alert";
 import { Spinner } from "../../shared/ui/Spinner";
-import { ArrowUpIcon, ArrowDownIcon, EllipsisHorizontalIcon } from "@heroicons/react/24/outline";
-
-// Utility to format weight change
-function formatWeightChange(change: number): { icon: React.ReactNode; color: string; text: string } {
-    if (change > 0) {
-        return {
-            icon: <ArrowUpIcon className="h-4 w-4" />,
-            color: "text-red-600",
-            text: `+${change.toFixed(1)} kg`,
-        };
-    } else if (change < 0) {
-        return {
-            icon: <ArrowDownIcon className="h-4 w-4" />,
-            color: "text-green-600",
-            text: `${change.toFixed(1)} kg`,
-        };
-    }
-    return {
-        icon: <EllipsisHorizontalIcon className="h-4 w-4" />,
-        color: "text-slate-600",
-        text: "No change",
-    };
-}
 
 // DashboardPage: Health summary and quick actions
 export default function DashboardPage() {
     const { isAuthenticated } = useAuth0();
 
-    // Try to load dashboard summary (simplified aggregated endpoint)
-    const summaryQ = useAuthedQuery("dashboardSummary", getDashboardSummary, isAuthenticated);
+    // Load individual data endpoints in parallel
+    const meQ = useAuthedQuery("me", getMe, isAuthenticated);
+    const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
+    const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
+    const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
+    const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
 
-    // Fallback individual queries if summary fails
-    const latestWeightQ = useAuthedQuery(
-        "latestWeight",
-        getLatestWeight,
-        isAuthenticated && !summaryQ.data
-    );
-    const latestInsightQ = useAuthedQuery(
-        "latestInsight",
-        getLatestInsight,
-        isAuthenticated && !summaryQ.data
-    );
+    const isLoading = meQ.loading || profileQ.loading || latestWeightQ.loading || goalsQ.loading || insightQ.loading;
+    const hasError = meQ.error || profileQ.error || latestWeightQ.error || goalsQ.error || insightQ.error;
 
-    const isLoading = summaryQ.loading || latestWeightQ.loading;
-    const hasError = summaryQ.error || latestWeightQ.error;
-
-    // Use summary data if available, otherwise use individual queries
-    const latestWeight = summaryQ.data?.currentWeight || latestWeightQ.data;
-    const activeGoal = summaryQ.data?.activeGoal || null;
-    const insight = summaryQ.data?.recentInsight || latestInsightQ.data;
-    const weightTrend = summaryQ.data?.weightTrend;
+    // Extract data from individual queries
+    const latestWeight = latestWeightQ.data;
+    const activeGoal = goalsQ.data && goalsQ.data.length > 0 ? goalsQ.data[0] : null;
+    const insight = insightQ.data;
 
     // Calculate weight change since 7 days ago
-    const hasWeightTrend = latestWeight && weightTrend;
+    // TODO: If weight trend is needed, can be calculated from weight history endpoint
 
     return (
         <div className="space-y-4 pb-32 md:pb-4">
@@ -92,8 +61,11 @@ export default function DashboardPage() {
                     tone="error"
                     title="Error Loading Dashboard"
                     message={
-                        summaryQ.error?.message ||
+                        meQ.error?.message ||
+                        profileQ.error?.message ||
                         latestWeightQ.error?.message ||
+                        goalsQ.error?.message ||
+                        insightQ.error?.message ||
                         "Failed to load dashboard data"
                     }
                 />
@@ -111,14 +83,6 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="text-sm text-slate-600">kg</div>
                             </div>
-                            {hasWeightTrend && (
-                                <div className={`flex items-center gap-1 ${formatWeightChange(weightTrend!.change).color}`}>
-                                    {formatWeightChange(weightTrend!.change).icon}
-                                    <span className="text-sm font-medium">
-                                        {formatWeightChange(weightTrend!.change).text}
-                                    </span>
-                                </div>
-                            )}
                         </div>
                         <div className="mt-2 text-xs text-slate-500">
                             Last recorded: {new Date(latestWeight.date).toLocaleDateString()}
