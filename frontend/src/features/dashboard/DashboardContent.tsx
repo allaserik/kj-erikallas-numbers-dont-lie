@@ -1,11 +1,11 @@
 import { Alert } from "../../shared/ui/Alert";
 import { Card, CardBody } from "../../shared/ui/Card";
-import { Spinner } from "../../shared/ui/Spinner";
 import { BMICard } from "./components/BMICard";
 import { WellnessScoreCard } from "./components/WellnessScoreCard";
 import { GoalCard } from "./components/GoalCard";
 import { InsightCard } from "./components/InsightCard";
 import { QuickNav } from "./components/QuickNav";
+import { BMICardSkeleton, WellnessScoreCardSkeleton, GoalCardSkeleton, InsightCardSkeleton } from "./components/SkeletonCards";
 import type { DashboardState } from "./useDashboardData";
 
 interface DashboardContentProps {
@@ -32,11 +32,12 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
             )}
 
             {data.isLoading && (
-                <Card>
-                    <CardBody>
-                        <Spinner label="Loading your dashboard..." />
-                    </CardBody>
-                </Card>
+                <>
+                    <BMICardSkeleton />
+                    <WellnessScoreCardSkeleton />
+                    <GoalCardSkeleton />
+                    <InsightCardSkeleton />
+                </>
             )}
 
             {data.error && (
