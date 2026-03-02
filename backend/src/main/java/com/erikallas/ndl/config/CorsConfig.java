@@ -15,7 +15,10 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("http://localhost:5173")
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173",
+                                "http://127.0.0.1:5174")
+                        // Allow both localhost and 127.0.0.1 on both 5173 and 5174
                         .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("Authorization", "Content-Type").maxAge(3600);
             }
