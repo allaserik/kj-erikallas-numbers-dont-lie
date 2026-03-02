@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                         // allow ping for quick checks
                         .requestMatchers(HttpMethod.GET, "/api/ping").permitAll()
+                        // allow public auth endpoints (register, login)
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         // everything else under /api requires auth
                         .requestMatchers("/api/**").authenticated().anyRequest().permitAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
