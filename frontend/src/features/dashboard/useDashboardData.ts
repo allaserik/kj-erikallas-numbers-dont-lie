@@ -5,7 +5,8 @@ import { getLatestWeight } from "../../shared/api/weight";
 import { getLatestInsight } from "../../shared/api/insights";
 import { getActiveGoals } from "../../shared/api/goals";
 import { getHealthSummary } from "../../shared/api/summary";
-import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary } from "../../shared/types";
+import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
+import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary, PeriodSummary } from "../../shared/types";
 
 export interface DashboardData {
     me: UserProfile | null;
@@ -14,6 +15,8 @@ export interface DashboardData {
     activeGoal: Goal | null;
     insight: Insight | null;
     summary: HealthSummary | null;
+    weeklySummary: PeriodSummary | null;
+    monthlySummary: PeriodSummary | null;
 }
 
 export interface DashboardState extends DashboardData {
@@ -31,6 +34,8 @@ export function useDashboardData(): DashboardState {
     const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
     const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
     const summaryQ = useAuthedQuery("summary", getHealthSummary, isAuthenticated);
+    const weeklySummaryQ = useAuthedQuery("weeklySummary", getWeeklySummary, isAuthenticated);
+    const monthlySummaryQ = useAuthedQuery("monthlySummary", getMonthlySummary, isAuthenticated);
 
     // Always fetch insights - backend returns generic fallback if goal/profile missing
     const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
@@ -42,6 +47,8 @@ export function useDashboardData(): DashboardState {
         latestWeightQ.loading ||
         goalsQ.loading ||
         summaryQ.loading ||
+        weeklySummaryQ.loading ||
+        monthlySummaryQ.loading ||
         insightQ.loading;
 
     // Determine overall error state (return first error found, ignore summary errors)
@@ -64,6 +71,8 @@ export function useDashboardData(): DashboardState {
         activeGoal,
         insight: insightQ.data || null,
         summary: summaryQ.data || null,
+        weeklySummary: weeklySummaryQ.data || null,
+        monthlySummary: monthlySummaryQ.data || null,
         isLoading,
         error,
     };

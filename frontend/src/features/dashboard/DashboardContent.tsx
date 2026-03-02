@@ -4,6 +4,7 @@ import { BMICard } from "./components/BMICard";
 import { WellnessScoreCard } from "./components/WellnessScoreCard";
 import { GoalCard } from "./components/GoalCard";
 import { InsightCard } from "./components/InsightCard";
+import { PeriodSummaryCard } from "./components/PeriodSummaryCard";
 import { QuickNav } from "./components/QuickNav";
 import { BMICardSkeleton, WellnessScoreCardSkeleton, GoalCardSkeleton, InsightCardSkeleton } from "./components/SkeletonCards";
 import type { DashboardState } from "./useDashboardData";
@@ -73,6 +74,10 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
                     <WellnessScoreCard profile={data.profile} isLoading={data.isLoading} />
                     <GoalCard activeGoal={data.activeGoal} />
                     <InsightCard insight={data.insight} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <PeriodSummaryCard summary={data.weeklySummary} />
+                        <PeriodSummaryCard summary={data.monthlySummary} />
+                    </div>
                     <QuickNav />
                 </>
             )}

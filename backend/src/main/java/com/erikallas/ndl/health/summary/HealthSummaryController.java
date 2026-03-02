@@ -2,6 +2,7 @@ package com.erikallas.ndl.health.summary;
 
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
+import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import com.erikallas.ndl.user.service.UserService;
 
@@ -10,6 +11,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController
@@ -46,5 +50,58 @@ public class HealthSummaryController {
 
         return new HealthSummaryDto(profile.getHeightCm(), latest.getWeightKg(), Math.round(bmi * 10.0) / 10.0,
                 delta7d);
+    }
+
+    /**
+     * Get weekly health summary for the past 7 days
+     */
+    @GetMapping("/api/summary/weekly")
+    public PeriodSummaryDto weeklySummary(JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        HealthProfileEntity profile = profileService.find(user.getId()).orElse(null);
+
+        var weights = weightRepo.findTop90ByUserIdOrderByMeasuredAtDesc(user.getId());
+
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(7);
+
+        Double weightChange = summaryService.weightDeltaForPeriod(weights, 7);
+        List<WeightEntryEntity> periodWeights = summaryService.entriesInRange(weights, startDate, endDate);
+
+        // Collect weight values for averaging (wellness score proxy)
+        double avgWellness = periodWeights.isEmpty() ? (profile != null ? 75.0 : 50.0) : 75.0; // Placeholder: could
+                                                                                               // include wellness
+                                                                                               // calculation
+
+        return new PeriodSummaryDto("weekly", startDate.toString(), endDate.toString(),
+                !periodWeights.isEmpty() ? periodWeights.get(periodWeights.size() - 1).getWeightKg() : null,
+                !periodWeights.isEmpty() ? periodWeights.get(0).getWeightKg() : null, weightChange, avgWellness,
+                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", 0, // Goal progress would need more
+                                                                                     // context
+                7, periodWeights.size());
+    }
+
+    /**
+     * Get monthly health summary for the past 30 days
+     */
+    @GetMapping("/api/summary/monthly")
+    public PeriodSummaryDto monthlySummary(JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        HealthProfileEntity profile = profileService.find(user.getId()).orElse(null);
+
+        var weights = weightRepo.findTop90ByUserIdOrderByMeasuredAtDesc(user.getId());
+
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(30);
+
+        Double weightChange = summaryService.weightDeltaForPeriod(weights, 30);
+        List<WeightEntryEntity> periodWeights = summaryService.entriesInRange(weights, startDate, endDate);
+
+        double avgWellness = periodWeights.isEmpty() ? (profile != null ? 75.0 : 50.0) : 75.0;
+
+        return new PeriodSummaryDto("monthly", startDate.toString(), endDate.toString(),
+                !periodWeights.isEmpty() ? periodWeights.get(periodWeights.size() - 1).getWeightKg() : null,
+                !periodWeights.isEmpty() ? periodWeights.get(0).getWeightKg() : null, weightChange, avgWellness,
+                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", 0, 30, periodWeights.size());
     }
 }

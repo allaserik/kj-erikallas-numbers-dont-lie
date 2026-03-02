@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 public interface WeightEntryRepository extends JpaRepository<WeightEntryEntity, UUID> {
     List<WeightEntryEntity> findTop30ByUserIdOrderByMeasuredAtDesc(UUID userId);
 
+    List<WeightEntryEntity> findTop90ByUserIdOrderByMeasuredAtDesc(UUID userId);
+
     boolean existsByUserId(UUID userId);
 
     // Paginated queries

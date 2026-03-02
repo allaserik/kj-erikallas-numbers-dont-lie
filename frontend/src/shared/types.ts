@@ -65,6 +65,22 @@ export type Insight = {
     createdAt: string; // ISO timestamp
 };
 
+// Period summary (weekly/monthly)
+export type PeriodSummary = {
+    periodType: "weekly" | "monthly";
+    startDate: string; // YYYY-MM-DD
+    endDate: string; // YYYY-MM-DD
+    weightStartKg: number | null;
+    weightEndKg: number | null;
+    weightChangeKg: number | null;
+    avgWellnessScore: number;
+    activityLevel: string;
+    goalProgressPercentage: number;
+    daysTracked: number;
+    weightEntriesCount: number;
+    generatedAt: string; // ISO timestamp
+};
+
 // Health summary with BMI info
 export type HealthSummary = {
     heightCm: number;
