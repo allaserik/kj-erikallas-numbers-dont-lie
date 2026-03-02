@@ -48,6 +48,7 @@ function transformHealthProfile(data: HealthProfileBackendResponse | null): Heal
         gender: data.gender as "MALE" | "FEMALE" | "OTHER",
         activityLevel,
         targetWeight: 0,
+        wellnessScore: data.wellness_score || 0,
         dietaryPreferences: data.dietary_preferences || [],
         fitnessGoals: [],
         createdAt: data.created_at,

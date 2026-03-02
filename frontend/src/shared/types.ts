@@ -21,6 +21,7 @@ export type HealthProfile = {
     gender: "MALE" | "FEMALE" | "OTHER";
     activityLevel: "SEDENTARY" | "LIGHTLY_ACTIVE" | "MODERATELY_ACTIVE" | "VERY_ACTIVE" | "EXTREMELY_ACTIVE";
     targetWeight: number; // kg (optional goal)
+    wellnessScore?: number; // 0-100 wellness score
     dietaryPreferences?: string[];
     fitnessGoals?: string[];
     createdAt: string;
