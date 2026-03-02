@@ -54,13 +54,13 @@ export type Goal = {
 
 // AI-generated insight
 export type Insight = {
-    id: string;
-    userId: string;
-    title?: string;
-    summary: string; // max 220 chars
-    recommendations: string[]; // 3 items, max 220 chars each
-    reflectionQuestion: string; // max 220 chars
-    generatedAt: string;
+    payload: {
+        recommendations: string[]; // 3 items, max 220 chars each
+        reflection_question: string; // max 220 chars
+        summary: string; // max 220 chars
+    };
+    source: "fallback" | "cached" | "cache" | "openai"; // where the insight came from
+    createdAt: string; // ISO timestamp
 };
 
 // Dashboard summary (aggregated view)

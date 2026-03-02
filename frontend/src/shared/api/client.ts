@@ -49,7 +49,17 @@ export async function apiFetch<T>(
     }
 
     if (res.status === 204) return undefined as unknown as T;
-    return (await res.json()) as T;
+
+    // Read response body once and handle empty/null cases
+    const bodyText = await res.text().catch(() => "");
+
+    // Return null for empty responses
+    if (!bodyText || bodyText === "null") {
+        return null as unknown as T;
+    }
+
+    // Parse and return JSON
+    return JSON.parse(bodyText) as T;
 }
 
 // Typed API helpers for common HTTP verbs

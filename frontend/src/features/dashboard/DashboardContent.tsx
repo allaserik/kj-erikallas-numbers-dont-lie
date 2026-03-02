@@ -46,7 +46,26 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
                 />
             )}
 
-            {isAuthenticated && !data.isLoading && !data.error && (
+            {isAuthenticated && !data.isLoading && !data.error && !data.profile && (
+                <Card>
+                    <CardBody>
+                        <div className="space-y-3">
+                            <h3 className="text-lg font-semibold text-slate-900">Complete Your Profile</h3>
+                            <p className="text-sm text-slate-600">
+                                Please fill in your health profile to get started with tracking your wellness.
+                            </p>
+                            <a
+                                href="/profile"
+                                className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
+                            >
+                                Go to Profile →
+                            </a>
+                        </div>
+                    </CardBody>
+                </Card>
+            )}
+
+            {isAuthenticated && !data.isLoading && !data.error && data.profile && (
                 <>
                     <WeightCard latestWeight={data.latestWeight} isLoading={data.isLoading} />
                     <GoalCard activeGoal={data.activeGoal} />

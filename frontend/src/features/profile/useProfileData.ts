@@ -3,6 +3,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { useAuthToken } from "../../shared/auth/useAuthToken";
 import { getHealthProfile, upsertHealthProfile } from "../../shared/api/profile";
+import { recordWeight } from "../../shared/api/weight";
 import { ApiError } from "../../shared/api/client";
 import type { HealthProfile } from "../../shared/types";
 
@@ -131,17 +132,48 @@ export function useProfileData(): ProfileState {
             const token = await getToken();
             if (!token) throw new Error("Not authenticated");
 
+            // Convert frontend form data to backend request format
+            // Backend expects snake_case field names and birth_year (calculated from age)
+            const currentYear = new Date().getFullYear();
+            const birthYear = currentYear - Number(formData.age);
+
+            // Map activityLevel enum to backend format (convert to lowercase snake_case)
+            const activityLevelMap: Record<string, string> = {
+                SEDENTARY: "sedentary",
+                LIGHTLY_ACTIVE: "light",
+                MODERATELY_ACTIVE: "moderate",
+                VERY_ACTIVE: "active",
+                EXTREMELY_ACTIVE: "very_active",
+            };
+
+            const backendRequest = {
+                birth_year: birthYear,
+                height_cm: Number(formData.height),
+                baseline_activity_level: activityLevelMap[formData.activityLevel] || formData.activityLevel,
+                gender: formData.gender,
+                dietary_preferences: [],
+                dietary_restrictions: [],
+                fitness_assessment: null,
+                fitness_assessment_completed: false,
+            };
+
             await upsertHealthProfile(
-                {
-                    height: Number(formData.height),
-                    weight: Number(formData.weight),
-                    age: Number(formData.age),
-                    gender: formData.gender,
-                    activityLevel: formData.activityLevel,
-                    targetWeight: Number(formData.targetWeight),
-                } as Partial<HealthProfile>,
+                backendRequest as unknown as Partial<HealthProfile>,
                 token
             );
+
+            // After successfully saving profile, also record a weight entry with today's date
+            try {
+                const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+                await recordWeight(
+                    { weight: Number(formData.weight), date: today },
+                    token
+                );
+            } catch (weightError) {
+                // Log but don't fail the entire save - profile was saved successfully
+                console.warn("Failed to record weight entry:", weightError);
+            }
+
             setSaveSuccess(true);
             setIsEditing(false);
             setTimeout(() => setSaveSuccess(false), 3000);

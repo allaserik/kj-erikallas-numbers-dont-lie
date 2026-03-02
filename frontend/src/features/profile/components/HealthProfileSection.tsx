@@ -94,7 +94,7 @@ export function HealthProfileSection({
                             <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">Activity Level</div>
                                 <div className="font-medium text-slate-900">
-                                    {profile.activityLevel.replace(/_/g, " ")}
+                                    {profile.activityLevel ? profile.activityLevel.replace(/_/g, " ") : "—"}
                                 </div>
                             </div>
                         </div>

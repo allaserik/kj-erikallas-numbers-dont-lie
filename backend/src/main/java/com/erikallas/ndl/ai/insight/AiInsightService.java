@@ -33,13 +33,8 @@ public class AiInsightService {
     private final HealthSummaryService summaryService;
     private final ObjectMapper om;
 
-    public AiInsightService(
-            AiInsightRepository repo,
-            OpenAiClient openAi,
-            GoalService goalService,
-            HealthProfileService profileService,
-            WeightEntryRepository weightRepo,
-            HealthSummaryService summaryService,
+    public AiInsightService(AiInsightRepository repo, OpenAiClient openAi, GoalService goalService,
+            HealthProfileService profileService, WeightEntryRepository weightRepo, HealthSummaryService summaryService,
             ObjectMapper om) {
         this.repo = repo;
         this.openAi = openAi;
@@ -50,30 +45,22 @@ public class AiInsightService {
         this.om = om;
     }
 
-    public record AiPayload(
-            java.util.List<String> recommendations,
-            String reflection_question,
-            String summary) {
+    public record AiPayload(java.util.List<String> recommendations, String reflection_question, String summary) {
     }
 
-    public record AiInsightResult(
-            AiPayload payload,
-            String source,
-            OffsetDateTime createdAt) {
+    public record AiInsightResult(AiPayload payload, String source, OffsetDateTime createdAt) {
     }
 
     public AiInsightResult getCurrent(UUID userId) {
         var goal = goalService.getActive(userId);
-        if (goal == null) {
-            throw new IllegalStateException("Active goal required");
-        }
-
-        var profile = profileService.find(userId)
-                .orElseThrow(() -> new IllegalStateException("Profile required"));
-
+        var profile = profileService.find(userId).orElse(null);
         var weights = weightRepo.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
-        if (weights.isEmpty()) {
-            throw new IllegalStateException("Weight data required");
+
+        // If missing any requirement for smart insight, fall back to generic
+        if (goal == null || profile == null || weights.isEmpty()) {
+            log.info("Smart insight unavailable (goal={}, profile={}, weights={}). Returning fallback. userId={}",
+                    goal != null, profile != null, !weights.isEmpty(), userId);
+            return fallbackToLast(userId);
         }
 
         var latest = weights.get(0);
@@ -117,20 +104,13 @@ public class AiInsightService {
             String json = openAi.generateInsightJson(systemPrompt, userPrompt);
             AiPayload payload = parseAndValidate(json);
 
-            AiInsightEntity stored = new AiInsightEntity(
-                    UUID.randomUUID(),
-                    userId,
-                    goal.getId(),
-                    inputHash,
-                    openAi.model(),
-                    writeJson(payload),
-                    OffsetDateTime.now());
+            AiInsightEntity stored = new AiInsightEntity(UUID.randomUUID(), userId, goal.getId(), inputHash,
+                    openAi.model(), writeJson(payload), OffsetDateTime.now());
             repo.save(stored);
 
             return new AiInsightResult(payload, "openai", stored.getCreatedAt());
         } catch (Exception e) {
-            log.warn("AI insight generation failed, falling back. userId={}, reason={}",
-                    userId, e.getMessage());
+            log.warn("AI insight generation failed, falling back. userId={}, reason={}", userId, e.getMessage());
             return fallbackToLast(userId);
         }
     }
@@ -143,8 +123,7 @@ public class AiInsightService {
         }
         // structured default fallback (still valid schema)
         AiPayload payload = new AiPayload(
-                java.util.List.of(
-                        "AI is temporarily unavailable. Take a 10-minute walk or do light stretching.",
+                java.util.List.of("AI is temporarily unavailable. Take a 10-minute walk or do light stretching.",
                         "Drink water and plan a short recovery break today.",
                         "Pick one small task and do 10 minutes of focused work with a timer."),
                 "What is the smallest helpful thing you can do in the next 15 minutes?",
@@ -196,10 +175,8 @@ public class AiInsightService {
                 throw new IllegalArgumentException("invalid summary");
             }
 
-            return new AiPayload(
-                    java.util.List.of(recs.get(0).asText(), recs.get(1).asText(), recs.get(2).asText()),
-                    rq.asText(),
-                    sum.asText());
+            return new AiPayload(java.util.List.of(recs.get(0).asText(), recs.get(1).asText(), recs.get(2).asText()),
+                    rq.asText(), sum.asText());
         } catch (Exception e) {
             throw new IllegalArgumentException("AI output not valid JSON schema", e);
         }

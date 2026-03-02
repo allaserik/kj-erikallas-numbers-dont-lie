@@ -28,6 +28,8 @@ export function useDashboardData(): DashboardState {
     const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
     const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
     const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
+
+    // Always fetch insights - backend returns generic fallback if goal/profile missing
     const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
 
     // Determine overall loading state
