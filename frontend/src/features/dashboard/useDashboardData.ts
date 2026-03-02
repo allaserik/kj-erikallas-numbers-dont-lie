@@ -4,7 +4,8 @@ import { getMe, getHealthProfile } from "../../shared/api/profile";
 import { getLatestWeight } from "../../shared/api/weight";
 import { getLatestInsight } from "../../shared/api/insights";
 import { getActiveGoals } from "../../shared/api/goals";
-import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight } from "../../shared/types";
+import { getHealthSummary } from "../../shared/api/summary";
+import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary } from "../../shared/types";
 
 export interface DashboardData {
     me: UserProfile | null;
@@ -12,6 +13,7 @@ export interface DashboardData {
     latestWeight: WeightEntry | null;
     activeGoal: Goal | null;
     insight: Insight | null;
+    summary: HealthSummary | null;
 }
 
 export interface DashboardState extends DashboardData {
@@ -28,14 +30,21 @@ export function useDashboardData(): DashboardState {
     const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
     const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
     const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
+    const summaryQ = useAuthedQuery("summary", getHealthSummary, isAuthenticated);
 
     // Always fetch insights - backend returns generic fallback if goal/profile missing
     const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
 
     // Determine overall loading state
-    const isLoading = meQ.loading || profileQ.loading || latestWeightQ.loading || goalsQ.loading || insightQ.loading;
+    const isLoading =
+        meQ.loading ||
+        profileQ.loading ||
+        latestWeightQ.loading ||
+        goalsQ.loading ||
+        summaryQ.loading ||
+        insightQ.loading;
 
-    // Determine overall error state (return first error found)
+    // Determine overall error state (return first error found, ignore summary errors)
     const error =
         meQ.error ||
         profileQ.error ||
@@ -54,6 +63,7 @@ export function useDashboardData(): DashboardState {
         latestWeight,
         activeGoal,
         insight: insightQ.data || null,
+        summary: summaryQ.data || null,
         isLoading,
         error,
     };

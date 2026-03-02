@@ -63,6 +63,14 @@ export type Insight = {
     createdAt: string; // ISO timestamp
 };
 
+// Health summary with BMI info
+export type HealthSummary = {
+    heightCm: number;
+    latestWeightKg: number;
+    bmi: number; // rounded to 1 decimal
+    weightDelta7d: number | null; // weight change in last 7 days, kg
+};
+
 // Dashboard summary (aggregated view)
 export type DashboardSummary = {
     user: UserProfile;

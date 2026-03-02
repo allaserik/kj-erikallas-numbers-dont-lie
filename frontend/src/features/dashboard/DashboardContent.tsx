@@ -2,6 +2,7 @@ import { Alert } from "../../shared/ui/Alert";
 import { Card, CardBody } from "../../shared/ui/Card";
 import { Spinner } from "../../shared/ui/Spinner";
 import { WeightCard } from "./components/WeightCard";
+import { BMICard } from "./components/BMICard";
 import { GoalCard } from "./components/GoalCard";
 import { InsightCard } from "./components/InsightCard";
 import { QuickNav } from "./components/QuickNav";
@@ -68,6 +69,7 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
             {isAuthenticated && !data.isLoading && !data.error && data.profile && (
                 <>
                     <WeightCard latestWeight={data.latestWeight} isLoading={data.isLoading} />
+                    <BMICard summary={data.summary} isLoading={data.isLoading} />
                     <GoalCard activeGoal={data.activeGoal} />
                     <InsightCard insight={data.insight} />
                     <QuickNav />
