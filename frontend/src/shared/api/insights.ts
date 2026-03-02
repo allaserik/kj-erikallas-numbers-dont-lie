@@ -9,7 +9,7 @@ import type { Insight } from "../types";
  * Get latest AI insight
  */
 export function getLatestInsight(token: string): Promise<Insight | null> {
-    return api.get<Insight | null>("/api/insights/latest", token);
+    return api.get<Insight | null>("/api/insights/current", token);
 }
 
 /**

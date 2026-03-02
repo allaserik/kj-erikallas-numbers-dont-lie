@@ -1,0 +1,58 @@
+import { useAuth0 } from "@auth0/auth0-react";
+import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
+import { getMe, getHealthProfile } from "../../shared/api/profile";
+import { getLatestWeight } from "../../shared/api/weight";
+import { getLatestInsight } from "../../shared/api/insights";
+import { getActiveGoals } from "../../shared/api/goals";
+import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight } from "../../shared/types";
+
+export interface DashboardData {
+    me: UserProfile | null;
+    profile: HealthProfile | null;
+    latestWeight: WeightEntry | null;
+    activeGoal: Goal | null;
+    insight: Insight | null;
+}
+
+export interface DashboardState extends DashboardData {
+    isLoading: boolean;
+    error: Error | null;
+}
+
+// Custom hook to orchestrate all dashboard data fetching
+export function useDashboardData(): DashboardState {
+    const { isAuthenticated } = useAuth0();
+
+    // Load individual data endpoints in parallel
+    const meQ = useAuthedQuery("me", getMe, isAuthenticated);
+    const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
+    const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
+    const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
+    const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
+
+    // Determine overall loading state
+    const isLoading = meQ.loading || profileQ.loading || latestWeightQ.loading || goalsQ.loading || insightQ.loading;
+
+    // Determine overall error state (return first error found)
+    const error =
+        meQ.error ||
+        profileQ.error ||
+        latestWeightQ.error ||
+        goalsQ.error ||
+        insightQ.error ||
+        null;
+
+    // Extract data from individual queries
+    const latestWeight = latestWeightQ.data;
+    const activeGoal = goalsQ.data && goalsQ.data.length > 0 ? goalsQ.data[0] : null;
+
+    return {
+        me: meQ.data || null,
+        profile: profileQ.data || null,
+        latestWeight,
+        activeGoal,
+        insight: insightQ.data || null,
+        isLoading,
+        error,
+    };
+}

@@ -21,8 +21,8 @@ export function Alert({
   return (
     <div className={`rounded-lg border p-3 text-sm ${styles}`}>
       {title && <div className="font-semibold">{title}</div>}
-      {message && <div className="break-words">{message}</div>}
-      {children && <div className="break-words">{children}</div>}
+      {message && <div className="wrap-break-word">{message}</div>}
+      {children && <div className="wrap-break-word">{children}</div>}
     </div>
   );
 }

@@ -64,7 +64,7 @@ public class WeightController {
     }
 
     /**
-     * Get all weight entries for the authenticated user.
+     * Get 30 latest weight entries for the authenticated user.
      * 
      * @param auth JWT authentication token
      * @return list of weight entries
@@ -74,6 +74,19 @@ public class WeightController {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entities = weightService.latest(user.getId());
         return entities.stream().map(ResponseMapper::toWeightEntryResponse).toList();
+    }
+
+        /**
+     * Get the latest weight entry for the authenticated user.
+     * 
+     * @param auth JWT authentication token
+     * @return the latest weight entry
+    */
+   @GetMapping("/api/weight/latest")
+    public WeightEntryResponse getLatest(JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var entity = weightService.latest(user.getId()).stream().findFirst().orElse(null);
+        return ResponseMapper.toWeightEntryResponse(entity);
     }
 
     /**

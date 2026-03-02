@@ -26,7 +26,7 @@ export function getAllGoals(token: string): Promise<Goal[]> {
  * Get active goals only
  */
 export function getActiveGoals(token: string): Promise<Goal[]> {
-    return api.get<Goal[]>("/api/goals?active=true", token);
+    return api.get<Goal[]>("/api/goals/active", token);
 }
 
 /**
