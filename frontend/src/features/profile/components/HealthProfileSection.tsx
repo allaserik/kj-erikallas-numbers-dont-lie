@@ -68,19 +68,19 @@ export function HealthProfileSection({
                             <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">Current Weight</div>
                                 <div className="text-lg font-semibold text-slate-900">
-                                    {profile.weight} kg
+                                    {formData.weight ? `${formData.weight} kg` : "—"}
                                 </div>
                             </div>
                             <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">Age</div>
                                 <div className="text-lg font-semibold text-slate-900">
-                                    {profile.age}
+                                    {formData.age || "—"}
                                 </div>
                             </div>
                             <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">Target Weight</div>
                                 <div className="text-lg font-semibold text-slate-900">
-                                    {profile.targetWeight} kg
+                                    {formData.targetWeight ? `${formData.targetWeight} kg` : "—"}
                                 </div>
                             </div>
                         </div>

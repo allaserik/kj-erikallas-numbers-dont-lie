@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { useAuthToken } from "../../shared/auth/useAuthToken";
 import { getHealthProfile, upsertHealthProfile } from "../../shared/api/profile";
-import { recordWeight } from "../../shared/api/weight";
+import { recordWeight, getLatestWeight } from "../../shared/api/weight";
 import { ApiError } from "../../shared/api/client";
 import type { HealthProfile } from "../../shared/types";
 
@@ -51,11 +51,11 @@ function validateForm(data: FormData): ValidationErrors {
     return errors;
 }
 
-function initializeFormData(profile: HealthProfile | null): FormData {
+function initializeFormData(profile: HealthProfile | null, latestWeight?: number): FormData {
     if (profile) {
         return {
             height: profile.height || "",
-            weight: profile.weight || "",
+            weight: latestWeight || profile.weight || "",
             age: profile.age || "",
             gender: profile.gender || "OTHER",
             activityLevel: profile.activityLevel || "MODERATELY_ACTIVE",
@@ -64,7 +64,7 @@ function initializeFormData(profile: HealthProfile | null): FormData {
     }
     return {
         height: "",
-        weight: "",
+        weight: latestWeight || "",
         age: "",
         gender: "OTHER",
         activityLevel: "MODERATELY_ACTIVE",
@@ -85,10 +85,18 @@ export function useProfileData(): ProfileState {
     // Fetch health profile
     const profileQ = useAuthedQuery("healthProfile", getHealthProfile, isAuthenticated && !isEditing);
 
-    // Initialize form with profile data
-    const [formData, setFormData] = useState<FormData>(() =>
-        initializeFormData(profileQ.data || null)
-    );
+    // Fetch latest weight entry (shown in profile view)
+    const weightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated && !isEditing);
+
+    // Initialize form as empty - will be populated by useEffect below
+    const [formData, setFormData] = useState<FormData>({
+        height: "",
+        weight: "",
+        age: "",
+        gender: "OTHER",
+        activityLevel: "MODERATELY_ACTIVE",
+        targetWeight: "",
+    });
 
     const handleInputChange = useCallback(
         (field: keyof FormData, value: string | number) => {
@@ -107,15 +115,46 @@ export function useProfileData(): ProfileState {
     const handleEdit = useCallback(() => {
         setIsEditing(true);
         if (profileQ.data) {
-            setFormData(initializeFormData(profileQ.data));
+            setFormData(initializeFormData(profileQ.data, weightQ.data?.weight));
         }
-    }, [profileQ.data]);
+    }, [profileQ.data, weightQ.data]);
 
     const handleCancel = useCallback(() => {
         setIsEditing(false);
         setSaveError(null);
         setValidationErrors({});
     }, []);
+
+    // Update form data when profile or weight data loads
+    useEffect(() => {
+        if (!isEditing) {
+            setFormData(
+                initializeFormData(profileQ.data || null, weightQ.data?.weight)
+            );
+        }
+    }, [profileQ.data, weightQ.data, isEditing]);
+
+    // After successfully saving, fetch and preserve the latest weight
+    useEffect(() => {
+        if (saveSuccess && isAuthenticated) {
+            const fetchAndUpdateWeight = async () => {
+                try {
+                    const token = await getToken();
+                    if (!token) return;
+                    const latestWeight = await getLatestWeight(token);
+                    if (latestWeight) {
+                        setFormData((prev) => ({
+                            ...prev,
+                            weight: latestWeight.weight || prev.weight,
+                        }));
+                    }
+                } catch (error) {
+                    console.warn("Failed to fetch latest weight:", error);
+                }
+            };
+            fetchAndUpdateWeight();
+        }
+    }, [saveSuccess, isAuthenticated, getToken]);
 
     const handleSave = useCallback(async () => {
         setSaveError(null);

@@ -5,27 +5,62 @@
 import { api } from "./client";
 import type { WeightEntry, PaginatedResponse } from "../types";
 
+// Backend response structure (snake_case)
+type WeightEntryBackendResponse = {
+    id: string;
+    weight_kg: number;
+    measured_at: string; // ISO timestamp
+    note?: string;
+};
+
+// Transform backend response to frontend type
+function transformWeightEntry(data: WeightEntryBackendResponse | null): WeightEntry | null {
+    if (!data) return null;
+
+    const date = data.measured_at ? new Date(data.measured_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+
+    return {
+        id: data.id,
+        userId: "", // Backend doesn't include userId in response
+        weight: data.weight_kg,
+        date,
+        notes: data.note,
+        createdAt: data.measured_at,
+    };
+}
+
 /**
  * Record a weight check-in
+ * Frontend format: { weight: number, date?: string (YYYY-MM-DD), notes?: string }
+ * Backend expects: { weightKg: number, measuredAt?: OffsetDateTime, note?: string }
  */
-export function recordWeight(
+export async function recordWeight(
     data: { weight: number; date?: string; notes?: string },
     token: string
 ): Promise<WeightEntry> {
-    return api.post<WeightEntry>("/api/weight", data, token);
+    // Transform frontend format to backend format
+    const backendRequest = {
+        weightKg: data.weight,
+        measuredAt: data.date ? new Date(`${data.date}T12:00:00Z`).toISOString() : undefined,
+        note: data.notes,
+    };
+
+    const response = await api.post<WeightEntryBackendResponse>("/api/weight", backendRequest, token);
+    return transformWeightEntry(response)!;
 }
 
 /**
  * Get latest weight entry
  */
-export function getLatestWeight(token: string): Promise<WeightEntry | null> {
-    return api.get<WeightEntry | null>("/api/weight/latest", token);
+export async function getLatestWeight(token: string): Promise<WeightEntry | null> {
+    const response = await api.get<WeightEntryBackendResponse | null>("/api/weight/latest", token);
+    return transformWeightEntry(response);
 }
 
 /**
  * Get weight history (paginated)
  */
-export function getWeightHistory(
+export async function getWeightHistory(
     params: { page?: number; size?: number; sort?: string },
     token: string
 ): Promise<PaginatedResponse<WeightEntry>> {
@@ -36,30 +71,42 @@ export function getWeightHistory(
     );
     const queryStr = query.toString();
     const path = `/api/weight/history${queryStr ? "?" + queryStr : ""}`;
-    return api.get<PaginatedResponse<WeightEntry>>(path, token);
+    const response = await api.get<PaginatedResponse<WeightEntryBackendResponse>>(path, token);
+    return {
+        ...response,
+        data: response.data.map(transformWeightEntry).filter((w) => w !== null) as WeightEntry[],
+    };
 }
 
 /**
  * Get weight entries for a specific date range
  */
-export function getWeightByDateRange(
+export async function getWeightByDateRange(
     startDate: string,
     endDate: string,
     token: string
 ): Promise<WeightEntry[]> {
     const query = new URLSearchParams({ startDate, endDate }).toString();
-    return api.get<WeightEntry[]>(`/api/weight/range?${query}`, token);
+    const response = await api.get<WeightEntryBackendResponse[]>(`/api/weight/range?${query}`, token);
+    return response.map(transformWeightEntry).filter((w) => w !== null) as WeightEntry[];
 }
 
 /**
  * Update weight entry
  */
-export function updateWeightEntry(
+export async function updateWeightEntry(
     id: string,
     data: Partial<WeightEntry>,
     token: string
 ): Promise<WeightEntry> {
-    return api.put<WeightEntry>(`/api/weight/${id}`, data, token);
+    // Transform frontend format to backend format
+    const backendRequest = {
+        weightKg: data.weight,
+        measuredAt: data.date ? new Date(`${data.date}T12:00:00Z`).toISOString() : undefined,
+        note: data.notes,
+    };
+    const response = await api.put<WeightEntryBackendResponse>(`/api/weight/${id}`, backendRequest, token);
+    return transformWeightEntry(response)!;
 }
 
 /**
