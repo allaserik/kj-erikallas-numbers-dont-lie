@@ -24,6 +24,12 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://kj-ea-ndl.eu.auth0.com/
+  # Email config for local development (disabled, logs to console)
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
 
 management:
   endpoints:
@@ -43,3 +49,10 @@ app:
   jwt:
     access-token-expiry-minutes: 15
     issuer: ndl-api
+  email:
+    # In local dev, email is disabled so codes appear in console logs
+    enabled: false
+    from-address: noreply@numbersdontlie.app
+    from-name: Numbers Don't Lie
+    # Frontend URL for verification links (used in email)
+    frontend-url: http://localhost:5173

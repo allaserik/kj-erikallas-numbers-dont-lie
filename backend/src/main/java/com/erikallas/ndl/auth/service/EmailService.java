@@ -3,6 +3,7 @@ package com.erikallas.ndl.auth.service;
 import com.erikallas.ndl.user.model.UserEntity;
 import com.erikallas.ndl.user.model.EmailVerificationCodeEntity;
 import com.erikallas.ndl.user.model.EmailVerificationCodeRepository;
+import com.erikallas.ndl.email.EmailSender;
 import java.time.OffsetDateTime;
 import java.util.Random;
 import java.util.UUID;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmailService {
 
     private final EmailVerificationCodeRepository codeRepository;
+    private final EmailSender emailSender;
     private final Random random = new Random();
 
     // Email verification code validity period
@@ -20,8 +22,9 @@ public class EmailService {
     // Minimum time between resend attempts (minutes)
     private static final int RESEND_COOLDOWN_MINUTES = 1;
 
-    public EmailService(EmailVerificationCodeRepository codeRepository) {
+    public EmailService(EmailVerificationCodeRepository codeRepository, EmailSender emailSender) {
         this.codeRepository = codeRepository;
+        this.emailSender = emailSender;
     }
 
     /**
@@ -46,9 +49,8 @@ public class EmailService {
 
         codeRepository.save(entity);
 
-        // TODO: Send email with code to user.getEmail()
-        // For now, just log or return the code for testing
-        System.out.println("Verification code for " + user.getEmail() + ": " + code);
+        // Send verification code to email (or log if testing)
+        emailSender.sendVerificationCode(user.getEmail(), code);
 
         return code;
     }

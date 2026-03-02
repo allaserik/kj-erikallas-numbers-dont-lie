@@ -35,6 +35,7 @@ public class RefreshTokenService {
         String tokenString = UUID.randomUUID().toString();
 
         var entity = new RefreshTokenEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(userId);
         entity.setToken(tokenString);
         entity.setCreatedAt(OffsetDateTime.now());
@@ -51,6 +52,7 @@ public class RefreshTokenService {
     @Transactional
     public RefreshTokenEntity createRefreshToken(com.erikallas.ndl.user.model.UserEntity user) {
         var entity = new RefreshTokenEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());
         entity.setToken(UUID.randomUUID().toString());
         entity.setCreatedAt(OffsetDateTime.now());
