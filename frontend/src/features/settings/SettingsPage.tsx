@@ -89,10 +89,10 @@ export default function SettingsPage() {
                                     <p className="text-2 text-slate-600">
                                         {userProfile?.createdAt
                                             ? new Date(userProfile.createdAt).toLocaleDateString("en-US", {
-                                                  year: "numeric",
-                                                  month: "long",
-                                                  day: "numeric",
-                                              })
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                            })
                                             : "—"}
                                     </p>
                                 </div>

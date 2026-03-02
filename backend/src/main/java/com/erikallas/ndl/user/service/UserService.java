@@ -41,8 +41,8 @@ public class UserService {
     }
 
     /**
-     * Convenience method: Extract auth0Sub and email from JWT, then ensure user exists.
-     * Email is extracted from the "email" claim if present.
+     * Convenience method: Extract auth0Sub and email from JWT, then ensure user
+     * exists. Email is extracted from the "email" claim if present.
      */
     @Transactional
     public UserEntity ensureUserFromJwt(JwtAuthenticationToken auth) {
