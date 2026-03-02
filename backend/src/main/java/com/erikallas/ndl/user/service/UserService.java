@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import com.erikallas.ndl.user.model.UserEntity;
 import com.erikallas.ndl.user.model.UserRepository;
 
@@ -37,5 +38,16 @@ public class UserService {
         }
 
         return user;
+    }
+
+    /**
+     * Convenience method: Extract auth0Sub and email from JWT, then ensure user exists.
+     * Email is extracted from the "email" claim if present.
+     */
+    @Transactional
+    public UserEntity ensureUserFromJwt(JwtAuthenticationToken auth) {
+        String auth0Sub = auth.getToken().getSubject();
+        String email = auth.getToken().getClaimAsString("email");
+        return ensureUser(auth0Sub, email);
     }
 }

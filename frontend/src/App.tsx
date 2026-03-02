@@ -6,6 +6,7 @@ import TrendsPage from './features/trends/TrendsPage';
 import GoalsPage from './features/goals/GoalsPage';
 import CheckInPage from './features/checkin/CheckInPage';
 import ProfilePage from './features/profile/ProfilePage';
+import SettingsPage from './features/settings/SettingsPage';
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginModal } from './features/auth/LoginModal';
 import { SplashScreen } from './shared/ui/SplashScreen';
@@ -33,6 +34,7 @@ function App() {
               <Route path="goals" element={<GoalsPage />} />
               <Route path="checkin" element={<CheckInPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

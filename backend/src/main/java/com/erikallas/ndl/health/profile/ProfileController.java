@@ -33,7 +33,7 @@ public class ProfileController {
      */
     @GetMapping("/api/profile")
     public HealthProfileResponse getProfile(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = profileService.find(user.getId()).orElse(null);
         return ResponseMapper.toHealthProfileResponse(entity);
     }
@@ -47,7 +47,7 @@ public class ProfileController {
     @PostMapping("/api/profile")
     public HealthProfileResponse upsertProfile(@Valid @RequestBody HealthProfileRequest request,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var profile = profileService.upsert(user.getId(), request.getBirthYear(), request.getGender(),
                 request.getHeightCm(), request.getBaselineActivityLevel(), request.getDietaryPreferences(),
                 request.getDietaryRestrictions(), request.getFitnessAssessment(),
@@ -67,7 +67,7 @@ public class ProfileController {
     @DeleteMapping("/api/profile")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteProfile(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = profileService.find(user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Health profile");
         OwnershipValidator.validateOwnership(entity.getUserId(), user.getId(), "health profile");
