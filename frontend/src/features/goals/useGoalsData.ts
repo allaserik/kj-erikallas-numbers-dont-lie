@@ -1,7 +1,6 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { useState, useCallback, useRef } from "react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
-import { useAuthToken } from "../../shared/auth/useAuthToken";
 import { getAllGoals, getActiveGoals, createGoal, updateGoal, deleteGoal } from "../../shared/api/goals";
 import type { Goal } from "../../shared/types";
 
@@ -17,7 +16,6 @@ export interface GoalsState {
 
 export function useGoalsData() {
     const { isAuthenticated } = useAuth0();
-    const getToken = useAuthToken();
     const [isCreating, setIsCreating] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);

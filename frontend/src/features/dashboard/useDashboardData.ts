@@ -55,7 +55,7 @@ export function useDashboardData(): DashboardState {
 
     // Extract data from individual queries
     const latestWeight = latestWeightQ.data;
-    const activeGoal = goalsQ.data && goalsQ.data.length > 0 ? goalsQ.data[0] : null;
+    const activeGoal = goalsQ.data || null;
 
     return {
         me: meQ.data || null,
