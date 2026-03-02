@@ -5,6 +5,7 @@ import com.erikallas.ndl.user.model.EmailVerificationCodeEntity;
 import com.erikallas.ndl.user.model.EmailVerificationCodeRepository;
 import java.time.OffsetDateTime;
 import java.util.Random;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,7 @@ public class EmailService {
         String code = String.format("%06d", random.nextInt(1000000));
 
         var entity = new EmailVerificationCodeEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());
         entity.setCode(code);
         entity.setCreatedAt(OffsetDateTime.now());

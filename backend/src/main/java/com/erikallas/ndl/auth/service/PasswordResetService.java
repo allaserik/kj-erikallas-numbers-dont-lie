@@ -80,6 +80,7 @@ public class PasswordResetService {
         String token = UUID.randomUUID().toString();
 
         var entity = new PasswordResetTokenEntity();
+        entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());
         entity.setToken(token);
         entity.setCreatedAt(OffsetDateTime.now());
