@@ -10,13 +10,27 @@ import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { useAuth0 } from '@auth0/auth0-react';
 import { LoginModal } from './features/auth/LoginModal';
 import { SplashScreen } from './shared/ui/SplashScreen';
+import { useLocalAuth } from './shared/auth/useLocalAuth';
+import { useEffect, useState } from 'react';
 
 
 // App.tsx sets up routing and uses AppShell as a layout route.
 // Email verification is public (accessible without auth)
 // Unauthenticated users see LoginModal when accessing protected routes
 function App() {
-  const { isAuthenticated, isLoading } = useAuth0();
+  const { isAuthenticated: auth0Authenticated, isLoading } = useAuth0();
+  const { isAuthenticated: localAuthenticated } = useLocalAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(auth0Authenticated || localAuthenticated);
+
+  // Listen for local auth changes (login/logout)
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setIsAuthenticated(auth0Authenticated || localAuthenticated);
+    };
+
+    window.addEventListener('localAuthChanged', handleAuthChange);
+    return () => window.removeEventListener('localAuthChanged', handleAuthChange);
+  }, [auth0Authenticated, localAuthenticated]);
 
   // Show splash screen while loading auth state
   if (isLoading) return <SplashScreen />;

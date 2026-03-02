@@ -23,8 +23,8 @@ export function LoginModal() {
                     <button
                         onClick={() => setAuthMode('oauth')}
                         className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors ${authMode === 'oauth'
-                                ? 'border-b-2 border-green-600 text-green-700'
-                                : 'text-slate-600 hover:text-slate-800'
+                            ? 'border-b-2 border-green-600 text-green-700'
+                            : 'text-slate-600 hover:text-slate-800'
                             }`}
                     >
                         OAuth
@@ -32,8 +32,8 @@ export function LoginModal() {
                     <button
                         onClick={() => setAuthMode('email')}
                         className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors ${authMode === 'email'
-                                ? 'border-b-2 border-green-600 text-green-700'
-                                : 'text-slate-600 hover:text-slate-800'
+                            ? 'border-b-2 border-green-600 text-green-700'
+                            : 'text-slate-600 hover:text-slate-800'
                             }`}
                     >
                         Email
@@ -57,8 +57,8 @@ export function LoginModal() {
                     <EmailPasswordForm
                         mode={emailMode}
                         onSuccess={() => {
-                            // On success, the user is authenticated and page will reload
-                            window.location.href = '/';
+                            // Modal will automatically disappear when auth state updates
+                            // No reload needed - just let the auth state change trigger re-render
                         }}
                         onSwitchMode={() => {
                             setEmailMode(emailMode === 'login' ? 'register' : 'login');

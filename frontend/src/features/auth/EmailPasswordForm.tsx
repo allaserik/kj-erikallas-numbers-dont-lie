@@ -4,10 +4,11 @@ import { Button } from '../../shared/ui/Button';
 import { Alert } from '../../shared/ui/Alert';
 import { Spinner } from '../../shared/ui/Spinner';
 import { registerUser, loginUser } from '../../api/auth';
+import { useLocalAuth } from '../../shared/auth/useLocalAuth';
 
 export interface EmailPasswordFormProps {
     mode: 'login' | 'register';
-    onSuccess: (accessToken: string) => void;
+    onSuccess: () => void;
     onSwitchMode: () => void;
 }
 
@@ -18,6 +19,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const { login } = useLocalAuth();
 
     const isRegister = mode === 'register';
 
@@ -57,10 +59,10 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
             } else {
                 // Login
                 const response = await loginUser(email, password);
-                // Store token and call success callback
-                localStorage.setItem('accessToken', response.accessToken);
-                localStorage.setItem('refreshToken', response.refreshToken);
-                onSuccess(response.accessToken);
+                // Store tokens and update auth state
+                login(response.accessToken, response.refreshToken);
+                // Trigger success callback to close modal
+                onSuccess();
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
