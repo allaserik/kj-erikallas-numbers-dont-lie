@@ -8,7 +8,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
@@ -61,6 +63,19 @@ public class GoalController {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = goalService.getActive(user.getId());
         return ResponseMapper.toGoalResponse(entity);
+    }
+
+    /**
+     * Get all goals (active and inactive) for the authenticated user.
+     * 
+     * @param auth JWT authentication token
+     * @return list of all goals for the user, ordered by creation date descending
+     */
+    @GetMapping("/api/goals")
+    public List<GoalResponse> getAll(JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var entities = goalRepository.findAllByUserIdNotDeleted(user.getId());
+        return entities.stream().map(ResponseMapper::toGoalResponse).collect(Collectors.toList());
     }
 
     /**

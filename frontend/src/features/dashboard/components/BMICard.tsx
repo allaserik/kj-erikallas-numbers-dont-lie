@@ -48,13 +48,6 @@ export const BMICard: React.FC<BMICardProps> = ({ summary, isLoading = false }) 
         red: "bg-red-100 text-red-900",
     };
 
-    const indicatorColors = {
-        blue: "bg-blue-400",
-        green: "bg-green-500",
-        yellow: "bg-yellow-400",
-        red: "bg-red-500",
-    };
-
     return (
         <Card>
             <div className={`p-5 border rounded-lg ${colorClasses[classification.color]}`}>
@@ -89,10 +82,10 @@ export const BMICard: React.FC<BMICardProps> = ({ summary, isLoading = false }) 
                             7-day change:{" "}
                             <span
                                 className={`font-semibold ${summary.weightDelta7d > 0
-                                        ? "text-red-600"
-                                        : summary.weightDelta7d < 0
-                                            ? "text-green-600"
-                                            : "text-gray-600"
+                                    ? "text-red-600"
+                                    : summary.weightDelta7d < 0
+                                        ? "text-green-600"
+                                        : "text-gray-600"
                                     }`}
                             >
                                 {summary.weightDelta7d > 0 ? "+" : ""}

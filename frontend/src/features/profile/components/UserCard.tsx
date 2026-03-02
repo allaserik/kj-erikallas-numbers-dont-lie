@@ -1,5 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { Card, CardBody } from "../../../shared/ui/Card";
+import { Card } from "../../../shared/ui/Card";
 
 interface UserCardProps {
     isAuthenticated: boolean;

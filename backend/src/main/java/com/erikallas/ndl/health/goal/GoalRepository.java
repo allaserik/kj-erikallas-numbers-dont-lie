@@ -19,6 +19,10 @@ public interface GoalRepository extends JpaRepository<GoalEntity, UUID> {
 
     List<GoalEntity> findByUserIdAndActiveTrue(UUID userId);
 
+    // Get all non-deleted goals for user
+    @Query("SELECT g FROM GoalEntity g WHERE g.userId = :userId AND g.deletedAt IS NULL ORDER BY g.createdAt DESC")
+    List<GoalEntity> findAllByUserIdNotDeleted(@Param("userId") UUID userId);
+
     // Ownership verification
     @Query("SELECT g FROM GoalEntity g WHERE g.id = :id AND g.userId = :userId AND g.deletedAt IS NULL")
     Optional<GoalEntity> findByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);

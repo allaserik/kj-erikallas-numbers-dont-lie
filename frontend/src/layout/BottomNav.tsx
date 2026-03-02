@@ -3,6 +3,7 @@ import {
     HomeIcon,
     PlusCircleIcon,
     ChartBarIcon,
+    AdjustmentsHorizontalIcon,
     UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
@@ -45,6 +46,17 @@ export default function BottomNav() {
                 >
                     <ChartBarIcon className="h-6 w-6" />
                     <span>Trends</span>
+                </NavLink>
+                {/* Goals */}
+                <NavLink
+                    to="/goals"
+                    className={({ isActive }) =>
+                        `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs rounded-md transition-colors ${isActive ? "text-green-700 bg-green-50" : "text-slate-600"}`
+                    }
+                    aria-label="Goals"
+                >
+                    <AdjustmentsHorizontalIcon className="h-6 w-6" />
+                    <span>Goals</span>
                 </NavLink>
                 {/* Profile */}
                 <NavLink

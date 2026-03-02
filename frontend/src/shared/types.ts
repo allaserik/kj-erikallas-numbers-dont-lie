@@ -46,6 +46,7 @@ export type Goal = {
     description?: string;
     goalType: "WEIGHT_LOSS" | "WEIGHT_GAIN" | "MAINTENANCE" | "STRENGTH" | "ENDURANCE" | "GENERAL_WELLNESS";
     targetValue?: number; // e.g., target weight in kg
+    targetActivityDaysPerWeek?: number; // For activity goals, target days per week
     targetDate: string; // ISO date
     isActive: boolean;
     progress?: number; // 0-100 percentage
