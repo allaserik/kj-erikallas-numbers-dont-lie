@@ -14,12 +14,16 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSAlgorithmFamilyJWSKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
 @Configuration
 public class SecurityConfig {
@@ -46,20 +50,20 @@ public class SecurityConfig {
     }
 
     /**
-     * Validates that the JWT contains the expected audience. Auth0 access tokens
-     * include "aud" and this prevents accepting tokens meant for a different API.
+     * Generate RSA key pair for signing local JWT tokens (email/password auth).
+     * Created as a bean so it's consistent across encoder and decoder.
      */
     @Bean
-    public JwtDecoder jwtDecoder(@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
-        NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
-
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
-        OAuth2TokenValidator<Jwt> withAudience = this::validateAudience;
-
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
-        return decoder;
+    public JWKSource<SecurityContext> localJwkSource() throws Exception {
+        RSAKey key = new RSAKeyGenerator(2048).generate();
+        JWKSet jwkSet = new JWKSet(key);
+        return new ImmutableJWKSet<>(jwkSet);
     }
 
+    /**
+     * Validates that Auth0 JWT contains the expected audience.
+     * Auth0 access tokens include "aud" to prevent token misuse across APIs.
+     */
     private OAuth2TokenValidatorResult validateAudience(Jwt jwt) {
         List<String> audiences = jwt.getAudience();
         if (audiences != null && audiences.contains(audience)) {
@@ -70,14 +74,59 @@ public class SecurityConfig {
     }
 
     /**
-     * Bean for encoding (generating) JWTs for email/password login. Creates a new
-     * RSA key pair on startup for signing tokens. For production, use a persistent
-     * key from a key store.
+     * Decoder for Auth0 OAuth2 tokens.
+     * Validates issuer, signature, and audience against Auth0 configuration.
      */
     @Bean
-    public JwtEncoder jwtEncoder() throws Exception {
-        RSAKey key = new RSAKeyGenerator(2048).generate();
-        JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(key));
-        return new NimbusJwtEncoder(jwks);
+    public JwtDecoder auth0Decoder(@Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
+        NimbusJwtDecoder decoder = JwtDecoders.fromIssuerLocation(issuer);
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(issuer);
+        OAuth2TokenValidator<Jwt> withAudience = this::validateAudience;
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(withIssuer, withAudience));
+        return decoder;
+    }
+
+    /**
+     * Decoder for local email/password JWT tokens.
+     * Validates issuer and signature using the local RSA key.
+     */
+    @Bean
+    public JwtDecoder localJwtDecoder(JWKSource<SecurityContext> localJwkSource) {
+        DefaultJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
+        JWSKeySelector<SecurityContext> keySelector = new JWSAlgorithmFamilyJWSKeySelector<SecurityContext>(
+                JWSAlgorithm.Family.RSA, localJwkSource);
+        processor.setJWSKeySelector(keySelector);
+
+        NimbusJwtDecoder decoder = new NimbusJwtDecoder(processor);
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer("numbers-dont-lie");
+        decoder.setJwtValidator(withIssuer);
+        return decoder;
+    }
+
+    /**
+     * Multi-issuer JWT decoder that routes tokens to the appropriate decoder.
+     * - Auth0 tokens (issuer: Auth0 domain) → auth0Decoder
+     * - Local tokens (issuer: "numbers-dont-lie") → localJwtDecoder
+     * 
+     * This allows supporting both OAuth2 and email/password authentication.
+     * Marked as @Primary so Spring Security uses this one when requesting JwtDecoder.
+     */
+    @Bean
+    @org.springframework.context.annotation.Primary
+    public JwtDecoder jwtDecoder(
+        @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String auth0Issuer,
+        JwtDecoder auth0Decoder,
+        JwtDecoder localJwtDecoder
+    ) {
+        return new MultiIssuerJwtDecoder(auth0Issuer, auth0Decoder, localJwtDecoder);
+    }
+
+    /**
+     * Bean for encoding (generating) JWTs for email/password login.
+     * Uses the same RSA key as the localJwtDecoder for validation.
+     */
+    @Bean
+    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> localJwkSource) {
+        return new NimbusJwtEncoder(localJwkSource);
     }
 }

@@ -1,5 +1,5 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 import { getMe } from "../../shared/api/profile";
 import { Card, CardBody, CardTitle } from "../../shared/ui/Card";
 import { Alert } from "../../shared/ui/Alert";
@@ -7,7 +7,7 @@ import { Spinner } from "../../shared/ui/Spinner";
 import type { UserProfile } from "../../shared/types";
 
 export default function SettingsPage() {
-    const { isAuthenticated, user: auth0User } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
     const meQ = useAuthedQuery("me", getMe, isAuthenticated);
 
     const userProfile: UserProfile | null = meQ.data || null;

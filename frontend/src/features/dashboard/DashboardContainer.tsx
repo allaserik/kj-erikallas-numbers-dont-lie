@@ -1,9 +1,9 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { DashboardContent } from "./DashboardContent";
 import { useDashboardData } from "./useDashboardData";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 
 export function DashboardContainer() {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
     const data = useDashboardData();
 
     return <DashboardContent isAuthenticated={isAuthenticated} data={data} />;

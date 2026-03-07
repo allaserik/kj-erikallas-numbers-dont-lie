@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 import { useAuthToken } from "../../shared/auth/useAuthToken";
 import { useGoalsData } from "./useGoalsData";
 import { Alert } from "../../shared/ui/Alert";
@@ -12,7 +12,7 @@ import { CreateGoalModal } from "./components/CreateGoalModal";
 import type { Goal } from "../../shared/types";
 
 export default function GoalsPage() {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
     const getToken = useAuthToken();
     const { activeGoal, allGoals, isLoading, error, isCreating, isDeleting, createNewGoal, updateExistingGoal, deleteExistingGoal } = useGoalsData();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);

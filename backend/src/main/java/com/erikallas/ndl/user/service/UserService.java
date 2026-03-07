@@ -2,6 +2,8 @@ package com.erikallas.ndl.user.service;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -11,6 +13,7 @@ import com.erikallas.ndl.user.model.UserRepository;
 @Service
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository repo;
 
     public UserService(UserRepository repo) {
@@ -19,8 +22,11 @@ public class UserService {
 
     @Transactional
     public UserEntity ensureUser(String auth0Sub, String emailOrNull) {
+        log.debug("ensureUser called: auth0Sub={}, email={}", auth0Sub, emailOrNull);
+
         var user = repo.findByAuth0Sub(auth0Sub).orElseGet(() -> {
             // First login: create new user
+            log.info("Creating new user: auth0Sub={}, email={}", auth0Sub, emailOrNull);
             var newUser = new UserEntity(UUID.randomUUID(), auth0Sub, emailOrNull, OffsetDateTime.now());
             // Auth0 email is already verified
             if (emailOrNull != null) {
@@ -31,6 +37,8 @@ public class UserService {
 
         // Sync email on every login (Auth0 may change user email)
         if (emailOrNull != null && !emailOrNull.equals(user.getEmail())) {
+            log.info("Updating user email: auth0Sub={}, oldEmail={}, newEmail={}", auth0Sub, user.getEmail(),
+                    emailOrNull);
             user.setEmail(emailOrNull);
             user.setEmailVerified(true);
             user.setUpdatedAt(OffsetDateTime.now());
@@ -48,6 +56,7 @@ public class UserService {
     public UserEntity ensureUserFromJwt(JwtAuthenticationToken auth) {
         String auth0Sub = auth.getToken().getSubject();
         String email = auth.getToken().getClaimAsString("email");
+        log.info("ensureUserFromJwt called: sub={}, email={}", auth0Sub, email);
         return ensureUser(auth0Sub, email);
     }
 }

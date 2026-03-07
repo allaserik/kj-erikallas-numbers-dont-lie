@@ -12,6 +12,15 @@ export interface AuthRegisterRequest {
     password: string;
 }
 
+// Login response as returned by backend (snake_case JSON)
+interface LoginResponseJson {
+    access_token: string;
+    refresh_token: string;
+    token_type?: string;
+    expires_in?: number;
+}
+
+// Normalized login response (camelCase)
 export interface LoginResponse {
     accessToken: string;
     refreshToken: string;
@@ -35,7 +44,7 @@ export async function registerUser(email: string, password: string): Promise<Reg
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password } as AuthRegisterRequest),
+        body: JSON.stringify({ email, password } as AuthLoginRequest),
     });
 
     if (!response.ok) {
@@ -64,5 +73,9 @@ export async function loginUser(email: string, password: string): Promise<LoginR
         throw new Error(error.message || 'Login failed');
     }
 
-    return response.json();
+    const data: LoginResponseJson = await response.json();
+    return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+    };
 }

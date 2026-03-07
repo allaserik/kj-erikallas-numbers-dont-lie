@@ -7,40 +7,14 @@ import GoalsPage from './features/goals/GoalsPage';
 import CheckInPage from './features/checkin/CheckInPage';
 import ProfilePage from './features/profile/ProfilePage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
-import { useAuth0 } from '@auth0/auth0-react';
 import { LoginModal } from './features/auth/LoginModal';
 import { SplashScreen } from './shared/ui/SplashScreen';
-import { useLocalAuth } from './shared/auth/useLocalAuth';
-import { useEffect, useState } from 'react';
+import { useAppAuth } from './shared/auth/AuthContext';
 
-
-// App.tsx sets up routing and uses AppShell as a layout route.
-// Email verification is public (accessible without auth)
-// Unauthenticated users see LoginModal when accessing protected routes
+// App: Uses centralized AuthContext from AuthProvider
+// All auth checks happen in AuthContext, App just consumes unified state
 function App() {
-  const { isAuthenticated: auth0Authenticated, isLoading } = useAuth0();
-  const localAuth = useLocalAuth();
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return auth0Authenticated || localAuth.isAuthenticated;
-  });
-
-  // Update auth state when either Auth0 or local auth changes
-  useEffect(() => {
-    const newAuthState = auth0Authenticated || localAuth.isAuthenticated;
-    setIsAuthenticated(newAuthState);
-  }, [auth0Authenticated, localAuth.isAuthenticated]);
-
-  // Listen for local auth changes (login/logout)
-  useEffect(() => {
-    const handleAuthChange = () => {
-      const localAuthState = localAuth.getAuthState();
-      const newAuthState = auth0Authenticated || localAuthState.isAuthenticated;
-      setIsAuthenticated(newAuthState);
-    };
-
-    window.addEventListener('localAuthChanged', handleAuthChange);
-    return () => window.removeEventListener('localAuthChanged', handleAuthChange);
-  }, [auth0Authenticated, localAuth]);
+  const { isAuthenticated, isLoading } = useAppAuth();
 
   // Show splash screen while loading auth state
   if (isLoading) return <SplashScreen />;

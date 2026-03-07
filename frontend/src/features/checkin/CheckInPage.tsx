@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 import { useAuthToken } from "../../shared/auth/useAuthToken";
 import { recordWeight } from "../../shared/api/weight";
 import { Button } from "../../shared/ui/Button";
@@ -24,7 +24,7 @@ function validateForm(weight: string): ValidationErrors {
 
 // CheckInPage: Quick weight check-in
 export default function CheckInPage() {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
     const getToken = useAuthToken();
     const [weight, setWeight] = useState("");
     const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // Today's date
