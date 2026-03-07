@@ -1,4 +1,4 @@
-package com.erikallas.ndl.user.service;
+package com.erikallas.ndl.auth.user;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -6,9 +6,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserRepository;
+
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import com.erikallas.ndl.user.model.UserEntity;
-import com.erikallas.ndl.user.model.UserRepository;
 
 @Service
 public class UserService {

@@ -1,13 +1,14 @@
 package com.erikallas.ndl.auth.api;
 
 import com.erikallas.ndl.auth.service.AuthService;
-import com.erikallas.ndl.auth.service.EmailService;
+import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.api.dto.LoginResponse;
 import com.erikallas.ndl.auth.api.dto.RegisterResponse;
+import com.erikallas.ndl.auth.email.EmailService;
 import com.erikallas.ndl.auth.api.dto.AuthLoginRequest;
 import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
-import com.erikallas.ndl.user.model.UserEntity;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

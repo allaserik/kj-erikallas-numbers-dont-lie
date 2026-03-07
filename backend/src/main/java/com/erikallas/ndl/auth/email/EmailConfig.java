@@ -1,4 +1,4 @@
-package com.erikallas.ndl.email;
+package com.erikallas.ndl.auth.email;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

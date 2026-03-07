@@ -1,4 +1,4 @@
-package com.erikallas.ndl.user.model;
+package com.erikallas.ndl.auth.user.model;
 
 import java.util.Optional;
 import java.util.UUID;

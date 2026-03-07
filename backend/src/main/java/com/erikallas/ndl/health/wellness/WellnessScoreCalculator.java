@@ -1,7 +1,5 @@
 package com.erikallas.ndl.health.wellness;
 
-// TODO:  refactor: move to service package?
-// TODO:  review the case usage
 /**
  * Utility class for calculating wellness score components.
  * 

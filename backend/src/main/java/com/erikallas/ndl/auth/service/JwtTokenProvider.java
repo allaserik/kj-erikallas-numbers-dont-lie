@@ -1,7 +1,8 @@
 package com.erikallas.ndl.auth.service;
 
 import com.erikallas.ndl.auth.config.AuthProperties;
-import com.erikallas.ndl.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserEntity;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;

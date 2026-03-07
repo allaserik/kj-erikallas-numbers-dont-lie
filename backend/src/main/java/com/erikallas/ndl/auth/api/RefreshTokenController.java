@@ -5,8 +5,9 @@ import com.erikallas.ndl.auth.api.dto.RefreshTokenResponse;
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.service.AuthService;
 import com.erikallas.ndl.auth.service.RefreshTokenService;
-import com.erikallas.ndl.user.model.UserEntity;
-import com.erikallas.ndl.user.model.UserRepository;
+import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserRepository;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

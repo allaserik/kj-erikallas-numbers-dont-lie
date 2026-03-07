@@ -1,11 +1,12 @@
 package com.erikallas.ndl.health.wellness;
 
-import com.erikallas.ndl.user.service.UserService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.erikallas.ndl.auth.user.UserService;
 
 /**
  * API endpoints for wellness score management.

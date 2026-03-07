@@ -1,9 +1,10 @@
 package com.erikallas.ndl.health.goal;
 
+import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.dto.GoalResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
-import com.erikallas.ndl.user.service.UserService;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

@@ -50,7 +50,7 @@ public class RefreshTokenService {
      * Create and save a new refresh token for a user. Returns the token entity.
      */
     @Transactional
-    public RefreshTokenEntity createRefreshToken(com.erikallas.ndl.user.model.UserEntity user) {
+    public RefreshTokenEntity createRefreshToken(com.erikallas.ndl.auth.user.model.UserEntity user) {
         var entity = new RefreshTokenEntity();
         entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());

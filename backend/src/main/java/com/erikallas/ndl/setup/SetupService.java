@@ -1,9 +1,10 @@
 package com.erikallas.ndl.setup;
 
+import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.health.goal.GoalRepository;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
-import com.erikallas.ndl.user.model.UserEntity;
+
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;

@@ -1,8 +1,9 @@
 package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
+import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
-import com.erikallas.ndl.user.service.UserService;
+
 import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.UUID;

@@ -1,14 +1,15 @@
 package com.erikallas.ndl.auth.service;
 
-import com.erikallas.ndl.user.model.UserEntity;
-import com.erikallas.ndl.user.model.UserRepository;
-import com.erikallas.ndl.user.model.PasswordResetTokenEntity;
-import com.erikallas.ndl.user.model.PasswordResetTokenRepository;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.erikallas.ndl.auth.user.model.PasswordResetTokenEntity;
+import com.erikallas.ndl.auth.user.model.PasswordResetTokenRepository;
+import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserRepository;
 
 @Service
 public class PasswordResetService {

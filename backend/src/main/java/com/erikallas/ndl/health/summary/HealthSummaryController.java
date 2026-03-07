@@ -1,10 +1,10 @@
 package com.erikallas.ndl.health.summary;
 
+import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
-import com.erikallas.ndl.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 

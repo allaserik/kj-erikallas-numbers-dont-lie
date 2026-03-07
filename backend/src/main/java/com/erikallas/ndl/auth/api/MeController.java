@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.erikallas.ndl.auth.user.UserService;
+
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import com.erikallas.ndl.user.service.UserService;
 
 @SecurityRequirement(name = "bearerAuth")
 @RestController

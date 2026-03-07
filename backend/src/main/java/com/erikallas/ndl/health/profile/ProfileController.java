@@ -1,10 +1,11 @@
 package com.erikallas.ndl.health.profile;
 
+import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.dto.HealthProfileResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
 import com.erikallas.ndl.health.wellness.WellnessScoreService;
-import com.erikallas.ndl.user.service.UserService;
+
 import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;

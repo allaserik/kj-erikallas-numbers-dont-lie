@@ -1,9 +1,9 @@
-package com.erikallas.ndl.auth.service;
+package com.erikallas.ndl.auth.email;
 
-import com.erikallas.ndl.user.model.UserEntity;
-import com.erikallas.ndl.user.model.EmailVerificationCodeEntity;
-import com.erikallas.ndl.user.model.EmailVerificationCodeRepository;
-import com.erikallas.ndl.email.EmailSender;
+import com.erikallas.ndl.auth.user.model.EmailVerificationCodeEntity;
+import com.erikallas.ndl.auth.user.model.EmailVerificationCodeRepository;
+import com.erikallas.ndl.auth.user.model.UserEntity;
+
 import java.time.OffsetDateTime;
 import java.util.Random;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.erikallas.ndl.email;
+package com.erikallas.ndl.auth.email;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

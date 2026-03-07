@@ -4,9 +4,10 @@ import com.erikallas.ndl.auth.api.dto.ResendCodeRequest;
 import com.erikallas.ndl.auth.api.dto.ResendCodeResponse;
 import com.erikallas.ndl.auth.api.dto.VerifyEmailRequest;
 import com.erikallas.ndl.auth.api.dto.VerifyEmailResponse;
-import com.erikallas.ndl.auth.service.EmailService;
-import com.erikallas.ndl.user.model.UserEntity;
-import com.erikallas.ndl.user.model.UserRepository;
+import com.erikallas.ndl.auth.email.EmailService;
+import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserRepository;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
