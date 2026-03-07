@@ -1,9 +1,9 @@
 package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
-import com.erikallas.ndl.common.api.dto.InsightResponse;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
 import com.erikallas.ndl.user.service.UserService;
+import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -49,6 +49,7 @@ public class AiInsightController {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = insightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Insight");
+        entity = Objects.requireNonNull(entity);
         insightRepository.delete(entity);
     }
 }

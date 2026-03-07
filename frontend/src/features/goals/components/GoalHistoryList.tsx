@@ -61,7 +61,7 @@ export const GoalHistoryList: React.FC<GoalHistoryListProps> = ({ goals, onDelet
                                 <Button
                                     onClick={() => onDelete(goal.id)}
                                     disabled={isDeleting}
-                                    className="text-red-600 bg-red-50 hover:bg-red-100 text-white bg-red-600 hover:bg-red-700"
+                                    className="text-red-600 bg-red-50 hover:bg-red-100"
                                 >
                                     Delete
                                 </Button>

@@ -7,7 +7,7 @@ import { Spinner } from "../../shared/ui/Spinner";
 import type { UserProfile } from "../../shared/types";
 
 export default function SettingsPage() {
-    const { isAuthenticated } = useAppAuth();
+    const { isAuthenticated, authMethod } = useAppAuth();
     const meQ = useAuthedQuery("me", getMe, isAuthenticated);
 
     const userProfile: UserProfile | null = meQ.data || null;
@@ -49,22 +49,23 @@ export default function SettingsPage() {
                                         <div className="flex items-center gap-3">
                                             <input
                                                 type="email"
-                                                value={userProfile?.email || auth0User?.email || ""}
+                                                value={userProfile?.email || ""}
                                                 disabled
                                                 className="px-3 py-2 bg-slate-50 border border-slate-300 rounded text-slate-900 font-mono text-sm cursor-not-allowed"
                                             />
-                                            {auth0User?.sub && auth0User.sub.startsWith("google-oauth2") && (
+                                            {authMethod === "oauth" && (
                                                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full whitespace-nowrap">
-                                                    🔗 Gmail
+                                                    🔗 OAuth
+                                                </span>
+                                            )}
+                                            {authMethod === "local" && (
+                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full whitespace-nowrap">
+                                                    🔐 Email
                                                 </span>
                                             )}
                                         </div>
                                     </div>
-                                    <p className="text-xs text-slate-500 mt-2">
-                                        {auth0User?.email_verified
-                                            ? "✓ Verified"
-                                            : "● Pending verification"}
-                                    </p>
+                                    <p className="text-xs text-slate-500 mt-2">✓ Verified</p>
                                 </div>
 
                                 {/* Auth Provider */}
@@ -74,9 +75,9 @@ export default function SettingsPage() {
                                     </label>
                                     <div className="p-3 bg-blue-50 border border-blue-200 rounded">
                                         <p className="text-sm text-blue-900">
-                                            {auth0User?.sub?.startsWith("google-oauth2")
-                                                ? "Signed in with Google"
-                                                : "Signed in with Auth0"}
+                                            {authMethod === "oauth"
+                                                ? "Signed in with OAuth"
+                                                : "Signed in with Email & Password"}
                                         </p>
                                     </div>
                                 </div>

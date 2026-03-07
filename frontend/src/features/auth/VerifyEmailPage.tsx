@@ -51,13 +51,13 @@ export function VerifyEmailPage() {
     }, [email, code, navigate]);
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white p-4">
-            <Card className="max-w-md w-full">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-blue-50 to-white p-4">
+            <Card>
                 <div className="p-8 text-center">
                     {loading && (
                         <>
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Verifying Email</h2>
-                            <Spinner size="lg" className="mx-auto mb-4" />
+                            <Spinner  />
                             <p className="text-slate-600">Please wait...</p>
                         </>
                     )}
@@ -74,7 +74,7 @@ export function VerifyEmailPage() {
                     {error && !loading && (
                         <>
                             <h2 className="text-2xl font-bold text-slate-800 mb-4">Verification Failed</h2>
-                            <Alert type="error" title="Error" message={error} className="mb-4" />
+                            <Alert tone="error" title="Error" message={error} />
                             <button
                                 onClick={() => navigate('/')}
                                 className="text-green-600 hover:text-green-700 font-semibold"

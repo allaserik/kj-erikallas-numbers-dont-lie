@@ -4,7 +4,6 @@ import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import org.springframework.stereotype.Service;
 

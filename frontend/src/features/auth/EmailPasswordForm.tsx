@@ -77,8 +77,8 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
                 {isRegister ? 'Create Account' : 'Sign In'}
             </h2>
 
-            {error && <Alert type="error" title="Error" message={error} className="mb-4" />}
-            {success && <Alert type="success" title="Success" message={success} className="mb-4" />}
+            {error && <Alert tone="error" title="Error" message={error} />}
+            {success && <Alert tone="success" title="Success" message={success} />}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <TextField
@@ -119,7 +119,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
                     fullWidth
                     className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded font-semibold mt-2"
                 >
-                    {loading ? <Spinner size="sm" /> : isRegister ? 'Create Account' : 'Sign In'}
+                    {loading ? <Spinner label="Loading..." /> : isRegister ? 'Create Account' : 'Sign In'}
                 </Button>
             </form>
 

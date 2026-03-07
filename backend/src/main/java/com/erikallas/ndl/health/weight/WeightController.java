@@ -5,6 +5,7 @@ import com.erikallas.ndl.common.api.dto.WeightEntryResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
 import com.erikallas.ndl.user.service.UserService;
+import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -101,6 +102,7 @@ public class WeightController {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = weightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Weight entry");
+        entity = Objects.requireNonNull(entity);
         return ResponseMapper.toWeightEntryResponse(entity);
     }
 
@@ -118,6 +120,7 @@ public class WeightController {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = weightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Weight entry");
+        entity = Objects.requireNonNull(entity);
 
         if (body.weightKg != null) {
             entity.setWeightKg(body.weightKg);
