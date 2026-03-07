@@ -10,16 +10,48 @@ kood/Jõhvi generative AI specialization Wellness App project
 
 [counting-calories](https://gitea.kood.tech/erikallas/counting-calories.git)
 
+## Start entire app in Docker (one command!)
 
-## Start local docker instance (postgres)
+**Production (no demo data):**
+
+```bash
+docker-compose up -d
+```
+
+**With Demo Data:**
+
+```bash
+DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
+# Or using env file:
+source .env.docker.demo && docker-compose up -d
+```
+
+Then visit: http://localhost:5173
+
+**Stop everything:**
+
+```bash
+docker-compose down
+```
+
+## Local Development (Frontend + Backend local, Database in Docker)
+
+Start the database:
 
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 ```
 
-## Stop local docker instance
+With demo data:
 
 ```bash
+source .env.demo && docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
+```
+
+## Legacy: Start just database (for local development)
+
+```bash
+docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 docker compose -f ./infra/docker-compose.yml --env-file ./.env down
 ```
 
@@ -45,7 +77,6 @@ npm run dev
 
 install ollama
 [host ALL your AI locally](https://www.youtube.com/watch?v=Wjrdr0NU4Sk)
-
 
 OpenAPI Swagger documentation
 [OpenAPI Swagger URL](http://localhost:8080/swagger-ui/index.html)

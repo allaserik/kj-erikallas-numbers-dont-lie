@@ -4,3 +4,7 @@ spring:
     description: A wellness application to track and improve your health metrics.
   profiles:
     active: local
+
+# Demo mode configuration
+demo:
+  mode: ${DEMO_MODE:false}
