@@ -13,85 +13,67 @@ How to do testing?
 
 #### Mandatory
 
-### Student can explain how PII removal affects AI model's ability to generate personalized recommendations
+* [ ] Student can explain how PII removal affects AI model's ability to generate personalized recommendationsA
+  When you remove PII (personally identifiable information) before sending data to an AI model like OpenAI, you lose contextual information that could make recommendations more personalized: the responses are anonymous but still useful.
+* [ ] Student can explain their strategy for detecting and handling AI hallucinations in health recommendations
 
-### Student can explain their strategy for detecting and handling AI hallucinations in health recommendations
+  See [ai hallutinations strategy]()
+* [X] User receives an email with verification link after registration
+* [X] Authentication options include email-password and at least 2 OAuth providers
 
-### User receives an email with verification link after registration
+  * [X] Traditional username/password
+  * [X] Auth0 Github
+  * [X] Auth0 Google
+* [ ] Password reset is handled via email
 
-### Authentication options include email-password and at least 2 OAuth providers
+Users can optinonally enable two-factor authentication
 
-### Password reset is handled via email
+    Verify functionality of 2FA
 
-### Users can optinonally enable two-factor authentication
+* [X] User cannot access protected routes without verifying email
+* [ ] Student can explain the security implications of access token duration in JWT authentication
 
-Verify functionality of 2FA
+* [X] Access token expires after [x] minutes of inactivity
 
-### User cannot access protected routes without verifying email
+* [X] New access token is issued when valid refresh token is provided
+* [X] Verify receiving new access token by sending a request with expired access token and valid refresh token
+* [ ] Platform provides clear data usage consent with explicit user approval before data collection
 
-### Student can explain the security implications of access token duration in JWT authentication
+  * [ ] At minimum, it includes what data is collected and how it's used
+* [X] Platform collects basic demographics, physical metrics, lifestyle indicators, dietary preferences and restrictions, wellness goals.
 
-### Access token expires after [x] minutes of inactivity
+* [ ] User data is encrypted in transit and at rest
+* [X] Platform collects initial fitness assessment data
 
-### New access token is issued when valid refresh token is provided
+* [ ] Student can explain how normalization of health metrics impacts data visualization accuracy
+* [ ] Health metrics are converted to standard units before storage
 
-Verify receiving new access token by sending a request with expired access token and valid refresh token
+* [ ] Platform allows user to change their data sharing preferences.
+* [ ] Historical weight changes are tracked with timestamps
 
-### Platform provides clear data usage consent with explicit user approval before data collection
+  * [ ] Verify each weight entry has a unique timestamp by adding multiple entries and checking their history display
+* [ ] System prevents duplicate activity entries for the same timestamp
+* [ ] Student can explain how BMI classifications affect wellness score calculation
+* [ ] Wellness score changes when user updates their weekly activity frequency
+* [ ] Student can explain their choice of AI model(s) based on response quality and latency requirements
+* [ ] Student can explain what model capabilities were most important for their implementation
 
-At minimum, it includes what data is collected and how it's used
+  * [ ] System recalculates wellness score components when any contributing metric changes
+  * [ ] Verify scores update when changing: BMI range, activity level, goal progress, or health habits
+* [ ] System generates different health insights when user's goals change
 
-### Platform collects basic demographics, physical metrics, lifestyle indicators, dietary preferences and restrictions, wellness goals.
+  * [ ] Verify insight adjustment after changing user goals from one type to another (e.g., weight loss to muscle gain)
+* [ ] Student can explain the difference between AI response caching and regeneration
 
-### User data is encrypted in transit and at rest
+* [ ] Student can explain how context length affects AI response quality in health recommendations
+* [ ] AI recommendations include specific references to user's stated fitness goals
+  * [ ] Verify recommendations explicitly mention and align with the specific fitness goal set in user profile
+* [ ] AI health insights exclude any personally identifiable information
 
-### Platform collects initial fitness assessment data
-
-### Student can explain how normalization of health metrics impacts data visualization accuracy
-
-### Health metrics are converted to standard units before storage
-
-### Platform allows user to change their data sharing preferences.
-
-### Historical weight changes are tracked with timestamps
-
-Verify each weight entry has a unique timestamp by adding multiple entries and checking their history display
-
-### System prevents duplicate activity entries for the same timestamp
-
-### Student can explain how BMI classifications affect wellness score calculation
-
-### Wellness score changes when user updates their weekly activity frequency
-
-### Student can explain their choice of AI model(s) based on response quality and latency requirements
-
-### Student can explain what model capabilities were most important for their implementation
-
-### System recalculates wellness score components when any contributing metric changes
-
-Verify scores update when changing: BMI range, activity level, goal progress, or health habits
-
-### System generates different health insights when user's goals change
-
-Verify insight adjustment after changing user goals from one type to another (e.g., weight loss to muscle gain)
-
-### Student can explain the difference between AI response caching and regeneration
-
-### Student can explain how context length affects AI response quality in health recommendations
-
-### AI recommendations include specific references to user's stated fitness goals
-
-Verify recommendations explicitly mention and align with the specific fitness goal set in user profile
-
-### AI health insights exclude any personally identifiable information
-
-### Student can explain their prompt engineering approach to ensure consistent health recommendation format
-
-### System implements response validation to filter out recommendations that don't match user's health restrictions
-
-Ask the students to describe their approach
-
-### Student can explain the tradeoffs between zero-shot and few-shot prompting in their implementation
+* [ ] Student can explain their prompt engineering approach to ensure consistent health recommendation format
+* [ ] System implements response validation to filter out recommendations that don't match user's health restrictions
+  * [ ] Ask the students to describe their approach
+* [ ] Student can explain the tradeoffs between zero-shot and few-shot prompting in their implementation
 
 ### System displays cached recommendations when AI service is unavailable
 
