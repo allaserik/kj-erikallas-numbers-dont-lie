@@ -42,7 +42,7 @@ public class PasswordResetService {
     public void requestPasswordReset(String email) {
         var user = userRepository.findByEmailIgnoreCase(email).orElse(null);
 
-        if (user != null) {
+        if (user != null && Boolean.TRUE.equals(user.getEmailVerified())) {
             // Generate and save token (will be sent to user via email)
             String token = generateResetToken(user);
             String resetUrl = emailConfig.getFrontendUrl()

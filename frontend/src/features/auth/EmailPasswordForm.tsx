@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { TextField } from '../../shared/ui/TextField';
 import { Button } from '../../shared/ui/Button';
 import { Alert } from '../../shared/ui/Alert';
 import { Spinner } from '../../shared/ui/Spinner';
-import { registerUser, loginUser } from '../../api/auth';
+import { registerUser, loginUser, resendVerificationCode } from '../../api/auth';
 import { useLocalAuth } from '../../shared/auth/useLocalAuth';
 
 export interface EmailPasswordFormProps {
@@ -20,6 +21,8 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [resendLoading, setResendLoading] = useState(false);
+    const [resendMessage, setResendMessage] = useState<string | null>(null);
     const { login } = useLocalAuth();
 
     const isRegister = mode === 'register';
@@ -28,6 +31,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
         e.preventDefault();
         setError(null);
         setSuccess(null);
+        setResendMessage(null);
 
         // Validate inputs
         if (!email || !password) {
@@ -72,6 +76,25 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
         }
     };
 
+    const canResendVerification = !isRegister && !!email.trim() && !!error && error.toLowerCase().includes('verification');
+
+    const handleResendVerification = async () => {
+        if (!email.trim()) {
+            setError('Enter your email first to resend verification code');
+            return;
+        }
+        setResendLoading(true);
+        setResendMessage(null);
+        try {
+            const response = await resendVerificationCode(email.trim());
+            setResendMessage(response.message);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Could not resend verification code');
+        } finally {
+            setResendLoading(false);
+        }
+    };
+
     return (
         <div className="w-full max-w-sm">
             <h2 className="text-2xl font-bold mb-6 text-center text-slate-800">
@@ -80,6 +103,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
 
             {error && <Alert tone="error" title="Error" message={error} />}
             {success && <Alert tone="success" title="Success" message={success} />}
+            {resendMessage && <Alert tone="success" title="Verification Code Sent" message={resendMessage} />}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <TextField
@@ -112,6 +136,25 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
                         disabled={loading}
                         maxLength={6}
                     />
+                )}
+
+                {!isRegister && (
+                    <div className="text-right -mt-1">
+                        <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-700 font-semibold">
+                            Forgot password?
+                        </Link>
+                    </div>
+                )}
+
+                {canResendVerification && (
+                    <button
+                        type="button"
+                        onClick={handleResendVerification}
+                        disabled={resendLoading}
+                        className="text-sm text-blue-700 hover:text-blue-800 font-semibold disabled:opacity-50"
+                    >
+                        {resendLoading ? 'Resending...' : 'Resend verification code'}
+                    </button>
                 )}
 
                 {isRegister && (

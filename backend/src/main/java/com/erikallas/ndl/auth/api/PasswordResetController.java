@@ -73,6 +73,9 @@ public class PasswordResetController {
         if (user == null) {
             throw new IllegalArgumentException("User not found");
         }
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new IllegalStateException("Email verification is required before password reset");
+        }
         // Complete password reset
         boolean success = passwordResetService.completePasswordReset(request.getToken(), request.getNewPassword(),
                 request.getEmail());
