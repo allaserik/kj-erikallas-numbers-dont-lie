@@ -120,11 +120,11 @@ Typical user flow:
 7. View trends (weight line, wellness evolution, component breakdown, heatmap)
 8. Use settings for privacy consent, 2FA, export, and account deletion
 
-## 5-Minute Reviewer Pass
+## 5-Minute Overview
 
 Use this exact flow for fast requirement verification:
 
-1. Run app (`docker-compose up -d --build`) and log in.
+1. Run app and log in.
 2. Toggle consent in Settings and confirm AI insight gating on Dashboard.
 3. Save Health Profile updates and verify success without page reload.
 4. Add one weight + one activity check-in; confirm timeline updates.
@@ -133,8 +133,6 @@ Use this exact flow for fast requirement verification:
    - Trends: weight chart, wellness charts, activity heatmap, range switch
 6. Run data export and confirm historical JSON payload.
 
-Full reviewer playbook:
-- `docs/REVIEWER_GUIDE.md`
 
 ## Local Development
 
@@ -217,7 +215,6 @@ When AI is unavailable:
 - Assignment requirements: `docs/ASSIGNMENT.md`
 - Test criteria: `docs/ASSIGNMENT_TEST.md`
 - Current implementation gap analysis: `docs/REVIEW_GAP_CHECKLIST.md`
-- Reviewer test playbook: `docs/REVIEWER_GUIDE.md`
 - Requirements defense notes: `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`
 - Encryption-at-rest production plan: `docs/SECURITY_ENCRYPTION_AT_REST_PLAN.md`
 
