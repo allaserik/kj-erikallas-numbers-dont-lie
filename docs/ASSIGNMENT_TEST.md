@@ -76,14 +76,14 @@ How to do testing?
 * [X] Verify each weight entry has a unique timestamp by adding multiple entries and checking their history display
   - Duplicate timestamp protection implemented in `WeightService`.
 
-* [ ] System prevents duplicate activity entries for the same timestamp
-  - Not fully applicable yet: no dedicated activity-entry entity/timestamps beyond weight check-ins.
+* [X] System prevents duplicate activity entries for the same timestamp
+  - Implemented dedicated `activity_checkins` entity with unique `(user_id, checkin_at)` and service-level collision handling.
 
 * [X] Student can explain how BMI classifications affect wellness score calculation
   - Explanation prepared and formula implemented in `WellnessScoreCalculator`.
 
 * [X] Wellness score changes when user updates weekly activity frequency
-  - Activity frequency is part of fitness assessment; wellness recalculates on profile updates.
+  - Wellness now uses real activity check-ins (last 7 days) and recalculates on activity/profile/goal updates.
 
 * [X] Student can explain their choice of AI model(s) based on response quality and latency requirements
   - Explanation prepared in requirements-fulfillment notes.
@@ -136,7 +136,7 @@ How to do testing?
   - Implemented dashboard cards and data orchestration.
 
 - [X] Progress chart shows weight tracking over time, wellness score evolution and activity level changes
-  - Implemented weight trend + wellness evolution + activity heatmap.
+  - Implemented weight trend + wellness evolution + activity heatmap from activity check-ins.
 
 - [X] Goal progress includes milestone tracking
   - Implemented milestone tracking at 5% intervals.

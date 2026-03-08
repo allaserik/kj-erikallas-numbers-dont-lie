@@ -1,33 +1,30 @@
 # Reviewer Guide
 
-This guide maps the main assignment requirements to a fast, repeatable demo/test flow.
+This is a fast, deterministic review script for assignment grading.
 
-## 1. Run The Project
-
-### One-command Docker run
+## 1. Start Project
 
 ```bash
-docker-compose up -d --build
+APP_EMAIL_ENABLED=true docker-compose up -d --build
 ```
 
-App URLs:
+URLs:
 - Frontend: `http://localhost:5173`
 - Backend health: `http://localhost:8080/actuator/health`
 - Swagger: `http://localhost:8080/swagger-ui/index.html`
+- MailHog inbox: `http://localhost:8025`
 
-### Demo mode (recommended for chart testing)
+Demo mode (recommended):
 
 ```bash
-DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
+DEMO_MODE=true VITE_DEMO_MODE=true APP_EMAIL_ENABLED=true docker-compose up -d --build
 ```
 
 Demo credentials:
 - Email: `demo@example.com`
 - Password: `demo@example.com`
 
-## 2. Reset Database
-
-Full reset (drop volumes and recreate):
+## 2. DB Reset (If Needed)
 
 ```bash
 docker-compose down -v
@@ -41,98 +38,61 @@ docker-compose down -v
 DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
 ```
 
-## 3. Core Feature Smoke Tests
+## 3. 5-Minute Grading Demo Script
 
-1. Registration + email verification
-- Register with email/password.
-- Verify via code/link flow.
-- Confirm unverified users are blocked from protected functionality.
+1. Authentication and account security (1 min)
+- Login with demo user.
+- Open Settings and confirm privacy preferences are available.
+- Open 2FA section and confirm optional enable flow with QR is present.
 
-2. Authentication methods
-- Login with email/password.
-- Login with Google OAuth.
-- Login with GitHub OAuth.
+2. Email flows visible to reviewer (45 sec)
+- Trigger Forgot Password for a test account.
+- Open `http://localhost:8025` and verify reset email appears.
+- Register a new email/password account and verify verification email appears.
 
-3. Refresh token
-- Login and obtain tokens.
-- Trigger expired access token flow.
-- Confirm refresh endpoint issues a new access token.
+3. Consent gate and privacy controls (45 sec)
+- Disable `data_usage_consent` in Settings.
+- Go to Dashboard: AI insight card should show consent-required message and link to Settings.
+- Re-enable consent.
 
-4. Password reset
-- Request reset from forgot-password page.
-- Use reset link/token to set new password.
-- Confirm login works with the new password.
+4. Health profile and data capture (1 min)
+- Open Health Profile and verify demographics, lifestyle, dietary and fitness assessment fields.
+- Save profile update and confirm success message appears without reload.
 
-5. Optional 2FA
-- Go to Settings -> Account.
-- Setup 2FA (QR is shown), enable with TOTP code.
-- Confirm login requires valid 2FA code.
+5. Check-in + timeline + activity (1 min)
+- In Check In, add weight entry and activity entry.
+- Confirm recent timeline shows both events.
+- Verify no crash on rapid submissions.
 
-## 4. Health + Analytics + Visualization Tests
+6. Analytics and visualization (1 min)
+- Open Dashboard: verify BMI, wellness score, active goal, AI insight, weekly/monthly summaries, and active days (7d) card.
+- Open Trends: verify weight chart (with target line if goal target exists), wellness evolution, wellness components, and activity heatmap.
+- Switch ranges `30d / 90d / All`.
 
-1. Profile + check-in data
-- Fill health profile (demographics, activity, dietary, fitness assessment).
-- Add weight entries via Check In.
+7. Data rights and reliability (15 sec)
+- Trigger data export and verify JSON download includes profile, weights, goals, progress, insights.
+- Confirm error states appear inline if any API call fails.
 
-2. Dashboard
-- Confirm BMI, wellness score, active goal, AI insight cards render.
-- Confirm weekly/monthly summary cards render.
-- Confirm skeleton placeholders while data loads.
+## 4. Mandatory Functional Evidence Map
 
-3. Trends
-- Confirm weight chart renders trend line.
-- Confirm target weight reference line appears (when goal has target).
-- Confirm milestone markers appear from goal-progress history.
-- Confirm 30d/90d/all switch updates chart data.
-- Confirm wellness evolution and component charts render.
-- Confirm activity heatmap renders.
+- Account: email/password + Google + GitHub OAuth, refresh token flow, password reset, optional 2FA.
+- Privacy: explicit consent gate, privacy settings persistence, data export, account deletion.
+- Health: profile + fitness assessment + weight/activity check-ins + goal progress milestones.
+- Analytics: BMI, wellness score with component model, weekly/monthly summaries.
+- Visualization: dashboard cards, trends charts, heatmap, loading/error states.
+- AI: structured output, validation/guardrails, cached/fallback behavior.
 
-4. Goal progress + milestones
-- Create active goal.
-- Record progress repeatedly.
-- Confirm progress percentage and milestone history update.
+## 5. Known Limitations (Current)
 
-## 5. Privacy, Export, Deletion
+- Full infrastructure-level encryption-at-rest proof is environment-dependent and not fully demonstrated in this repo.
+- Dedicated “comparison view” page (current vs target + weekly/monthly in one place) is still partial across dashboard/trends.
 
-1. Consent gating
-- Disable data usage consent in Settings.
-- Confirm AI insight generation is blocked and UI points to Settings.
+## 6. Code Pointers
 
-2. Privacy preferences
-- Toggle anonymized analytics/public profile/email notifications.
-- Confirm preferences persist.
-
-3. Data export
-- Run export from Settings.
-- Confirm JSON includes account/profile/weight/goals/progress/insights with timestamps.
-
-4. Account deletion
-- Use delete account flow with confirmation.
-- Confirm account and related data are removed/soft-deleted per service behavior.
-
-## 6. AI Reliability Checks
-
-1. Cached fallback
-- Disable/misconfigure OpenAI key.
-- Confirm API returns cached or fallback insight instead of hard failing.
-
-2. Hallucination guards
-- Confirm generated insight is valid JSON schema.
-- Confirm no ungrounded percent claims are accepted.
-- Confirm unsafe medical/extreme wording is rejected.
-- Confirm repeated recommendations are filtered against recent insights.
-
-## 7. Known Limitations (Current)
-
-- Encryption at rest is not implemented at application level (deployment concern).
-- Restriction-aware recommendation filtering is mostly prompt/context driven, not a strict rule engine.
-
-## 8. Where To Look In Code
-
-- Auth + sessions: `backend/src/main/java/com/erikallas/ndl/auth`
+- Auth/session/security: `backend/src/main/java/com/erikallas/ndl/auth`
 - Privacy + consent: `backend/src/main/java/com/erikallas/ndl/privacy`
-- Health profile/goals/weight/wellness: `backend/src/main/java/com/erikallas/ndl/health`
-- AI insight pipeline: `backend/src/main/java/com/erikallas/ndl/ai`
+- Health domain: `backend/src/main/java/com/erikallas/ndl/health`
+- AI pipeline: `backend/src/main/java/com/erikallas/ndl/ai`
 - Data export: `backend/src/main/java/com/erikallas/ndl/export`
-- Frontend pages/components: `frontend/src/features`
-- Gap checklist: `docs/REVIEW_GAP_CHECKLIST.md`
+- Frontend features: `frontend/src/features`
+- Requirement checklist: `docs/ASSIGNMENT_TEST.md`

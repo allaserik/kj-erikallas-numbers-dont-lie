@@ -119,6 +119,15 @@ export default function GoalsPage() {
                             <GoalHistoryList goals={inactiveGoals} onDelete={handleDeleteGoal} isDeleting={isDeleting} />
                         </div>
                     )}
+                    {activeGoal && inactiveGoals.length === 0 && (
+                        <Card>
+                            <CardBody>
+                                <p className="text-sm text-slate-600">
+                                    No archived goals yet. Your completed and archived goals will appear here.
+                                </p>
+                            </CardBody>
+                        </Card>
+                    )}
                 </>
             )}
 

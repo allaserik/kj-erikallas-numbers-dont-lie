@@ -9,6 +9,7 @@ import { Card, CardBody, CardTitle, CardSubtitle } from "../../shared/ui/Card";
 import { TextField } from "../../shared/ui/TextField";
 import { Alert } from "../../shared/ui/Alert";
 import { ApiError } from "../../shared/api/client";
+import { Spinner } from "../../shared/ui/Spinner";
 
 type WeightValidationErrors = {
     weight?: string;
@@ -337,6 +338,18 @@ export default function CheckInPage() {
                 <CardTitle>Recent Timeline</CardTitle>
                 <CardSubtitle>Latest activity and weight events</CardSubtitle>
                 <CardBody>
+                    {(activityQ.loading || weightQ.loading) && (
+                        <div className="py-2">
+                            <Spinner label="Loading recent check-ins..." />
+                        </div>
+                    )}
+                    {(activityQ.error || weightQ.error) && (
+                        <Alert
+                            tone="error"
+                            title="Timeline Unavailable"
+                            message={activityQ.error?.message || weightQ.error?.message || "Failed to load timeline"}
+                        />
+                    )}
                     {timeline.length === 0 && (
                         <p className="text-sm text-slate-500">No entries yet. Add your first check-in above.</p>
                     )}

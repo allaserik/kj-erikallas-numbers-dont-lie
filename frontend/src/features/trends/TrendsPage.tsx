@@ -66,6 +66,20 @@ export default function TrendsPage() {
                     message={chartData.error.message || "Failed to load weight data"}
                 />
             )}
+            {wellnessQ.error && (
+                <Alert
+                    tone="error"
+                    title="Wellness Trend Unavailable"
+                    message={wellnessQ.error.message || "Failed to load wellness history"}
+                />
+            )}
+            {activityQ.error && (
+                <Alert
+                    tone="error"
+                    title="Activity Trend Unavailable"
+                    message={activityQ.error.message || "Failed to load activity history"}
+                />
+            )}
 
             {!chartData.isLoading && !chartData.error && (
                 <>
@@ -79,6 +93,13 @@ export default function TrendsPage() {
                     <WellnessEvolutionChart points={wellnessQ.data || []} />
                     <WellnessComponentsStackedChart points={wellnessQ.data || []} />
                     <ActivityHeatmap dates={activityDates} />
+                    {!activityQ.error && activityDates.length === 0 && (
+                        <Alert
+                            tone="info"
+                            title="No Activity Check-Ins Yet"
+                            message="Add activity check-ins to populate the weekly heatmap."
+                        />
+                    )}
 
                     {chartData.points.length === 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

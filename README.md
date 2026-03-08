@@ -9,9 +9,10 @@ Main capabilities:
 - Email verification, refresh-token based sessions, password reset
 - Optional user-enabled 2FA (TOTP + QR setup)
 - Health profile + fitness assessment
-- Weight check-ins and historical tracking
+- Weight + activity check-ins and historical tracking
 - Goals, progress snapshots, and milestone tracking
 - BMI + wellness score analytics
+- Active-days (last 7d) activity indicator
 - AI insights with caching/fallback and response guardrails
 - Privacy preferences, data export, account deletion
 
@@ -49,9 +50,41 @@ openssl rand -base64 48
 
 Use first output as `APP_TOKEN_PEPPER`, second as `APP_DATA_ENCRYPTION_KEY`.
 
-## One-Line Run (Docker)
+## Run Modes
 
-After `.env` is prepared:
+### Demo (Recommended First)
+
+This mode is optimized for demo purposes:
+- pre-seeded data (`DEMO_MODE=true`)
+- frontend demo login mode
+- real email flow captured in MailHog inbox UI (verification/reset links visible)
+
+Run:
+
+```bash
+DEMO_MODE=true VITE_DEMO_MODE=true APP_EMAIL_ENABLED=true docker-compose up -d --build
+```
+
+Open:
+- Frontend: `http://localhost:5173`
+- Swagger: `http://localhost:8080/swagger-ui/index.html`
+- MailHog inbox UI: `http://localhost:8025`
+
+Demo credentials:
+- `demo@example.com` / `demo@example.com`
+- Detailed demo seed notes: [DEMO_MODE.md](DEMO_MODE.md)
+
+### Clean Mode (No Demo Seed Data)
+
+Use this when you want an empty database and non-demo UX:
+
+```bash
+DEMO_MODE=false VITE_DEMO_MODE=false APP_EMAIL_ENABLED=false docker-compose up -d --build
+```
+
+In this mode, email verification/reset content is logged to backend console unless you configure SMTP and enable `APP_EMAIL_ENABLED=true`.
+
+### Default One-Line Run (Docker)
 
 ```bash
 docker-compose up -d --build
@@ -60,6 +93,7 @@ docker-compose up -d --build
 Open:
 - Frontend: `http://localhost:5173`
 - Swagger: `http://localhost:8080/swagger-ui/index.html`
+- MailHog (if used): `http://localhost:8025`
 
 Stop:
 
@@ -80,25 +114,27 @@ Typical user flow:
 1. Sign up/login (email/password, Google, or GitHub)
 2. Verify email (for local email/password auth)
 3. Complete health profile
-4. Add weight check-ins
+4. Add weight and activity check-ins
 5. Create an active goal
-6. View dashboard (BMI, wellness score, summaries, AI insight)
+6. View dashboard (BMI, wellness score, active days, summaries, AI insight)
 7. View trends (weight line, wellness evolution, component breakdown, heatmap)
 8. Use settings for privacy consent, 2FA, export, and account deletion
 
-## Demo Mode
+## 5-Minute Reviewer Pass
 
-Run with pre-seeded demo user/data:
+Use this exact flow for fast requirement verification:
 
-```bash
-DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
-```
+1. Run app (`docker-compose up -d --build`) and log in.
+2. Toggle consent in Settings and confirm AI insight gating on Dashboard.
+3. Save Health Profile updates and verify success without page reload.
+4. Add one weight + one activity check-in; confirm timeline updates.
+5. Open Dashboard and Trends:
+   - Dashboard: BMI, wellness score, active days (7d), goal, insight, weekly/monthly cards
+   - Trends: weight chart, wellness charts, activity heatmap, range switch
+6. Run data export and confirm historical JSON payload.
 
-Demo credentials:
-- `demo@example.com` / `demo@example.com`
-
-Detailed demo instructions:
-- [DEMO_MODE.md](DEMO_MODE.md)
+Full reviewer playbook:
+- `docs/REVIEWER_GUIDE.md`
 
 ## Local Development
 
@@ -136,6 +172,20 @@ Important keys:
 - `DEMO_MODE` and `VITE_DEMO_MODE` (optional demo flags)
 - `APP_TOKEN_PEPPER` (pepper for hashing refresh/reset/verification tokens at rest)
 - `APP_DATA_ENCRYPTION_KEY` (AES key material for encrypting 2FA secrets at rest)
+- `APP_EMAIL_ENABLED` (enable real SMTP sending)
+- `APP_EMAIL_FROM_ADDRESS`, `APP_EMAIL_FROM_NAME`, `APP_EMAIL_FRONTEND_URL`
+- `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`
+- `MAIL_SMTP_AUTH`, `MAIL_SMTP_STARTTLS`
+
+### Email Testing Setup
+
+Reviewer-friendly local setup with MailHog:
+1. Set `APP_EMAIL_ENABLED=true`
+2. Keep `MAIL_HOST=mailhog` and `MAIL_PORT=1025` (docker-compose defaults)
+3. Run docker-compose
+4. Open `http://localhost:8025` to see verification and password-reset emails
+
+If `APP_EMAIL_ENABLED=false`, email payloads are intentionally logged to backend console for local testing only.
 
 If running backend directly and loading `.env` into shell:
 
