@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 
 /**
  * API endpoints for wellness score management.
@@ -37,7 +38,7 @@ public class WellnessScoreController {
      * @return WellnessScoreResponse with score (0-100) and description
      */
     @GetMapping("/api/wellness-score")
-    public WellnessScoreResponse getWellnessScore(JwtAuthenticationToken auth) {
+    public ApiSuccess<WellnessScoreResponse> getWellnessScore(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         Integer score = wellnessScoreService.getWellnessScore(user.getId());
 
@@ -47,7 +48,7 @@ public class WellnessScoreController {
         }
 
         String description = wellnessScoreService.getWellnessScoreDescription(user.getId());
-        return new WellnessScoreResponse(score, description);
+        return ApiSuccess.of(new WellnessScoreResponse(score, description));
     }
 
     /**
@@ -61,7 +62,7 @@ public class WellnessScoreController {
      * @return WellnessScoreResponse with newly calculated score (0-100)
      */
     @PostMapping("/api/wellness-score/calculate")
-    public WellnessScoreResponse calculateWellnessScore(JwtAuthenticationToken auth) {
+    public ApiSuccess<WellnessScoreResponse> calculateWellnessScore(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         Integer score = wellnessScoreService.calculateAndUpdateWellnessScore(user.getId());
 
@@ -71,6 +72,6 @@ public class WellnessScoreController {
         }
 
         String description = wellnessScoreService.getWellnessScoreDescription(user.getId());
-        return new WellnessScoreResponse(score, description);
+        return ApiSuccess.of(new WellnessScoreResponse(score, description));
     }
 }
