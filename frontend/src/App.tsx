@@ -22,7 +22,7 @@ function AppContent({ isAuthenticated }: { isAuthenticated: boolean }) {
   const location = useLocation();
   const publicPaths = new Set(['/verify-email', '/forgot-password', '/reset-password']);
   const isPublicRoute = publicPaths.has(location.pathname);
-  const privacyQ = useAuthedQuery('consentGate', getPrivacyPreferences, isAuthenticated);
+  const privacyQ = useAuthedQuery(`consentGate:${location.pathname}`, getPrivacyPreferences, isAuthenticated);
   const consentLoading = isAuthenticated && privacyQ.loading;
   const hasConsent = !!privacyQ.data?.data_usage_consent;
   const consentRequired = isAuthenticated && !consentLoading && !privacyQ.error && !hasConsent;
