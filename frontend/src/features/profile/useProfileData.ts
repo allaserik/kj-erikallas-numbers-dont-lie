@@ -14,6 +14,18 @@ export type FormData = {
     gender: "MALE" | "FEMALE" | "OTHER";
     activityLevel: "SEDENTARY" | "LIGHTLY_ACTIVE" | "MODERATELY_ACTIVE" | "VERY_ACTIVE" | "EXTREMELY_ACTIVE";
     targetWeight: number | "";
+    occupationType: string;
+    dietaryPreferencesText: string;
+    dietaryRestrictionsText: string;
+    activityFrequency: number | "";
+    exerciseTypesText: string;
+    sessionDuration: "" | "15_30" | "30_60" | "60_plus";
+    fitnessLevel: "" | "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+    exerciseEnvironment: "" | "HOME" | "GYM" | "OUTDOORS";
+    exerciseTimePreference: "" | "MORNING" | "AFTERNOON" | "EVENING";
+    enduranceMinutes: number | "";
+    pushups: number | "";
+    squats: number | "";
 };
 
 export type ValidationErrors = Partial<Record<keyof FormData, string>>;
@@ -33,7 +45,7 @@ export interface ProfileState {
     validationErrors: ValidationErrors;
 
     // Actions
-    handleInputChange: (field: keyof FormData, value: string | number) => void;
+    handleInputChange: (field: keyof FormData, value: string | number | boolean) => void;
     handleEdit: () => void;
     handleCancel: () => void;
     handleSave: () => Promise<void>;
@@ -47,11 +59,43 @@ function validateForm(data: FormData): ValidationErrors {
     if (!data.weight || data.weight <= 0) errors.weight = "Weight is required and must be positive";
     if (!data.age || data.age < 13 || data.age > 120) errors.age = "Age must be between 13 and 120";
     if (!data.targetWeight || data.targetWeight <= 0) errors.targetWeight = "Target weight is required and must be positive";
+    if (data.activityFrequency !== "" && (data.activityFrequency < 0 || data.activityFrequency > 7)) {
+        errors.activityFrequency = "Activity frequency must be between 0 and 7";
+    }
+    if (data.enduranceMinutes !== "" && data.enduranceMinutes < 0) {
+        errors.enduranceMinutes = "Endurance minutes must be 0 or more";
+    }
+    if (data.pushups !== "" && data.pushups < 0) {
+        errors.pushups = "Pushups must be 0 or more";
+    }
+    if (data.squats !== "" && data.squats < 0) {
+        errors.squats = "Squats must be 0 or more";
+    }
 
     return errors;
 }
 
 function initializeFormData(profile: HealthProfile | null, latestWeight?: number): FormData {
+    const fitness = profile?.fitnessAssessment || {};
+    const getText = (key: string): string => {
+        const value = (fitness as Record<string, unknown>)[key];
+        return typeof value === "string" ? value : "";
+    };
+    const getNumber = (key: string): number | "" => {
+        const value = (fitness as Record<string, unknown>)[key];
+        if (typeof value === "number") return value;
+        if (typeof value === "string" && value.trim() !== "") {
+            const parsed = Number(value);
+            return Number.isFinite(parsed) ? parsed : "";
+        }
+        return "";
+    };
+    const getArrayText = (key: string): string => {
+        const value = (fitness as Record<string, unknown>)[key];
+        if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+        return "";
+    };
+
     if (profile) {
         return {
             height: profile.height || "",
@@ -60,6 +104,18 @@ function initializeFormData(profile: HealthProfile | null, latestWeight?: number
             gender: profile.gender || "OTHER",
             activityLevel: profile.activityLevel || "MODERATELY_ACTIVE",
             targetWeight: profile.targetWeight || "",
+            occupationType: getText("occupation_type"),
+            dietaryPreferencesText: (profile.dietaryPreferences || []).join(", "),
+            dietaryRestrictionsText: (profile.dietaryRestrictions || []).join(", "),
+            activityFrequency: getNumber("current_activity_frequency"),
+            exerciseTypesText: getArrayText("exercise_types"),
+            sessionDuration: (getText("average_session_duration") as FormData["sessionDuration"]) || "",
+            fitnessLevel: (getText("self_assessed_fitness_level") as FormData["fitnessLevel"]) || "",
+            exerciseEnvironment: (getText("preferred_exercise_environment") as FormData["exerciseEnvironment"]) || "",
+            exerciseTimePreference: (getText("exercise_time_preference") as FormData["exerciseTimePreference"]) || "",
+            enduranceMinutes: getNumber("current_endurance_minutes"),
+            pushups: getNumber("pushups_count"),
+            squats: getNumber("squats_count"),
         };
     }
     return {
@@ -69,6 +125,18 @@ function initializeFormData(profile: HealthProfile | null, latestWeight?: number
         gender: "OTHER",
         activityLevel: "MODERATELY_ACTIVE",
         targetWeight: "",
+        occupationType: "",
+        dietaryPreferencesText: "",
+        dietaryRestrictionsText: "",
+        activityFrequency: "",
+        exerciseTypesText: "",
+        sessionDuration: "",
+        fitnessLevel: "",
+        exerciseEnvironment: "",
+        exerciseTimePreference: "",
+        enduranceMinutes: "",
+        pushups: "",
+        squats: "",
     };
 }
 
@@ -96,10 +164,22 @@ export function useProfileData(): ProfileState {
         gender: "OTHER",
         activityLevel: "MODERATELY_ACTIVE",
         targetWeight: "",
+        occupationType: "",
+        dietaryPreferencesText: "",
+        dietaryRestrictionsText: "",
+        activityFrequency: "",
+        exerciseTypesText: "",
+        sessionDuration: "",
+        fitnessLevel: "",
+        exerciseEnvironment: "",
+        exerciseTimePreference: "",
+        enduranceMinutes: "",
+        pushups: "",
+        squats: "",
     });
 
     const handleInputChange = useCallback(
-        (field: keyof FormData, value: string | number) => {
+        (field: keyof FormData, value: string | number | boolean) => {
             setFormData((prev) => ({ ...prev, [field]: value }));
             if (validationErrors[field]) {
                 setValidationErrors((prev) => {
@@ -190,10 +270,41 @@ export function useProfileData(): ProfileState {
                 height_cm: Number(formData.height),
                 baseline_activity_level: activityLevelMap[formData.activityLevel] || formData.activityLevel,
                 gender: formData.gender,
-                dietary_preferences: [],
-                dietary_restrictions: [],
-                fitness_assessment: null,
-                fitness_assessment_completed: false,
+                dietary_preferences: formData.dietaryPreferencesText
+                    .split(",")
+                    .map((x) => x.trim())
+                    .filter(Boolean),
+                dietary_restrictions: formData.dietaryRestrictionsText
+                    .split(",")
+                    .map((x) => x.trim())
+                    .filter(Boolean),
+                fitness_assessment: {
+                    occupation_type: formData.occupationType || null,
+                    current_activity_frequency:
+                        formData.activityFrequency === "" ? null : Number(formData.activityFrequency),
+                    exercise_types: formData.exerciseTypesText
+                        .split(",")
+                        .map((x) => x.trim())
+                        .filter(Boolean),
+                    average_session_duration: formData.sessionDuration || null,
+                    self_assessed_fitness_level: formData.fitnessLevel || null,
+                    preferred_exercise_environment: formData.exerciseEnvironment || null,
+                    exercise_time_preference: formData.exerciseTimePreference || null,
+                    current_endurance_minutes:
+                        formData.enduranceMinutes === "" ? null : Number(formData.enduranceMinutes),
+                    pushups_count: formData.pushups === "" ? null : Number(formData.pushups),
+                    squats_count: formData.squats === "" ? null : Number(formData.squats),
+                },
+                fitness_assessment_completed:
+                    formData.activityFrequency !== "" ||
+                    formData.exerciseTypesText.trim() !== "" ||
+                    formData.sessionDuration !== "" ||
+                    formData.fitnessLevel !== "" ||
+                    formData.exerciseEnvironment !== "" ||
+                    formData.exerciseTimePreference !== "" ||
+                    formData.enduranceMinutes !== "" ||
+                    formData.pushups !== "" ||
+                    formData.squats !== "",
             };
 
             await upsertHealthProfile(

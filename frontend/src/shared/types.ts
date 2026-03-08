@@ -23,6 +23,8 @@ export type HealthProfile = {
     targetWeight: number; // kg (optional goal)
     wellnessScore?: number; // 0-100 wellness score
     dietaryPreferences?: string[];
+    dietaryRestrictions?: string[];
+    fitnessAssessment?: Record<string, unknown> | null;
     fitnessGoals?: string[];
     createdAt: string;
     updatedAt: string;

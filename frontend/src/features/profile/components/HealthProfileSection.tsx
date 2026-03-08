@@ -98,6 +98,26 @@ export function HealthProfileSection({
                                 </div>
                             </div>
                         </div>
+                        <div className="grid grid-cols-1 gap-3 text-sm">
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Occupation Type</div>
+                                <div className="font-medium text-slate-900">{formData.occupationType || "—"}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Dietary Preferences</div>
+                                <div className="font-medium text-slate-900">{formData.dietaryPreferencesText || "—"}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Dietary Restrictions</div>
+                                <div className="font-medium text-slate-900">{formData.dietaryRestrictionsText || "—"}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Weekly Activity Frequency</div>
+                                <div className="font-medium text-slate-900">
+                                    {formData.activityFrequency !== "" ? `${formData.activityFrequency} days` : "—"}
+                                </div>
+                            </div>
+                        </div>
                         <Button fullWidth onClick={onEdit}>
                             Edit Profile
                         </Button>
@@ -175,6 +195,113 @@ export function HealthProfileSection({
                             max="300"
                             placeholder="70"
                             step="0.1"
+                        />
+                        <TextField
+                            label="Occupation Type"
+                            value={formData.occupationType}
+                            onChange={(e) => onInputChange("occupationType", e.target.value)}
+                            placeholder="Office / Manual / Shift work / Student..."
+                        />
+                        <TextField
+                            label="Dietary Preferences (comma-separated)"
+                            value={formData.dietaryPreferencesText}
+                            onChange={(e) => onInputChange("dietaryPreferencesText", e.target.value)}
+                            placeholder="Vegetarian, High-protein"
+                        />
+                        <TextField
+                            label="Dietary Restrictions (comma-separated)"
+                            value={formData.dietaryRestrictionsText}
+                            onChange={(e) => onInputChange("dietaryRestrictionsText", e.target.value)}
+                            placeholder="Lactose-free, Gluten-free"
+                        />
+
+                        <h3 className="text-sm font-semibold text-slate-900 pt-2">Fitness Assessment</h3>
+                        <TextField
+                            label="Current Weekly Activity Frequency (0-7)"
+                            type="number"
+                            value={formData.activityFrequency}
+                            onChange={(e) => onInputChange("activityFrequency", e.target.value)}
+                            error={validationErrors.activityFrequency}
+                            min="0"
+                            max="7"
+                        />
+                        <TextField
+                            label="Exercise Types (comma-separated)"
+                            value={formData.exerciseTypesText}
+                            onChange={(e) => onInputChange("exerciseTypesText", e.target.value)}
+                            placeholder="Cardio, Strength, Flexibility, Sports"
+                        />
+                        <SelectField
+                            label="Average Session Duration"
+                            value={formData.sessionDuration}
+                            onChange={(e) => onInputChange("sessionDuration", e.target.value as FormData["sessionDuration"])}
+                            options={[
+                                { value: "", label: "Select..." },
+                                { value: "15_30", label: "15-30 min" },
+                                { value: "30_60", label: "30-60 min" },
+                                { value: "60_plus", label: "60+ min" },
+                            ]}
+                        />
+                        <SelectField
+                            label="Self-Assessed Fitness Level"
+                            value={formData.fitnessLevel}
+                            onChange={(e) => onInputChange("fitnessLevel", e.target.value as FormData["fitnessLevel"])}
+                            options={[
+                                { value: "", label: "Select..." },
+                                { value: "BEGINNER", label: "Beginner" },
+                                { value: "INTERMEDIATE", label: "Intermediate" },
+                                { value: "ADVANCED", label: "Advanced" },
+                            ]}
+                        />
+                        <SelectField
+                            label="Preferred Exercise Environment"
+                            value={formData.exerciseEnvironment}
+                            onChange={(e) =>
+                                onInputChange("exerciseEnvironment", e.target.value as FormData["exerciseEnvironment"])
+                            }
+                            options={[
+                                { value: "", label: "Select..." },
+                                { value: "HOME", label: "Home" },
+                                { value: "GYM", label: "Gym" },
+                                { value: "OUTDOORS", label: "Outdoors" },
+                            ]}
+                        />
+                        <SelectField
+                            label="Preferred Time of Day"
+                            value={formData.exerciseTimePreference}
+                            onChange={(e) =>
+                                onInputChange("exerciseTimePreference", e.target.value as FormData["exerciseTimePreference"])
+                            }
+                            options={[
+                                { value: "", label: "Select..." },
+                                { value: "MORNING", label: "Morning" },
+                                { value: "AFTERNOON", label: "Afternoon" },
+                                { value: "EVENING", label: "Evening" },
+                            ]}
+                        />
+                        <TextField
+                            label="Current Endurance Level (minutes)"
+                            type="number"
+                            value={formData.enduranceMinutes}
+                            onChange={(e) => onInputChange("enduranceMinutes", e.target.value)}
+                            error={validationErrors.enduranceMinutes}
+                            min="0"
+                        />
+                        <TextField
+                            label="Pushups (count)"
+                            type="number"
+                            value={formData.pushups}
+                            onChange={(e) => onInputChange("pushups", e.target.value)}
+                            error={validationErrors.pushups}
+                            min="0"
+                        />
+                        <TextField
+                            label="Squats (count)"
+                            type="number"
+                            value={formData.squats}
+                            onChange={(e) => onInputChange("squats", e.target.value)}
+                            error={validationErrors.squats}
+                            min="0"
                         />
 
                         {/* Edit Form Actions */}

@@ -52,6 +52,8 @@ function transformHealthProfile(data: HealthProfileBackendResponse | null): Heal
         targetWeight: 0,
         wellnessScore: data.wellness_score || 0,
         dietaryPreferences: data.dietary_preferences || [],
+        dietaryRestrictions: data.dietary_restrictions || [],
+        fitnessAssessment: data.fitness_assessment || null,
         fitnessGoals: [],
         createdAt: data.created_at,
         updatedAt: data.updated_at,
