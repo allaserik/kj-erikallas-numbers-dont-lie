@@ -1,6 +1,7 @@
 package com.erikallas.ndl.privacy;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -52,19 +53,19 @@ public class PrivacyPreferencesController {
     }
 
     @GetMapping("/api/privacy-preferences")
-    public PrivacyPreferencesResponse getPreferences(JwtAuthenticationToken auth) {
+    public ApiSuccess<PrivacyPreferencesResponse> getPreferences(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var prefs = privacyPreferencesService.getOrDefault(user.getId());
-        return toResponse(prefs);
+        return ApiSuccess.of(toResponse(prefs));
     }
 
     @PostMapping("/api/privacy-preferences")
-    public PrivacyPreferencesResponse upsertPreferences(@Valid @RequestBody PrivacyPreferencesRequest request,
+    public ApiSuccess<PrivacyPreferencesResponse> upsertPreferences(@Valid @RequestBody PrivacyPreferencesRequest request,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var prefs = privacyPreferencesService.upsert(user.getId(), request.dataUsageConsent,
                 request.allowAnonymizedAnalytics, request.publicProfileVisible, request.emailNotificationsEnabled);
-        return toResponse(prefs);
+        return ApiSuccess.of(toResponse(prefs));
     }
 
     private PrivacyPreferencesResponse toResponse(PrivacyPreferencesEntity entity) {

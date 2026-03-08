@@ -1,4 +1,6 @@
 import { api } from "./client";
+import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 export type PrivacyPreferences = {
     data_usage_consent: boolean;
@@ -10,7 +12,9 @@ export type PrivacyPreferences = {
 };
 
 export function getPrivacyPreferences(token: string): Promise<PrivacyPreferences> {
-    return api.get<PrivacyPreferences>("/api/privacy-preferences", token);
+    return api
+        .get<PrivacyPreferences | ApiResponse<PrivacyPreferences>>("/api/privacy-preferences", token)
+        .then((response) => unwrapApiData(response));
 }
 
 export function upsertPrivacyPreferences(data: {
@@ -19,5 +23,7 @@ export function upsertPrivacyPreferences(data: {
     public_profile_visible: boolean;
     email_notifications_enabled: boolean;
 }, token: string): Promise<PrivacyPreferences> {
-    return api.post<PrivacyPreferences>("/api/privacy-preferences", data, token);
+    return api
+        .post<PrivacyPreferences | ApiResponse<PrivacyPreferences>>("/api/privacy-preferences", data, token)
+        .then((response) => unwrapApiData(response));
 }
