@@ -26,8 +26,9 @@ public class MeController {
     @GetMapping("/api/me")
     public Map<String, Object> me(JwtAuthenticationToken auth) {
         var jwt = auth.getToken();
+        String issuer = jwt.getClaimAsString("iss");
 
-        log.info("GET /api/me - issuer: {}, sub: {}, has email: {}", jwt.getIssuer(), jwt.getSubject(),
+        log.info("GET /api/me - issuer: {}, sub: {}, has email: {}", issuer, jwt.getSubject(),
                 jwt.getClaimAsString("email") != null);
 
         // Sync user from JWT (saves email from OAuth providers)
@@ -42,7 +43,7 @@ public class MeController {
         out.put("sub", jwt.getSubject());
         out.put("email", jwt.getClaimAsString("email")); // may be null
         out.put("aud", jwt.getAudience()); // non-null list
-        out.put("iss", jwt.getIssuer() != null ? jwt.getIssuer().toString() : null);
+        out.put("iss", issuer);
         out.put("scope", jwt.getClaimAsString("scope")); // may be null
         out.put("claims", jwt.getClaims().keySet()); // helpful for debugging
         return out;
