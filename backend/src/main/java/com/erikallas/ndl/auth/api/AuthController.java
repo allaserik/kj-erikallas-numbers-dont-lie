@@ -10,9 +10,12 @@ import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.twofactor.TwoFactorService;
 import com.erikallas.ndl.common.api.dto.ApiSuccess;
+import com.erikallas.ndl.common.ratelimit.RateLimitService;
 
+import java.time.Duration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,11 +28,17 @@ public class AuthController {
     private final AuthService authService;
     private final EmailService emailService;
     private final TwoFactorService twoFactorService;
+    private final RateLimitService rateLimitService;
 
-    public AuthController(AuthService authService, EmailService emailService, TwoFactorService twoFactorService) {
+    public AuthController(
+            AuthService authService,
+            EmailService emailService,
+            TwoFactorService twoFactorService,
+            RateLimitService rateLimitService) {
         this.authService = authService;
         this.emailService = emailService;
         this.twoFactorService = twoFactorService;
+        this.rateLimitService = rateLimitService;
     }
 
     /**
@@ -42,7 +51,9 @@ public class AuthController {
      * validation error
      */
     @PostMapping("/register")
-    public ResponseEntity<ApiSuccess<RegisterResponse>> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<ApiSuccess<RegisterResponse>> register(
+            @RequestBody AuthRegisterRequest request,
+            HttpServletRequest httpRequest) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -50,6 +61,8 @@ public class AuthController {
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password is required");
         }
+        rateLimitService.check("auth:register:email", request.getEmail(), 5, Duration.ofMinutes(10));
+        rateLimitService.check("auth:register:ip", httpRequest.getRemoteAddr(), 20, Duration.ofMinutes(10));
         // Register user
         UserEntity user = authService.registerUser(request.getEmail(), request.getPassword());
         // Generate and send verification code
@@ -66,7 +79,9 @@ public class AuthController {
      * "emailVerified": true } - 401: { "message": "Invalid email or password" }
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiSuccess<LoginResponse>> login(@RequestBody AuthLoginRequest request) {
+    public ResponseEntity<ApiSuccess<LoginResponse>> login(
+            @RequestBody AuthLoginRequest request,
+            HttpServletRequest httpRequest) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -74,6 +89,8 @@ public class AuthController {
         if (request.getPassword() == null || request.getPassword().isEmpty()) {
             throw new IllegalArgumentException("Password is required");
         }
+        rateLimitService.check("auth:login:email", request.getEmail(), 10, Duration.ofMinutes(1));
+        rateLimitService.check("auth:login:ip", httpRequest.getRemoteAddr(), 40, Duration.ofMinutes(1));
         // Authenticate user
         UserEntity user = authService.authenticateUser(request.getEmail(), request.getPassword());
         if (user == null) {

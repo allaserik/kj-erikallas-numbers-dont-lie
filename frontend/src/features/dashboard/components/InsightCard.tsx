@@ -36,6 +36,12 @@ export function InsightCard({ insight, consentRequired = false }: InsightCardPro
             source === "cache" || source === "cached" ? "Cached" :
                 "Generic Wellness Tip";
 
+    const priorityForIndex = (index: number) => {
+        if (index === 0) return { label: "High", style: "bg-red-100 text-red-800" };
+        if (index === 1) return { label: "Medium", style: "bg-amber-100 text-amber-800" };
+        return { label: "Low", style: "bg-blue-100 text-blue-800" };
+    };
+
     return (
         <Card>
             <div className="flex items-center justify-between">
@@ -54,9 +60,23 @@ export function InsightCard({ insight, consentRequired = false }: InsightCardPro
                         </h4>
                         <ul className="space-y-1">
                             {payload.recommendations.map((rec, idx) => (
-                                <li key={idx} className="text-xs text-slate-600 flex gap-2">
-                                    <span className="text-green-600">→</span>
-                                    <span>{rec}</span>
+                                <li key={idx} className="text-xs text-slate-600">
+                                    <details className="rounded border border-slate-200 p-2 bg-slate-50">
+                                        <summary className="flex items-center justify-between cursor-pointer list-none">
+                                            <span className="flex items-center gap-2">
+                                                <span className="text-green-600">→</span>
+                                                <span>{rec}</span>
+                                            </span>
+                                            <span
+                                                className={`px-2 py-0.5 rounded text-[10px] font-semibold ${priorityForIndex(idx).style}`}
+                                            >
+                                                {priorityForIndex(idx).label}
+                                            </span>
+                                        </summary>
+                                        <p className="mt-2 text-[11px] text-slate-500">
+                                            Priority is based on recommendation order in the latest AI insight.
+                                        </p>
+                                    </details>
                                 </li>
                             ))}
                         </ul>

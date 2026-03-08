@@ -17,6 +17,8 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntryEntity, 
     List<WeightEntryEntity> findByUserIdOrderByMeasuredAtDesc(UUID userId);
 
     boolean existsByUserId(UUID userId);
+    boolean existsByUserIdAndMeasuredAt(UUID userId, java.time.OffsetDateTime measuredAt);
+    boolean existsByUserIdAndMeasuredAtAndIdNot(UUID userId, java.time.OffsetDateTime measuredAt, UUID id);
 
     // Paginated queries
     Page<WeightEntryEntity> findByUserIdOrderByMeasuredAtDesc(UUID userId, Pageable pageable);

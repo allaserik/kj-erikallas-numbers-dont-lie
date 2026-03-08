@@ -6,5 +6,6 @@ public enum ApiErrorCode {
     MALFORMED_JSON,
     NOT_FOUND,
     ILLEGAL_STATE,
+    RATE_LIMITED,
     INTERNAL_ERROR
 }

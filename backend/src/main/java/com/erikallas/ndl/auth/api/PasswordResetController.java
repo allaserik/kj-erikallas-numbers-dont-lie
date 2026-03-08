@@ -7,7 +7,10 @@ import com.erikallas.ndl.auth.service.PasswordResetService;
 import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.user.model.UserRepository;
 import com.erikallas.ndl.common.api.dto.ApiSuccess;
+import com.erikallas.ndl.common.ratelimit.RateLimitService;
 
+import java.time.Duration;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,10 +23,15 @@ public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
     private final UserRepository userRepository;
+    private final RateLimitService rateLimitService;
 
-    public PasswordResetController(PasswordResetService passwordResetService, UserRepository userRepository) {
+    public PasswordResetController(
+            PasswordResetService passwordResetService,
+            UserRepository userRepository,
+            RateLimitService rateLimitService) {
         this.passwordResetService = passwordResetService;
         this.userRepository = userRepository;
+        this.rateLimitService = rateLimitService;
     }
 
     /**
@@ -34,11 +42,15 @@ public class PasswordResetController {
      * (don't reveal if email exists)
      */
     @PostMapping("/request")
-    public ResponseEntity<ApiSuccess<PasswordResetResponse>> requestReset(@RequestBody PasswordResetRequest request) {
+    public ResponseEntity<ApiSuccess<PasswordResetResponse>> requestReset(
+            @RequestBody PasswordResetRequest request,
+            HttpServletRequest httpRequest) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
+        rateLimitService.check("password-reset:request:email", request.getEmail(), 3, Duration.ofMinutes(10));
+        rateLimitService.check("password-reset:request:ip", httpRequest.getRemoteAddr(), 20, Duration.ofMinutes(10));
 
         // Request reset (generates token, no error if email doesn't exist)
         passwordResetService.requestPasswordReset(request.getEmail());

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.erikallas.ndl.common.ratelimit.RateLimitExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -59,6 +60,16 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.getReasonPhrase(), ApiErrorCode.ILLEGAL_STATE.name(), ex.getMessage(),
                 req.getRequestURI(), List.of());
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiError> handleRateLimit(RateLimitExceededException ex, HttpServletRequest req) {
+        ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.TOO_MANY_REQUESTS.value(),
+                HttpStatus.TOO_MANY_REQUESTS.getReasonPhrase(), ApiErrorCode.RATE_LIMITED.name(), ex.getMessage(),
+                req.getRequestURI(), List.of());
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(ex.getRetryAfterSeconds()))
+                .body(body);
     }
 
     @ExceptionHandler(Exception.class)

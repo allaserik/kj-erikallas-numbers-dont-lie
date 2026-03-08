@@ -4,9 +4,11 @@ import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
 import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
+import com.erikallas.ndl.common.ratelimit.RateLimitService;
 import com.erikallas.ndl.privacy.PrivacyPreferencesService;
 
 import java.util.Objects;
+import java.time.Duration;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -21,13 +23,16 @@ public class AiInsightController {
     private final AiInsightService insightService;
     private final AiInsightRepository insightRepository;
     private final PrivacyPreferencesService privacyPreferencesService;
+    private final RateLimitService rateLimitService;
 
     public AiInsightController(UserService userService, AiInsightService insightService,
-            AiInsightRepository insightRepository, PrivacyPreferencesService privacyPreferencesService) {
+            AiInsightRepository insightRepository, PrivacyPreferencesService privacyPreferencesService,
+            RateLimitService rateLimitService) {
         this.userService = userService;
         this.insightService = insightService;
         this.insightRepository = insightRepository;
         this.privacyPreferencesService = privacyPreferencesService;
+        this.rateLimitService = rateLimitService;
     }
 
     /**
@@ -39,6 +44,7 @@ public class AiInsightController {
     @GetMapping("/api/insights/current")
     public ApiSuccess<AiInsightResult> current(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
+        rateLimitService.check("ai-insights:current:user", user.getId().toString(), 8, Duration.ofMinutes(1));
         if (!privacyPreferencesService.hasDataUsageConsent(user.getId())) {
             throw new IllegalStateException("Data usage consent is required before generating AI insights");
         }

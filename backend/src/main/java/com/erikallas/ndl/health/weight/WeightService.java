@@ -26,9 +26,13 @@ public class WeightService {
 
     @Transactional
     public WeightEntryEntity add(UUID userId, double weightKg, OffsetDateTime measuredAt, String note) {
+        OffsetDateTime effectiveMeasuredAt = measuredAt != null ? measuredAt : OffsetDateTime.now();
+        if (repo.existsByUserIdAndMeasuredAt(userId, effectiveMeasuredAt)) {
+            throw new IllegalArgumentException("Weight entry already exists for this timestamp");
+        }
         // Save weight entry
         var entry = repo.save(new WeightEntryEntity(UUID.randomUUID(), userId,
-                measuredAt != null ? measuredAt : OffsetDateTime.now(), weightKg, note));
+                effectiveMeasuredAt, weightKg, note));
 
         // Update BMI in health profile if it exists
         // Just a note on using var vs explicit types:
@@ -74,6 +78,9 @@ public class WeightService {
      */
     @Transactional
     public WeightEntryEntity update(UUID userId, WeightEntryEntity entry) {
+        if (repo.existsByUserIdAndMeasuredAtAndIdNot(userId, entry.getMeasuredAt(), entry.getId())) {
+            throw new IllegalArgumentException("Weight entry already exists for this timestamp");
+        }
         var saved = repo.save(entry);
 
         // Recalculate BMI in health profile if it exists
