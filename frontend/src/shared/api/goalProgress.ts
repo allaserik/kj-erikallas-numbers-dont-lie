@@ -26,6 +26,11 @@ export type GoalProgress = {
     updatedAt: string;
 };
 
+export type GoalMilestone = {
+    percentage: number;
+    completedAt: string;
+};
+
 function transformGoalProgress(data: GoalProgressBackendResponse): GoalProgress {
     return {
         currentValue: data.current_value,
@@ -49,5 +54,36 @@ export async function getCurrentGoalProgress(goalId: string, token: string): Pro
         return transformGoalProgress(unwrapApiData(response));
     } catch {
         return null;
+    }
+}
+
+function toMilestones(data: GoalProgressBackendResponse): GoalMilestone[] {
+    const details = data.milestone_details ?? [];
+    const milestones: GoalMilestone[] = [];
+    for (const item of details) {
+        const percentageRaw = item.percentage;
+        const completedAtRaw = item.completed_at;
+        const percentage = typeof percentageRaw === "number" ? percentageRaw : Number(percentageRaw);
+        const completedAt = typeof completedAtRaw === "string" ? completedAtRaw : data.recorded_at;
+        if (Number.isFinite(percentage) && completedAt) {
+            milestones.push({ percentage, completedAt });
+        }
+    }
+    return milestones;
+}
+
+export async function getGoalMilestones(goalId: string, token: string): Promise<GoalMilestone[]> {
+    try {
+        const response = await api.get<GoalProgressBackendResponse[] | ApiResponse<GoalProgressBackendResponse[]>>(
+            `/api/goals/${goalId}/progress/history`,
+            token
+        );
+        const history = unwrapApiData(response);
+        if (!Array.isArray(history)) {
+            return [];
+        }
+        return history.flatMap(toMilestones);
+    } catch {
+        return [];
     }
 }

@@ -1,8 +1,9 @@
-import type { ChartDataPoint } from "../useWeightChartData";
+import type { ChartDataPoint, MilestoneMarker } from "../useWeightChartData";
 import { Card, CardBody, CardTitle } from "../../../shared/ui/Card";
 
 interface WeightChartProps {
     points: ChartDataPoint[];
+    milestones: MilestoneMarker[];
     targetWeight: number | null;
     minWeight: number;
     maxWeight: number;
@@ -10,6 +11,7 @@ interface WeightChartProps {
 
 export function WeightChart({
     points,
+    milestones,
     targetWeight,
     minWeight,
     maxWeight,
@@ -116,6 +118,7 @@ export function WeightChart({
     const lastPoint = points[points.length - 1];
     const lastX = scaleX(lastPoint.daysAgo);
     const lastY = scaleY(lastPoint.weight);
+    const visibleMilestones = milestones.filter((m) => m.daysAgo <= daysRange);
 
     return (
         <Card>
@@ -155,6 +158,40 @@ export function WeightChart({
                                 </text>
                             </>
                         )}
+
+                        {/* Milestone markers */}
+                        {visibleMilestones.map((milestone, idx) => {
+                            const x = scaleX(milestone.daysAgo);
+                            return (
+                                <g key={`milestone-${idx}`}>
+                                    <line
+                                        x1={x}
+                                        y1={padding.top}
+                                        x2={x}
+                                        y2={height - padding.bottom}
+                                        stroke="#f59e0b"
+                                        strokeWidth="1"
+                                        strokeDasharray="3,3"
+                                        opacity="0.7"
+                                    />
+                                    <circle
+                                        cx={x}
+                                        cy={padding.top + 8}
+                                        r="4"
+                                        fill="#f59e0b"
+                                    />
+                                    <text
+                                        x={x}
+                                        y={padding.top + 22}
+                                        textAnchor="middle"
+                                        className="text-[10px] fill-amber-700"
+                                        fontWeight="bold"
+                                    >
+                                        {milestone.percentage}%
+                                    </text>
+                                </g>
+                            );
+                        })}
 
                         {/* Weight line chart */}
                         <polyline
@@ -219,6 +256,12 @@ export function WeightChart({
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-1 bg-blue-300" style={{ width: "12px" }}></div>
                             <span className="text-slate-700">Target: {targetWeight}kg</span>
+                        </div>
+                    )}
+                    {visibleMilestones.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-1 bg-amber-500" style={{ width: "12px" }}></div>
+                            <span className="text-slate-700">Milestones: {visibleMilestones.length}</span>
                         </div>
                     )}
                     {targetWeight && currentWeight < targetWeight && (
