@@ -1,6 +1,8 @@
 /**
  * Authentication API calls for email/password auth
  */
+import { unwrapApiData } from "../shared/api/unwrap";
+import type { ApiResponse } from "../shared/types";
 
 export interface AuthLoginRequest {
     email: string;
@@ -45,7 +47,7 @@ export async function registerUser(email: string, password: string): Promise<Reg
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password } as AuthLoginRequest),
+        body: JSON.stringify({ email, password } as AuthRegisterRequest),
     });
 
     if (!response.ok) {
@@ -53,7 +55,8 @@ export async function registerUser(email: string, password: string): Promise<Reg
         throw new Error(error.message || 'Registration failed');
     }
 
-    return response.json();
+    const raw = await response.json();
+    return unwrapApiData(raw as RegisterResponse | ApiResponse<RegisterResponse>);
 }
 
 /**
@@ -74,7 +77,8 @@ export async function loginUser(email: string, password: string, twoFactorCode?:
         throw new Error(error.message || 'Login failed');
     }
 
-    const data: LoginResponseJson = await response.json();
+    const raw = await response.json();
+    const data = unwrapApiData(raw as LoginResponseJson | ApiResponse<LoginResponseJson>);
     return {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,

@@ -7,6 +7,7 @@ import com.erikallas.ndl.auth.service.AuthService;
 import com.erikallas.ndl.auth.service.RefreshTokenService;
 import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.user.model.UserRepository;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +44,7 @@ public class RefreshTokenController {
      * 400: { "message": "Invalid or expired refresh token" }
      */
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+    public ResponseEntity<ApiSuccess<RefreshTokenResponse>> refreshToken(@RequestBody RefreshTokenRequest request) {
         // Validate request
         if (request.getRefreshToken() == null || request.getRefreshToken().isEmpty()) {
             throw new IllegalArgumentException("Refresh token is required");
@@ -67,6 +68,6 @@ public class RefreshTokenController {
         // Optionally: Generate new refresh token (rotating refresh tokens pattern)
         // RefreshTokenEntity newRefreshToken = authService.generateRefreshToken(user);
 
-        return ResponseEntity.ok(new RefreshTokenResponse(newAccessToken));
+        return ResponseEntity.ok(ApiSuccess.of(new RefreshTokenResponse(newAccessToken)));
     }
 }

@@ -7,6 +7,7 @@ import com.erikallas.ndl.auth.api.dto.VerifyEmailResponse;
 import com.erikallas.ndl.auth.email.EmailService;
 import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.user.model.UserRepository;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +35,7 @@ public class EmailVerificationController {
      * "message": "Invalid or expired code" } - 404: { "message": "User not found" }
      */
     @PostMapping("/verify")
-    public ResponseEntity<VerifyEmailResponse> verifyEmail(@RequestBody VerifyEmailRequest request) {
+    public ResponseEntity<ApiSuccess<VerifyEmailResponse>> verifyEmail(@RequestBody VerifyEmailRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -55,7 +56,7 @@ public class EmailVerificationController {
         // Mark email as verified in user entity
         user.setEmailVerified(true);
         userRepository.save(user);
-        return ResponseEntity.ok(new VerifyEmailResponse());
+        return ResponseEntity.ok(ApiSuccess.of(new VerifyEmailResponse()));
     }
 
     /**
@@ -67,7 +68,7 @@ public class EmailVerificationController {
      * found" }
      */
     @PostMapping("/resend-code")
-    public ResponseEntity<ResendCodeResponse> resendCode(@RequestBody ResendCodeRequest request) {
+    public ResponseEntity<ApiSuccess<ResendCodeResponse>> resendCode(@RequestBody ResendCodeRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -89,6 +90,6 @@ public class EmailVerificationController {
         // Generate and send new code
         emailService.generateVerificationCode(user);
 
-        return ResponseEntity.ok(new ResendCodeResponse("Code sent to email"));
+        return ResponseEntity.ok(ApiSuccess.of(new ResendCodeResponse("Code sent to email")));
     }
 }

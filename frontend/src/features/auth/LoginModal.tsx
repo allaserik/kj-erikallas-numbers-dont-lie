@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { EmailPasswordForm } from "./EmailPasswordForm";
 import { DEMO_MODE } from "../../shared/config";
-import { api } from "../../shared/api/client";
+import { loginUser } from "../../api/auth";
 
 // LoginModal: Full-screen calming overlay for unauthenticated users
 // Supports both Auth0 OAuth and email/password authentication
@@ -21,17 +21,11 @@ export function LoginModal() {
     const handleDemoLogin = async () => {
         setIsDemoLoading(true);
         try {
-            // Call local auth endpoint directly (demo@example.com / demo@example.com)
-            const response = await api.post<{ accessToken: string }>(
-                "/api/auth/login",
-                {
-                    email: "demo@example.com",
-                    password: "demo@example.com",
-                }
-            );
+            const response = await loginUser("demo@example.com", "demo@example.com");
 
             // Store token in localStorage
             localStorage.setItem("accessToken", response.accessToken);
+            localStorage.setItem("refreshToken", response.refreshToken);
             // Dispatch auth changed event for AuthContext to pick up
             window.dispatchEvent(new Event("localAuthChanged"));
             // Modal will disappear when auth state updates

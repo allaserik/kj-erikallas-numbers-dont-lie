@@ -9,6 +9,7 @@ import com.erikallas.ndl.auth.api.dto.AuthLoginRequest;
 import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.twofactor.TwoFactorService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +42,7 @@ public class AuthController {
      * validation error
      */
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody AuthRegisterRequest request) {
+    public ResponseEntity<ApiSuccess<RegisterResponse>> register(@RequestBody AuthRegisterRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -54,7 +55,7 @@ public class AuthController {
         // Generate and send verification code
         emailService.generateVerificationCode(user);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new RegisterResponse(user.getId(), user.getEmail()));
+                .body(ApiSuccess.of(new RegisterResponse(user.getId(), user.getEmail())));
     }
 
     /**
@@ -65,7 +66,7 @@ public class AuthController {
      * "emailVerified": true } - 401: { "message": "Invalid email or password" }
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody AuthLoginRequest request) {
+    public ResponseEntity<ApiSuccess<LoginResponse>> login(@RequestBody AuthLoginRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -95,6 +96,6 @@ public class AuthController {
         // Generate refresh token
         RefreshTokenEntity refreshToken = authService.generateRefreshToken(user);
         // Return tokens
-        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken.getToken()));
+        return ResponseEntity.ok(ApiSuccess.of(new LoginResponse(accessToken, refreshToken.getToken())));
     }
 }

@@ -2,6 +2,7 @@ package com.erikallas.ndl.auth.api;
 
 import com.erikallas.ndl.auth.twofactor.TwoFactorService;
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -35,15 +36,15 @@ public class TwoFactorController {
     }
 
     @PostMapping("/setup")
-    public ResponseEntity<TwoFactorSetupResponse> setup(JwtAuthenticationToken auth) {
+    public ResponseEntity<ApiSuccess<TwoFactorSetupResponse>> setup(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
         String accountLabel = user.getEmail() != null ? user.getEmail() : user.getId().toString();
         var setup = twoFactorService.setup(user.getId(), accountLabel);
-        return ResponseEntity.ok(new TwoFactorSetupResponse(setup.secret(), setup.otpauthUri()));
+        return ResponseEntity.ok(ApiSuccess.of(new TwoFactorSetupResponse(setup.secret(), setup.otpauthUri())));
     }
 
     @PostMapping("/enable")
-    public ResponseEntity<TwoFactorStatusResponse> enable(@RequestBody TwoFactorCodeRequest request,
+    public ResponseEntity<ApiSuccess<TwoFactorStatusResponse>> enable(@RequestBody TwoFactorCodeRequest request,
             JwtAuthenticationToken auth) {
         if (request == null || request.code == null || request.code.isBlank()) {
             throw new IllegalArgumentException("2FA code is required");
@@ -53,11 +54,11 @@ public class TwoFactorController {
         if (!enabled) {
             throw new IllegalArgumentException("Invalid 2FA code");
         }
-        return ResponseEntity.ok(new TwoFactorStatusResponse(true));
+        return ResponseEntity.ok(ApiSuccess.of(new TwoFactorStatusResponse(true)));
     }
 
     @PostMapping("/disable")
-    public ResponseEntity<TwoFactorStatusResponse> disable(@RequestBody TwoFactorCodeRequest request,
+    public ResponseEntity<ApiSuccess<TwoFactorStatusResponse>> disable(@RequestBody TwoFactorCodeRequest request,
             JwtAuthenticationToken auth) {
         if (request == null || request.code == null || request.code.isBlank()) {
             throw new IllegalArgumentException("2FA code is required");
@@ -67,12 +68,12 @@ public class TwoFactorController {
         if (!disabled) {
             throw new IllegalArgumentException("Invalid 2FA code");
         }
-        return ResponseEntity.ok(new TwoFactorStatusResponse(false));
+        return ResponseEntity.ok(ApiSuccess.of(new TwoFactorStatusResponse(false)));
     }
 
     @GetMapping("/status")
-    public ResponseEntity<TwoFactorStatusResponse> status(JwtAuthenticationToken auth) {
+    public ResponseEntity<ApiSuccess<TwoFactorStatusResponse>> status(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
-        return ResponseEntity.ok(new TwoFactorStatusResponse(twoFactorService.isEnabled(user.getId())));
+        return ResponseEntity.ok(ApiSuccess.of(new TwoFactorStatusResponse(twoFactorService.isEnabled(user.getId()))));
     }
 }

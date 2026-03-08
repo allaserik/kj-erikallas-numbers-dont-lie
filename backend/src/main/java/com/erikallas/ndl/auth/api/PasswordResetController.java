@@ -6,6 +6,7 @@ import com.erikallas.ndl.auth.api.dto.PasswordResetRequest;
 import com.erikallas.ndl.auth.service.PasswordResetService;
 import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.user.model.UserRepository;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +34,7 @@ public class PasswordResetController {
      * (don't reveal if email exists)
      */
     @PostMapping("/request")
-    public ResponseEntity<PasswordResetResponse> requestReset(@RequestBody PasswordResetRequest request) {
+    public ResponseEntity<ApiSuccess<PasswordResetResponse>> requestReset(@RequestBody PasswordResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -43,7 +44,8 @@ public class PasswordResetController {
         passwordResetService.requestPasswordReset(request.getEmail());
 
         // Always return success for security
-        return ResponseEntity.ok(new PasswordResetResponse("Password reset link sent to email (if account exists)"));
+        return ResponseEntity.ok(
+                ApiSuccess.of(new PasswordResetResponse("Password reset link sent to email (if account exists)")));
     }
 
     /**
@@ -55,7 +57,7 @@ public class PasswordResetController {
      * validation error - 404: { "message": "User not found" }
      */
     @PostMapping("/complete")
-    public ResponseEntity<PasswordResetResponse> completeReset(@RequestBody CompleteResetRequest request) {
+    public ResponseEntity<ApiSuccess<PasswordResetResponse>> completeReset(@RequestBody CompleteResetRequest request) {
         // Validate request
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -77,6 +79,6 @@ public class PasswordResetController {
         if (!success) {
             throw new IllegalArgumentException("Invalid or expired token");
         }
-        return ResponseEntity.ok(new PasswordResetResponse("Password reset successfully"));
+        return ResponseEntity.ok(ApiSuccess.of(new PasswordResetResponse("Password reset successfully")));
     }
 }
