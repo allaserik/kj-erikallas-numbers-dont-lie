@@ -24,35 +24,40 @@ public class GlobalExceptionHandler {
                 .toList();
 
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(), "Validation failed", req.getRequestURI(), fields);
+                HttpStatus.BAD_REQUEST.getReasonPhrase(), ApiErrorCode.VALIDATION_ERROR.name(), "Validation failed",
+                req.getRequestURI(), fields);
         return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException ex, HttpServletRequest req) {
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(), ex.getMessage(), req.getRequestURI(), List.of());
+                HttpStatus.BAD_REQUEST.getReasonPhrase(), ApiErrorCode.BAD_REQUEST.name(), ex.getMessage(),
+                req.getRequestURI(), List.of());
         return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex, HttpServletRequest req) {
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(), "Malformed JSON request", req.getRequestURI(), List.of());
+                HttpStatus.BAD_REQUEST.getReasonPhrase(), ApiErrorCode.MALFORMED_JSON.name(),
+                "Malformed JSON request", req.getRequestURI(), List.of());
         return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(NoHandlerFoundException ex, HttpServletRequest req) {
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.NOT_FOUND.value(),
-                HttpStatus.NOT_FOUND.getReasonPhrase(), "Endpoint not found", req.getRequestURI(), List.of());
+                HttpStatus.NOT_FOUND.getReasonPhrase(), ApiErrorCode.NOT_FOUND.name(), "Endpoint not found",
+                req.getRequestURI(), List.of());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiError> handleIllegalState(IllegalStateException ex, HttpServletRequest req) {
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.getReasonPhrase(), ex.getMessage(), req.getRequestURI(), List.of());
+                HttpStatus.BAD_REQUEST.getReasonPhrase(), ApiErrorCode.ILLEGAL_STATE.name(), ex.getMessage(),
+                req.getRequestURI(), List.of());
         return ResponseEntity.badRequest().body(body);
     }
 
@@ -61,7 +66,8 @@ public class GlobalExceptionHandler {
         log.error("Unhandled exception processing request to " + req.getRequestURI(), ex);
 
         ApiError body = new ApiError(OffsetDateTime.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), "Unexpected error", req.getRequestURI(), List.of());
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), ApiErrorCode.INTERNAL_ERROR.name(),
+                "Unexpected error", req.getRequestURI(), List.of());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 

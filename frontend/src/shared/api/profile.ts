@@ -4,6 +4,7 @@
  */
 import { api } from "./client";
 import type { UserProfile, HealthProfile } from "../types";
+import type { ApiResponse } from "../types";
 
 // Backend response structure (snake_case)
 type HealthProfileBackendResponse = {
@@ -59,8 +60,31 @@ function transformHealthProfile(data: HealthProfileBackendResponse | null): Heal
 /**
  * Get current user's profile (from Auth0/JWT)
  */
-export function getMe(token: string): Promise<UserProfile> {
-    return api.get<UserProfile>("/api/me", token);
+type MeBackendResponse = {
+    id?: string | null;
+    auth0_sub?: string | null;
+    email?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+    sub?: string | null;
+};
+
+function toUserProfile(data: MeBackendResponse): UserProfile {
+    return {
+        id: data.id || data.sub || "",
+        auth0Sub: data.auth0_sub || undefined,
+        email: data.email || "",
+        createdAt: data.created_at || new Date().toISOString(),
+        updatedAt: data.updated_at || data.created_at || new Date().toISOString(),
+    };
+}
+
+export async function getMe(token: string): Promise<UserProfile> {
+    const response = await api.get<MeBackendResponse | ApiResponse<MeBackendResponse>>("/api/me", token);
+    if (response && typeof response === "object" && "data" in response) {
+        return toUserProfile((response as ApiResponse<MeBackendResponse>).data);
+    }
+    return toUserProfile(response as MeBackendResponse);
 }
 
 /**

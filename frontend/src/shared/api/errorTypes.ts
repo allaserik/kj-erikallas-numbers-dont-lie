@@ -7,6 +7,8 @@ export type ApiErrorBody = {
     timestamp?: string;
     status: number;
     error?: string;
+    errorCode?: string;
+    error_code?: string;
     message?: string;
     path?: string;
     fieldErrors?: FieldError[];

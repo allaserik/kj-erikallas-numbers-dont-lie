@@ -1,5 +1,9 @@
 package com.erikallas.ndl.auth.api;
 
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -23,8 +27,21 @@ public class MeController {
         this.userService = userService;
     }
 
+    public record MeResponse(
+            String id,
+            @JsonProperty("auth0_sub") String auth0Sub,
+            String email,
+            @JsonProperty("created_at") OffsetDateTime createdAt,
+            @JsonProperty("updated_at") OffsetDateTime updatedAt,
+            String sub,
+            String iss,
+            List<String> aud,
+            String scope,
+            Object claims) {
+    }
+
     @GetMapping("/api/me")
-    public Map<String, Object> me(JwtAuthenticationToken auth) {
+    public ApiSuccess<MeResponse> me(JwtAuthenticationToken auth) {
         var jwt = auth.getToken();
         String issuer = jwt.getClaimAsString("iss");
 
@@ -33,19 +50,36 @@ public class MeController {
 
         // Sync user from JWT (saves email from OAuth providers)
         try {
-            userService.ensureUserFromJwt(auth);
+            var user = userService.ensureUserFromJwt(auth);
             log.debug("User synced from JWT: sub={}", jwt.getSubject());
+            Map<String, Object> claims = new LinkedHashMap<>();
+            claims.put("keys", jwt.getClaims().keySet());
+            return ApiSuccess.of(new MeResponse(
+                    user.getId().toString(),
+                    user.getAuth0Sub(),
+                    user.getEmail(),
+                    user.getCreatedAt(),
+                    user.getUpdatedAt(),
+                    jwt.getSubject(),
+                    issuer,
+                    jwt.getAudience(),
+                    jwt.getClaimAsString("scope"),
+                    claims));
         } catch (Exception e) {
             log.error("Failed to sync user from JWT: {}", e.getMessage(), e);
+            Map<String, Object> claims = new LinkedHashMap<>();
+            claims.put("keys", jwt.getClaims().keySet());
+            return ApiSuccess.of(new MeResponse(
+                    null,
+                    null,
+                    jwt.getClaimAsString("email"),
+                    null,
+                    null,
+                    jwt.getSubject(),
+                    issuer,
+                    jwt.getAudience(),
+                    jwt.getClaimAsString("scope"),
+                    claims));
         }
-
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("sub", jwt.getSubject());
-        out.put("email", jwt.getClaimAsString("email")); // may be null
-        out.put("aud", jwt.getAudience()); // non-null list
-        out.put("iss", issuer);
-        out.put("scope", jwt.getClaimAsString("scope")); // may be null
-        out.put("claims", jwt.getClaims().keySet()); // helpful for debugging
-        return out;
     }
 }
