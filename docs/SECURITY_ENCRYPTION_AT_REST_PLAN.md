@@ -1,12 +1,15 @@
 # Encryption At Rest Plan
 
-Status: planned hardening for production deployment
+Status: app-layer baseline implemented; production infra hardening still planned
 
 ## Current State
 
 - Database stores health/profile/auth data in PostgreSQL.
 - Transport security is expected via HTTPS/TLS in deployment.
-- Full at-rest encryption is not yet enforced by application code.
+- Application now protects sensitive auth secrets at rest:
+  - refresh tokens, password reset tokens, verification codes are stored as hashes
+  - 2FA secrets are encrypted with AES-GCM
+- Remaining gap is infra-level evidence and rollout (encrypted volumes/KMS policy enforcement).
 
 ## Practical Production Plan
 
@@ -45,7 +48,6 @@ Status: planned hardening for production deployment
 
 ## Scope Decision For This Submission
 
-- Functional features were prioritized for assignment milestones.
-- At-rest encryption hardening is documented as next production phase.
-- Reviewer can validate that architecture and implementation path are concrete and realistic.
-
+- App-layer protections for sensitive auth data are implemented now.
+- Infra-level at-rest controls are documented as next production phase.
+- Reviewer can validate current implementation plus concrete production rollout path.

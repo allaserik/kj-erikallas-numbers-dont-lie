@@ -1,6 +1,5 @@
 package com.erikallas.ndl.auth.service;
 
-import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.auth.user.model.UserRepository;
 
@@ -200,7 +199,7 @@ public class AuthService {
      * Generate a refresh token and return the entity. Refresh tokens are valid for
      * 7 days.
      */
-    public RefreshTokenEntity generateRefreshToken(UserEntity user) {
-        return refreshTokenService.createRefreshToken(user);
+    public String generateRefreshToken(UserEntity user) {
+        return refreshTokenService.generateRefreshToken(user.getId());
     }
 }

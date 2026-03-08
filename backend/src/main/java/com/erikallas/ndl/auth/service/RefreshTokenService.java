@@ -2,6 +2,7 @@ package com.erikallas.ndl.auth.service;
 
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.model.RefreshTokenRepository;
+import com.erikallas.ndl.auth.security.SensitiveTokenHasher;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository tokenRepository;
+    private final SensitiveTokenHasher tokenHasher;
 
     // Refresh token validity period (days)
     private static final int TOKEN_VALIDITY_DAYS = 7;
 
-    public RefreshTokenService(RefreshTokenRepository tokenRepository) {
+    public RefreshTokenService(RefreshTokenRepository tokenRepository, SensitiveTokenHasher tokenHasher) {
         this.tokenRepository = tokenRepository;
+        this.tokenHasher = tokenHasher;
     }
 
     /**
@@ -37,7 +40,7 @@ public class RefreshTokenService {
         var entity = new RefreshTokenEntity();
         entity.setId(UUID.randomUUID());
         entity.setUserId(userId);
-        entity.setToken(tokenString);
+        entity.setToken(tokenHasher.hash(tokenString));
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setExpiresAt(OffsetDateTime.now().plusDays(TOKEN_VALIDITY_DAYS));
 
@@ -47,26 +50,15 @@ public class RefreshTokenService {
     }
 
     /**
-     * Create and save a new refresh token for a user. Returns the token entity.
-     */
-    @Transactional
-    public RefreshTokenEntity createRefreshToken(com.erikallas.ndl.auth.user.model.UserEntity user) {
-        var entity = new RefreshTokenEntity();
-        entity.setId(UUID.randomUUID());
-        entity.setUserId(user.getId());
-        entity.setToken(UUID.randomUUID().toString());
-        entity.setCreatedAt(OffsetDateTime.now());
-        entity.setExpiresAt(OffsetDateTime.now().plusDays(TOKEN_VALIDITY_DAYS));
-
-        return tokenRepository.save(entity);
-    }
-
-    /**
      * Validate and retrieve a refresh token. Returns the token entity if valid, or
      * null if invalid/expired/revoked.
      */
     public RefreshTokenEntity validateToken(String token) {
-        var entity = tokenRepository.findByToken(token).orElse(null);
+        var entity = tokenRepository.findByToken(tokenHasher.hash(token)).orElse(null);
+        if (entity == null) {
+            // Legacy compatibility: previously tokens were stored plaintext.
+            entity = tokenRepository.findByToken(token).orElse(null);
+        }
 
         if (entity == null) {
             return null;
@@ -85,7 +77,10 @@ public class RefreshTokenService {
      */
     @Transactional
     public void revokeToken(String token) {
-        var entity = tokenRepository.findByToken(token).orElse(null);
+        var entity = tokenRepository.findByToken(tokenHasher.hash(token)).orElse(null);
+        if (entity == null) {
+            entity = tokenRepository.findByToken(token).orElse(null);
+        }
 
         if (entity != null && !entity.isRevoked()) {
             entity.revoke();

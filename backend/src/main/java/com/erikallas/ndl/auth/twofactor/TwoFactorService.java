@@ -1,10 +1,10 @@
 package com.erikallas.ndl.auth.twofactor;
 
+import com.erikallas.ndl.auth.security.DataEncryptionService;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
-import java.util.Base64;
 import java.util.UUID;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -21,13 +21,15 @@ public class TwoFactorService {
     private static final int WINDOW_STEPS = 1;
 
     private final TwoFactorSecretRepository repository;
+    private final DataEncryptionService dataEncryptionService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${app.two-factor.issuer:NumbersDontLie}")
     private String issuer;
 
-    public TwoFactorService(TwoFactorSecretRepository repository) {
+    public TwoFactorService(TwoFactorSecretRepository repository, DataEncryptionService dataEncryptionService) {
         this.repository = repository;
+        this.dataEncryptionService = dataEncryptionService;
     }
 
     public record SetupResult(String secret, String otpauthUri) {
@@ -214,12 +216,11 @@ public class TwoFactorService {
         return out;
     }
 
-    // Minimal reversible obfuscation to avoid plaintext storage. Replace with KMS in production.
     private String encryptSecret(String raw) {
-        return Base64.getEncoder().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
+        return dataEncryptionService.encrypt(raw);
     }
 
     private String decryptSecret(String encrypted) {
-        return new String(Base64.getDecoder().decode(encrypted), StandardCharsets.UTF_8);
+        return dataEncryptionService.decrypt(encrypted);
     }
 }

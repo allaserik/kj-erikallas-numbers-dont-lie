@@ -7,7 +7,6 @@ import com.erikallas.ndl.auth.api.dto.RegisterResponse;
 import com.erikallas.ndl.auth.email.EmailService;
 import com.erikallas.ndl.auth.api.dto.AuthLoginRequest;
 import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
-import com.erikallas.ndl.auth.model.RefreshTokenEntity;
 import com.erikallas.ndl.auth.twofactor.TwoFactorService;
 import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.ratelimit.RateLimitService;
@@ -110,9 +109,9 @@ public class AuthController {
         }
         // Generate JWT access token
         String accessToken = authService.generateAccessToken(user);
-        // Generate refresh token
-        RefreshTokenEntity refreshToken = authService.generateRefreshToken(user);
+        // Generate refresh token (raw token returned once, hashed value stored at rest)
+        String refreshToken = authService.generateRefreshToken(user);
         // Return tokens
-        return ResponseEntity.ok(ApiSuccess.of(new LoginResponse(accessToken, refreshToken.getToken())));
+        return ResponseEntity.ok(ApiSuccess.of(new LoginResponse(accessToken, refreshToken)));
     }
 }

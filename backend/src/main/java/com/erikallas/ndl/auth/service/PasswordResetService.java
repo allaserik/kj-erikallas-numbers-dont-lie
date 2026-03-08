@@ -2,6 +2,7 @@ package com.erikallas.ndl.auth.service;
 
 import com.erikallas.ndl.auth.email.EmailConfig;
 import com.erikallas.ndl.auth.email.EmailSender;
+import com.erikallas.ndl.auth.security.SensitiveTokenHasher;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,17 +22,20 @@ public class PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final EmailSender emailSender;
     private final EmailConfig emailConfig;
+    private final SensitiveTokenHasher tokenHasher;
 
     // Password reset token validity period (hours)
     private static final int TOKEN_VALIDITY_HOURS = 1;
 
     public PasswordResetService(PasswordResetTokenRepository tokenRepository, UserRepository userRepository,
-            PasswordEncoder passwordEncoder, EmailSender emailSender, EmailConfig emailConfig) {
+            PasswordEncoder passwordEncoder, EmailSender emailSender, EmailConfig emailConfig,
+            SensitiveTokenHasher tokenHasher) {
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailSender = emailSender;
         this.emailConfig = emailConfig;
+        this.tokenHasher = tokenHasher;
     }
 
     /**
@@ -95,7 +99,7 @@ public class PasswordResetService {
         var entity = new PasswordResetTokenEntity();
         entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());
-        entity.setToken(token);
+        entity.setToken(tokenHasher.hash(token));
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setExpiresAt(OffsetDateTime.now().plusHours(TOKEN_VALIDITY_HOURS));
 
@@ -109,7 +113,11 @@ public class PasswordResetService {
      * if invalid.
      */
     public PasswordResetTokenEntity validateToken(String token) {
-        var entity = tokenRepository.findByToken(token).orElse(null);
+        var entity = tokenRepository.findByToken(tokenHasher.hash(token)).orElse(null);
+        if (entity == null) {
+            // Legacy compatibility: previously token was stored plaintext.
+            entity = tokenRepository.findByToken(token).orElse(null);
+        }
 
         if (entity == null) {
             return null;

@@ -49,6 +49,9 @@ app:
   jwt:
     access-token-expiry-minutes: 15
     issuer: numbers-dont-lie
+  security:
+    token-pepper: ${APP_TOKEN_PEPPER:}
+    data-encryption-key: ${APP_DATA_ENCRYPTION_KEY:change-me-in-env}
   two-factor:
     issuer: NumbersDontLie
   email:

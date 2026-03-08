@@ -45,7 +45,7 @@ Legend: `DONE` = implemented and visible in code, `PARTIAL` = implemented but in
 | Handle missing data gracefully | DONE | Controlled fallbacks in `AiInsightService` (`fallbackToLast`, cached insight fallback) |
 | Clear data usage consent | DONE | Consent gate in `AiInsightController` and settings UX in `InsightCard` -> `/settings` |
 | Encryption in transit | PARTIAL | Depends on deployment TLS; local env is plain HTTP |
-| Encryption at rest | PARTIAL | Production implementation plan documented in `docs/SECURITY_ENCRYPTION_AT_REST_PLAN.md`; full infra/app rollout pending |
+| Encryption at rest | PARTIAL | App-layer protection implemented (hashed refresh/reset/verification tokens + encrypted 2FA secrets) and production infra plan documented in `docs/SECURITY_ENCRYPTION_AT_REST_PLAN.md` |
 
 ## 5) Health Analytics
 
@@ -112,7 +112,7 @@ Needs explicit reviewer/demo explanation (likely oral):
 - Missing data impact on AI accuracy
 
 Still weak or incomplete for above-average grading:
-- Encryption-at-rest is planned/documented but not yet fully implemented in infra + app runtime
+- Encryption-at-rest is implemented in app layer for sensitive auth secrets, but full infra encryption evidence (volume/KMS policy) is still pending
 
 ## 9) Recommended Final Pre-Submission Chunks
 

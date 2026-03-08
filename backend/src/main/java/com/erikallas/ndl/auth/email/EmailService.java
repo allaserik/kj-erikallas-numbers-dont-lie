@@ -3,6 +3,7 @@ package com.erikallas.ndl.auth.email;
 import com.erikallas.ndl.auth.user.model.EmailVerificationCodeEntity;
 import com.erikallas.ndl.auth.user.model.EmailVerificationCodeRepository;
 import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.security.SensitiveTokenHasher;
 
 import java.time.OffsetDateTime;
 import java.util.Random;
@@ -15,6 +16,7 @@ public class EmailService {
 
     private final EmailVerificationCodeRepository codeRepository;
     private final EmailSender emailSender;
+    private final SensitiveTokenHasher tokenHasher;
     private final Random random = new Random();
 
     // Email verification code validity period
@@ -22,9 +24,11 @@ public class EmailService {
     // Minimum time between resend attempts (minutes)
     private static final int RESEND_COOLDOWN_MINUTES = 1;
 
-    public EmailService(EmailVerificationCodeRepository codeRepository, EmailSender emailSender) {
+    public EmailService(EmailVerificationCodeRepository codeRepository, EmailSender emailSender,
+            SensitiveTokenHasher tokenHasher) {
         this.codeRepository = codeRepository;
         this.emailSender = emailSender;
+        this.tokenHasher = tokenHasher;
     }
 
     /**
@@ -43,7 +47,7 @@ public class EmailService {
         var entity = new EmailVerificationCodeEntity();
         entity.setId(UUID.randomUUID());
         entity.setUserId(user.getId());
-        entity.setCode(code);
+        entity.setCode(tokenHasher.hash(code));
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setExpiresAt(OffsetDateTime.now().plusHours(CODE_VALIDITY_HOURS));
 
@@ -61,7 +65,11 @@ public class EmailService {
      */
     @Transactional
     public boolean verifyCode(String code, UserEntity user) {
-        var codeEntity = codeRepository.findByCode(code).orElse(null);
+        var codeEntity = codeRepository.findByCode(tokenHasher.hash(code)).orElse(null);
+        if (codeEntity == null) {
+            // Legacy compatibility: previously code was stored plaintext.
+            codeEntity = codeRepository.findByCode(code).orElse(null);
+        }
 
         if (codeEntity == null) {
             return false;
