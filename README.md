@@ -1,79 +1,128 @@
-# Wellness App
+# Numbers Don't Lie
 
-kood/Jõhvi generative AI specialization Wellness App project
+Wellness tracking app with health profile collection, goal tracking, wellness scoring, AI-generated insights, and trend visualizations.
 
-- KJ gitea's:
+## Project Overview
 
-[numbers-dont-lie](https://gitea.kood.tech/erikallas/numbers-dont-lie.git)
+Main capabilities:
+- Account system: email/password, Google OAuth, GitHub OAuth
+- Email verification, refresh-token based sessions, password reset
+- Optional user-enabled 2FA (TOTP + QR setup)
+- Health profile + fitness assessment
+- Weight check-ins and historical tracking
+- Goals, progress snapshots, and milestone tracking
+- BMI + wellness score analytics
+- AI insights with caching/fallback and response guardrails
+- Privacy preferences, data export, account deletion
 
-[ai-assistant](https://gitea.kood.tech/erikallas/ai-assistant.git)
+## Tech Stack
 
-[counting-calories](https://gitea.kood.tech/erikallas/counting-calories.git)
+- Backend: Java, Spring Boot, Spring Security, JPA/Hibernate, Flyway, PostgreSQL
+- Frontend: React, TypeScript, Vite
+- Auth: Local JWT + Auth0 resource-server validation for OAuth tokens
+- AI: OpenAI Responses API (optional), strict JSON schema output
 
-## Start entire app in Docker (one command!)
+## Quick Start (Docker)
 
-**Production (no demo data):**
+Run full app:
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-**With Demo Data:**
+Open:
+- Frontend: `http://localhost:5173`
+- Swagger: `http://localhost:8080/swagger-ui/index.html`
 
-```bash
-DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
-# Or using env file:
-source .env.docker.demo && docker-compose up -d
-```
-
-Then visit: http://localhost:5173
-
-**Stop everything:**
+Stop:
 
 ```bash
 docker-compose down
 ```
 
-Local Development (Frontend + Backend locally, Database in Docker)
+Full reset (drop DB volume):
 
-**Terminal 1 - Start database only:**
+```bash
+docker-compose down -v
+docker-compose up -d --build
+```
+
+## Demo Mode
+
+Run with pre-seeded demo user/data:
+
+```bash
+DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
+```
+
+Demo credentials:
+- `demo@example.com` / `demo@example.com`
+
+Detailed demo instructions:
+- [DEMO_MODE.md](DEMO_MODE.md)
+
+## Local Development
+
+1. Start database only:
 
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 ```
 
-**Terminal 2 - Start backend:**
+2. Start backend:
 
 ```bash
 cd backend
-./mvnw -U clean test
 ./mvnw -q -DskipTests compile
-DEMO_MODE=true ./mvnw spring-boot:run
+./mvnw spring-boot:run
 ```
 
-**Terminal 3 - Start frontend:**
+3. Start frontend:
 
 ```bash
 cd frontend
-VITE_DEMO_MODE=true npm run dev
+npm install
+npm run dev
 ```
 
-install ollama
-[host ALL your AI locally](https://www.youtube.com/watch?v=Wjrdr0NU4Sk)
+## Environment Variables
 
-OpenAPI Swagger documentation
-[OpenAPI Swagger URL](http://localhost:8080/swagger-ui/index.html)
+Place variables in root `.env` (or export in shell).
 
-## Run with openai api key
+Important keys:
+- `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`
+- `AUTH0_AUDIENCE`
+- `OPENAI_API_KEY` (optional)
+- `OPENAI_MODEL` (default `gpt-4o-mini`)
+- `DEMO_MODE` and `VITE_DEMO_MODE` (for demo data/UI)
+
+If running backend directly and using `.env`:
 
 ```bash
-cd /home/erik/dev/kood/erikallas/numbers-dont-lie
 set -a
 source .env
 set +a
-
-cd backend
-./mvnw spring-boot:run
-
-echo $OPENAI_API_KEY | head -c 12 && echo "..."
 ```
+
+## AI Insights Notes
+
+When `OPENAI_API_KEY` is configured:
+- Insights are generated with strict JSON schema
+- Responses are cached by prompt-context hash
+- Guardrails enforce grounding/safety/novelty constraints
+
+When AI is unavailable:
+- Service returns latest cached insight or a safe fallback insight
+
+## Submission/Review Docs
+
+- Assignment requirements: `docs/ASSIGNMENT.md`
+- Test criteria: `docs/ASSIGNMENT_TEST.md`
+- Current implementation gap analysis: `docs/REVIEW_GAP_CHECKLIST.md`
+- Reviewer test playbook: `docs/REVIEWER_GUIDE.md`
+- Encryption-at-rest production plan: `docs/SECURITY_ENCRYPTION_AT_REST_PLAN.md`
+
+## Known Limitations
+
+- Encryption-at-rest is not implemented in application layer (deployment concern)
+- Restriction-aware AI filtering is mainly prompt/context driven (not full rule-engine enforcement)

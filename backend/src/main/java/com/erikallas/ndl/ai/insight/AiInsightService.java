@@ -27,7 +27,7 @@ public class AiInsightService {
     private static final Logger log = LoggerFactory.getLogger(AiInsightService.class);
 
     private static final Duration CACHE_TTL = Duration.ofHours(24);
-    private static final String PROMPT_VERSION = "v3-grounded-safe-novel";
+    private static final String PROMPT_VERSION = "v4-grounded-safe-novel-restrictions";
     private static final Pattern PERCENT_PATTERN = Pattern.compile("\\b(\\d{1,3})\\s*%");
     private static final Pattern UNSAFE_PATTERN = Pattern.compile(
             "\\b(diagnose|diagnosis|medication|dose|dosage|prescribe|cure|starve|starvation|purge|laxative|self-harm|suicide)\\b",
@@ -197,6 +197,7 @@ public class AiInsightService {
                 validateGrounding(payload, context);
                 validatePercentClaims(payload, context);
                 validateSafety(payload);
+                validateDietaryRestrictions(payload, context);
                 validateRecommendationNovelty(payload, recentNormalized);
             }
 
@@ -263,6 +264,26 @@ public class AiInsightService {
         }
     }
 
+    private void validateDietaryRestrictions(AiPayload payload, Map<String, Object> context) {
+        Set<String> blockedTerms = extractBlockedFoodTerms(context);
+        if (blockedTerms.isEmpty()) {
+            return;
+        }
+
+        List<String> texts = new ArrayList<>(payload.recommendations());
+        texts.add(payload.reflection_question());
+        texts.add(payload.summary());
+
+        for (String text : texts) {
+            String normalized = normalizeText(text);
+            for (String blocked : blockedTerms) {
+                if (normalized.contains(blocked)) {
+                    throw new IllegalArgumentException("recommendation conflicts with dietary restriction: " + blocked);
+                }
+            }
+        }
+    }
+
     private Set<String> extractKeyDataTokens(Map<String, Object> context) {
         Set<String> out = new LinkedHashSet<>();
         addValueToken(out, nestedValue(context, "current_metrics", "current_weight_kg"));
@@ -320,6 +341,96 @@ public class AiInsightService {
         return allowed;
     }
 
+    @SuppressWarnings("unchecked")
+    private Set<String> extractBlockedFoodTerms(Map<String, Object> context) {
+        Set<String> blocked = new LinkedHashSet<>();
+        if (context == null) {
+            return blocked;
+        }
+
+        Object dietaryObj = context.get("dietary");
+        if (!(dietaryObj instanceof Map<?, ?> dietaryMapRaw)) {
+            return blocked;
+        }
+        Map<String, Object> dietaryMap = (Map<String, Object>) dietaryMapRaw;
+        Object restrictionsObj = dietaryMap.get("restrictions");
+        if (!(restrictionsObj instanceof List<?> restrictions)) {
+            return blocked;
+        }
+
+        for (Object restrictionObj : restrictions) {
+            if (!(restrictionObj instanceof String restriction)) {
+                continue;
+            }
+            String r = normalizeText(restriction);
+            if (r.isBlank()) {
+                continue;
+            }
+
+            if (r.contains("lactose") || r.contains("dairy")) {
+                blocked.add("milk");
+                blocked.add("cheese");
+                blocked.add("yogurt");
+                blocked.add("butter");
+                blocked.add("cream");
+                continue;
+            }
+            if (r.contains("gluten")) {
+                blocked.add("wheat");
+                blocked.add("bread");
+                blocked.add("pasta");
+                blocked.add("barley");
+                blocked.add("rye");
+                continue;
+            }
+            if (r.contains("vegan")) {
+                blocked.add("meat");
+                blocked.add("chicken");
+                blocked.add("fish");
+                blocked.add("egg");
+                blocked.add("milk");
+                blocked.add("cheese");
+                continue;
+            }
+            if (r.contains("vegetarian")) {
+                blocked.add("meat");
+                blocked.add("chicken");
+                blocked.add("fish");
+                continue;
+            }
+            if (r.contains("nut")) {
+                blocked.add("nut");
+                blocked.add("peanut");
+                blocked.add("almond");
+                blocked.add("walnut");
+                blocked.add("cashew");
+                continue;
+            }
+            if (r.contains("shellfish")) {
+                blocked.add("shrimp");
+                blocked.add("prawn");
+                blocked.add("crab");
+                blocked.add("lobster");
+                blocked.add("shellfish");
+                continue;
+            }
+            if (r.contains("egg")) {
+                blocked.add("egg");
+                continue;
+            }
+            if (r.contains("soy")) {
+                blocked.add("soy");
+                blocked.add("tofu");
+                continue;
+            }
+
+            // Fallback: use normalized restriction phrase as a blocked token.
+            blocked.add(r);
+        }
+
+        return blocked;
+    }
+
     private boolean containsAnyToken(String text, Set<String> tokens) {
         if (text == null || text.isBlank()) {
             return false;
@@ -356,6 +467,7 @@ public class AiInsightService {
         sb.append("- Mention at least one concrete metric from the provided context in recommendations or summary.\n");
         sb.append("- If you mention any percentage, it must exactly match a provided percentage from context.\n");
         sb.append("- Avoid diagnosis, prescriptions, dosages, and extreme advice.\n");
+        sb.append("- Respect dietary restrictions and do not suggest restricted foods.\n");
         if (recentRecommendations != null && !recentRecommendations.isEmpty()) {
             sb.append("- Do not repeat recommendations from recent insights; provide fresh wording and actions.\n");
         }
