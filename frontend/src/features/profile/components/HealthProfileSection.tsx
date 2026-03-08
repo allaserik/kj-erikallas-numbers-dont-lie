@@ -77,12 +77,6 @@ export function HealthProfileSection({
                                     {formData.age || "—"}
                                 </div>
                             </div>
-                            <div className="p-3 bg-slate-50 rounded">
-                                <div className="text-xs text-slate-600">Target Weight</div>
-                                <div className="text-lg font-semibold text-slate-900">
-                                    {formData.targetWeight ? `${formData.targetWeight} kg` : "—"}
-                                </div>
-                            </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3 text-sm">
                             <div className="p-3 bg-slate-50 rounded">
@@ -115,6 +109,20 @@ export function HealthProfileSection({
                                 <div className="text-xs text-slate-600">Weekly Activity Frequency</div>
                                 <div className="font-medium text-slate-900">
                                     {formData.activityFrequency !== "" ? `${formData.activityFrequency} days` : "—"}
+                                </div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Strength Indicators</div>
+                                <div className="font-medium text-slate-900">
+                                    Pushups: {formData.pushups !== "" ? formData.pushups : "—"} | Situps: {formData.situps !== "" ? formData.situps : "—"} | Pullups: {formData.pullups !== "" ? formData.pullups : "—"}
+                                </div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">3km Run Time</div>
+                                <div className="font-medium text-slate-900">
+                                    {formData.run3kmMinutes !== "" || formData.run3kmSeconds !== ""
+                                        ? `${formData.run3kmMinutes || 0}m ${formData.run3kmSeconds || 0}s`
+                                        : "—"}
                                 </div>
                             </div>
                         </div>
@@ -184,17 +192,6 @@ export function HealthProfileSection({
                                 { value: "VERY_ACTIVE", label: "Very active (6-7 days/week)" },
                                 { value: "EXTREMELY_ACTIVE", label: "Extremely active (twice per day)" },
                             ]}
-                        />
-                        <TextField
-                            label="Target Weight (kg)"
-                            type="number"
-                            value={formData.targetWeight}
-                            onChange={(e) => onInputChange("targetWeight", e.target.value)}
-                            error={validationErrors.targetWeight}
-                            min="20"
-                            max="300"
-                            placeholder="70"
-                            step="0.1"
                         />
                         <TextField
                             label="Occupation Type"
@@ -296,13 +293,40 @@ export function HealthProfileSection({
                             min="0"
                         />
                         <TextField
-                            label="Squats (count)"
+                            label="Situps (count)"
                             type="number"
-                            value={formData.squats}
-                            onChange={(e) => onInputChange("squats", e.target.value)}
-                            error={validationErrors.squats}
+                            value={formData.situps}
+                            onChange={(e) => onInputChange("situps", e.target.value)}
+                            error={validationErrors.situps}
                             min="0"
                         />
+                        <TextField
+                            label="Pullups (count)"
+                            type="number"
+                            value={formData.pullups}
+                            onChange={(e) => onInputChange("pullups", e.target.value)}
+                            error={validationErrors.pullups}
+                            min="0"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                            <TextField
+                                label="3km Run Minutes"
+                                type="number"
+                                value={formData.run3kmMinutes}
+                                onChange={(e) => onInputChange("run3kmMinutes", e.target.value)}
+                                error={validationErrors.run3kmMinutes}
+                                min="0"
+                            />
+                            <TextField
+                                label="3km Run Seconds"
+                                type="number"
+                                value={formData.run3kmSeconds}
+                                onChange={(e) => onInputChange("run3kmSeconds", e.target.value)}
+                                error={validationErrors.run3kmSeconds}
+                                min="0"
+                                max="59"
+                            />
+                        </div>
 
                         {/* Edit Form Actions */}
                         <div className="flex gap-2 pt-4">

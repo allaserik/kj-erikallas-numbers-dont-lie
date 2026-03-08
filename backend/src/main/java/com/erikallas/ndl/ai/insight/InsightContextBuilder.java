@@ -140,7 +140,17 @@ public class InsightContextBuilder {
         Map<?, ?> activity = (Map<?, ?>) context.getOrDefault("activity", new HashMap<>());
         if (!activity.isEmpty()) {
             sb.append("ACTIVITY & COMPLIANCE:\n");
-            activity.forEach((k, v) -> sb.append("  ").append(k).append(": ").append(v).append("\n"));
+            activity.forEach((k, v) -> {
+                if ("run_3km_time_sec".equals(k) && v instanceof Number secondsNumber) {
+                    long totalSeconds = secondsNumber.longValue();
+                    long minutes = totalSeconds / 60;
+                    long seconds = totalSeconds % 60;
+                    sb.append("  ").append(k).append(": ").append(minutes).append(":")
+                            .append(String.format("%02d", seconds)).append(" (mm:ss)\n");
+                } else {
+                    sb.append("  ").append(k).append(": ").append(v).append("\n");
+                }
+            });
             sb.append("\n");
         }
 
@@ -245,15 +255,18 @@ public class InsightContextBuilder {
         // Fitness assessment data
         if (profile.getFitnessAssessment() != null && !profile.getFitnessAssessment().isEmpty()) {
             Map<String, Object> fitness = profile.getFitnessAssessment();
-            if (fitness.get("weekly_exercise_days") != null) {
-                activity.put("weekly_exercise_days", fitness.get("weekly_exercise_days"));
-            }
-            if (fitness.get("exercise_preference") != null) {
-                activity.put("exercise_preference", fitness.get("exercise_preference"));
-            }
-            if (fitness.get("current_fitness_level") != null) {
-                activity.put("current_fitness_level", fitness.get("current_fitness_level"));
-            }
+            putIfPresent(fitness, activity, "occupation_type");
+            putIfPresent(fitness, activity, "current_activity_frequency");
+            putIfPresent(fitness, activity, "exercise_types");
+            putIfPresent(fitness, activity, "average_session_duration");
+            putIfPresent(fitness, activity, "self_assessed_fitness_level");
+            putIfPresent(fitness, activity, "preferred_exercise_environment");
+            putIfPresent(fitness, activity, "exercise_time_preference");
+            putIfPresent(fitness, activity, "current_endurance_minutes");
+            putIfPresent(fitness, activity, "pushups_count");
+            putIfPresent(fitness, activity, "situps_count");
+            putIfPresent(fitness, activity, "pullups_count");
+            putIfPresent(fitness, activity, "run_3km_time_sec");
         }
 
         if (profile.getFitnessAssessmentCompleted() != null) {
@@ -261,6 +274,13 @@ public class InsightContextBuilder {
         }
 
         context.put("activity", activity);
+    }
+
+    private void putIfPresent(Map<String, Object> source, Map<String, Object> target, String key) {
+        Object value = source.get(key);
+        if (value != null) {
+            target.put(key, value);
+        }
     }
 
     private void addDietarySection(Map<String, Object> context, HealthProfileEntity profile) {

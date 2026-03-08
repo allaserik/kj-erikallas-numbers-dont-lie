@@ -1,6 +1,6 @@
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { getWeightHistory } from "../../shared/api/weight";
-import { getHealthProfile } from "../../shared/api/profile";
+import { getActiveGoals } from "../../shared/api/goals";
 import type { WeightEntry, PaginatedResponse } from "../../shared/types";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 
@@ -29,8 +29,8 @@ export function useWeightChartData(): WeightChartState {
         isAuthenticated
     );
 
-    // Fetch health profile for target weight
-    const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
+    // Fetch active goal for target weight reference
+    const activeGoalQ = useAuthedQuery("activeGoal", getActiveGoals, isAuthenticated);
 
     // Process weight data into chart points
     const points: ChartDataPoint[] = [];
@@ -73,10 +73,10 @@ export function useWeightChartData(): WeightChartState {
 
     return {
         points,
-        targetWeight: profileQ.data?.targetWeight || null,
+        targetWeight: activeGoalQ.data?.targetValue || null,
         minWeight: adjustedMin,
         maxWeight: adjustedMax,
-        isLoading: weightQ.loading || profileQ.loading,
-        error: weightQ.error || profileQ.error || null,
+        isLoading: weightQ.loading || activeGoalQ.loading,
+        error: weightQ.error || activeGoalQ.error || null,
     };
 }

@@ -10,7 +10,7 @@ import { unwrapApiData } from "./unwrap";
 // Backend response structure (snake_case)
 type HealthProfileBackendResponse = {
     user_id: string;
-    birth_year: number;
+    birth_year: number | null;
     gender: string;
     height_cm: number;
     baseline_activity_level: string;
@@ -30,7 +30,7 @@ function transformHealthProfile(data: HealthProfileBackendResponse | null): Heal
     if (!data) return null;
 
     const currentYear = new Date().getFullYear();
-    const age = currentYear - data.birth_year;
+    const age = typeof data.birth_year === "number" ? currentYear - data.birth_year : 0;
 
     // Parse activity level: backend stores as "sedentary", "light active", etc.
     // Convert to SCREAMING_SNAKE_CASE
@@ -39,8 +39,8 @@ function transformHealthProfile(data: HealthProfileBackendResponse | null): Heal
     if (levelStr.includes("sedentary")) activityLevel = "SEDENTARY";
     else if (levelStr.includes("light")) activityLevel = "LIGHTLY_ACTIVE";
     else if (levelStr.includes("moderate")) activityLevel = "MODERATELY_ACTIVE";
-    else if (levelStr.includes("very")) activityLevel = "VERY_ACTIVE";
     else if (levelStr.includes("extremely")) activityLevel = "EXTREMELY_ACTIVE";
+    else if (levelStr.includes("very")) activityLevel = "VERY_ACTIVE";
 
     return {
         userId: data.user_id,
