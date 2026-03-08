@@ -1,8 +1,7 @@
 import { Card, CardBody, CardTitle } from "../../../shared/ui/Card";
-import type { ChartDataPoint } from "../useWeightChartData";
 
 interface ActivityHeatmapProps {
-    points: ChartDataPoint[];
+    dates: string[];
 }
 
 type HeatCell = {
@@ -10,10 +9,10 @@ type HeatCell = {
     count: number;
 };
 
-function buildHeatmap(points: ChartDataPoint[], days = 84): HeatCell[] {
+function buildHeatmap(dates: string[], days = 84): HeatCell[] {
     const counts = new Map<string, number>();
-    for (const p of points) {
-        counts.set(p.date, (counts.get(p.date) || 0) + 1);
+    for (const date of dates) {
+        counts.set(date, (counts.get(date) || 0) + 1);
     }
 
     const today = new Date();
@@ -36,8 +35,8 @@ function cellColor(count: number): string {
     return "bg-emerald-600";
 }
 
-export function ActivityHeatmap({ points }: ActivityHeatmapProps) {
-    const cells = buildHeatmap(points, 84);
+export function ActivityHeatmap({ dates }: ActivityHeatmapProps) {
+    const cells = buildHeatmap(dates, 84);
     const activeDays = cells.filter((c) => c.count > 0).length;
 
     return (

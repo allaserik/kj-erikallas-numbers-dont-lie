@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 import { getWellnessHistory } from "../../shared/api/wellness";
+import { getActivityHistory } from "../../shared/api/activity";
 import { WellnessEvolutionChart } from "./components/WellnessEvolutionChart";
 import { WellnessComponentsStackedChart } from "./components/WellnessComponentsStackedChart";
 import { ActivityHeatmap } from "./components/ActivityHeatmap";
@@ -20,6 +21,14 @@ export default function TrendsPage() {
         `wellnessHistory-${range}`,
         (token: string) => getWellnessHistory(token, weeksByRange[range]),
         isAuthenticated
+    );
+    const activityQ = useAuthedQuery(
+        `activityHistory-${range}`,
+        (token: string) => getActivityHistory({ size: range === "30" ? 80 : range === "90" ? 220 : 500 }, token),
+        isAuthenticated
+    );
+    const activityDates = (activityQ.data?.content || []).map((item) =>
+        new Date(item.checkinAt).toISOString().split("T")[0]
     );
 
     return (
@@ -69,7 +78,7 @@ export default function TrendsPage() {
                     />
                     <WellnessEvolutionChart points={wellnessQ.data || []} />
                     <WellnessComponentsStackedChart points={wellnessQ.data || []} />
-                    <ActivityHeatmap points={chartData.points} />
+                    <ActivityHeatmap dates={activityDates} />
 
                     {chartData.points.length === 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

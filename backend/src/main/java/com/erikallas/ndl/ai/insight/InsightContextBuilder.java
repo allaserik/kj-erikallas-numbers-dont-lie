@@ -4,6 +4,7 @@ import com.erikallas.ndl.health.goal.GoalEntity;
 import com.erikallas.ndl.health.goal.GoalProgressEntity;
 import com.erikallas.ndl.health.goal.GoalProgressRepository;
 import com.erikallas.ndl.health.goal.GoalRepository;
+import com.erikallas.ndl.health.activity.ActivityCheckinRepository;
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
 import com.erikallas.ndl.health.summary.HealthSummaryService;
@@ -37,14 +38,17 @@ public class InsightContextBuilder {
     private final GoalRepository goalRepo;
     private final GoalProgressRepository progressRepo;
     private final HealthSummaryService summaryService;
+    private final ActivityCheckinRepository activityCheckinRepository;
 
     public InsightContextBuilder(HealthProfileService profileService, WeightEntryRepository weightRepo,
-            GoalRepository goalRepo, GoalProgressRepository progressRepo, HealthSummaryService summaryService) {
+            GoalRepository goalRepo, GoalProgressRepository progressRepo, HealthSummaryService summaryService,
+            ActivityCheckinRepository activityCheckinRepository) {
         this.profileService = profileService;
         this.weightRepo = weightRepo;
         this.goalRepo = goalRepo;
         this.progressRepo = progressRepo;
         this.summaryService = summaryService;
+        this.activityCheckinRepository = activityCheckinRepository;
     }
 
     /**
@@ -271,6 +275,30 @@ public class InsightContextBuilder {
 
         if (profile.getFitnessAssessmentCompleted() != null) {
             activity.put("fitness_assessment_completed", profile.getFitnessAssessmentCompleted());
+        }
+
+        var recentActivity = activityCheckinRepository.findTop100ByUserIdOrderByCheckinAtDesc(profile.getUserId());
+        long activeDaysLast7 = recentActivity.stream()
+                .filter(a -> a.getCheckinAt() != null && !a.getCheckinAt().isBefore(OffsetDateTime.now().minusDays(7)))
+                .map(a -> a.getCheckinAt().toLocalDate())
+                .distinct()
+                .count();
+        activity.put("active_days_last_7d", activeDaysLast7);
+
+        var timeline = recentActivity.stream().limit(10).map(a -> {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("checkin_at", a.getCheckinAt());
+            item.put("activity_type", a.getActivityType());
+            if (a.getDurationMinutes() != null) {
+                item.put("duration_minutes", a.getDurationMinutes());
+            }
+            if (a.getIntensity() != null) {
+                item.put("intensity", a.getIntensity());
+            }
+            return item;
+        }).toList();
+        if (!timeline.isEmpty()) {
+            activity.put("recent_activity_timeline", timeline);
         }
 
         context.put("activity", activity);

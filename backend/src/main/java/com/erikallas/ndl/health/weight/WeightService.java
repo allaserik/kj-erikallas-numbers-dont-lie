@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class WeightService {
+    private static final int MAX_COLLISION_RETRIES = 120;
 
     private final WeightEntryRepository repo;
     private final HealthProfileRepository profileRepo;
@@ -26,10 +27,8 @@ public class WeightService {
 
     @Transactional
     public WeightEntryEntity add(UUID userId, double weightKg, OffsetDateTime measuredAt, String note) {
-        OffsetDateTime effectiveMeasuredAt = measuredAt != null ? measuredAt : OffsetDateTime.now();
-        if (repo.existsByUserIdAndMeasuredAt(userId, effectiveMeasuredAt)) {
-            throw new IllegalArgumentException("Weight entry already exists for this timestamp");
-        }
+        OffsetDateTime effectiveMeasuredAt = resolveUniqueTimestamp(userId,
+                measuredAt != null ? measuredAt : OffsetDateTime.now());
         // Save weight entry
         var entry = repo.save(new WeightEntryEntity(UUID.randomUUID(), userId,
                 effectiveMeasuredAt, weightKg, note));
@@ -78,9 +77,7 @@ public class WeightService {
      */
     @Transactional
     public WeightEntryEntity update(UUID userId, WeightEntryEntity entry) {
-        if (repo.existsByUserIdAndMeasuredAtAndIdNot(userId, entry.getMeasuredAt(), entry.getId())) {
-            throw new IllegalArgumentException("Weight entry already exists for this timestamp");
-        }
+        entry.setMeasuredAt(resolveUniqueTimestampForUpdate(userId, entry.getMeasuredAt(), entry.getId()));
         var saved = repo.save(entry);
 
         // Recalculate BMI in health profile if it exists
@@ -96,5 +93,27 @@ public class WeightService {
         }
 
         return saved;
+    }
+
+    private OffsetDateTime resolveUniqueTimestamp(UUID userId, OffsetDateTime base) {
+        OffsetDateTime candidate = base;
+        for (int i = 0; i < MAX_COLLISION_RETRIES; i++) {
+            if (!repo.existsByUserIdAndMeasuredAt(userId, candidate)) {
+                return candidate;
+            }
+            candidate = candidate.plusSeconds(1);
+        }
+        throw new IllegalArgumentException("Too many entries for the same timestamp");
+    }
+
+    private OffsetDateTime resolveUniqueTimestampForUpdate(UUID userId, OffsetDateTime base, UUID id) {
+        OffsetDateTime candidate = base;
+        for (int i = 0; i < MAX_COLLISION_RETRIES; i++) {
+            if (!repo.existsByUserIdAndMeasuredAtAndIdNot(userId, candidate, id)) {
+                return candidate;
+            }
+            candidate = candidate.plusSeconds(1);
+        }
+        throw new IllegalArgumentException("Too many entries for the same timestamp");
     }
 }

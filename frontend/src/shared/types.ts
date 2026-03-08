@@ -40,6 +40,15 @@ export type WeightEntry = {
     createdAt: string;
 };
 
+export type ActivityCheckin = {
+    id: string;
+    activityType: string;
+    durationMinutes?: number;
+    intensity?: string;
+    note?: string;
+    checkinAt: string;
+};
+
 // Goal (fitness/wellness targets)
 export type Goal = {
     id: string;

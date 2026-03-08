@@ -7,6 +7,8 @@ import com.erikallas.ndl.health.goal.GoalProgressEntity;
 import com.erikallas.ndl.health.goal.GoalProgressRepository;
 import com.erikallas.ndl.health.goal.GoalRepository;
 import com.erikallas.ndl.health.goal.GoalType;
+import com.erikallas.ndl.health.activity.ActivityCheckinEntity;
+import com.erikallas.ndl.health.activity.ActivityCheckinRepository;
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
@@ -40,15 +42,18 @@ public class DemoDataInitializer {
     private final GoalRepository goalRepo;
     private final GoalProgressRepository goalProgressRepo;
     private final WeightEntryRepository weightRepo;
+    private final ActivityCheckinRepository activityRepo;
     private final PasswordEncoder passwordEncoder;
 
     public DemoDataInitializer(UserRepository userRepo, HealthProfileRepository profileRepo, GoalRepository goalRepo,
-            GoalProgressRepository goalProgressRepo, WeightEntryRepository weightRepo, PasswordEncoder passwordEncoder) {
+            GoalProgressRepository goalProgressRepo, WeightEntryRepository weightRepo, ActivityCheckinRepository activityRepo,
+            PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
         this.profileRepo = profileRepo;
         this.goalRepo = goalRepo;
         this.goalProgressRepo = goalProgressRepo;
         this.weightRepo = weightRepo;
+        this.activityRepo = activityRepo;
         this.passwordEncoder = passwordEncoder;
         initializeDemo();
     }
@@ -118,7 +123,11 @@ public class DemoDataInitializer {
             createArchivedGoalProgressHistory(archivedGoal, now);
             log.info("Created goal progress history");
 
-            // 6. Set BMI and wellness score snapshot for faster first-load demo UX
+            // 6. Create activity check-ins for activity heatmap and timeline demos
+            createActivityCheckins(DEMO_USER_ID, now);
+            log.info("Created activity check-ins");
+
+            // 7. Set BMI and wellness score snapshot for faster first-load demo UX
             var latestWeight = weightRepo.findTop30ByUserIdOrderByMeasuredAtDesc(DEMO_USER_ID).stream().findFirst();
             latestWeight.ifPresent(w -> profile.calculateBMI(w.getWeightKg()));
             profile.setWellnessScore(74);
@@ -205,6 +214,30 @@ public class DemoDataInitializer {
                     "completed_at", ts.toString()
             )));
             goalProgressRepo.save(progress);
+        }
+    }
+
+    private void createActivityCheckins(UUID userId, OffsetDateTime baseTime) {
+        String[] activityTypes = { "cardio", "strength", "walking", "cycling", "mobility" };
+        String[] intensities = { "low", "medium", "high" };
+
+        for (int daysAgo = 35; daysAgo >= 0; daysAgo--) {
+            int sessions = (daysAgo % 6 == 0) ? 0 : (daysAgo % 2 == 0 ? 1 : 2);
+            for (int s = 0; s < sessions; s++) {
+                OffsetDateTime ts = baseTime.minusDays(daysAgo).withHour(7 + (s * 10)).withMinute(15).withSecond(0)
+                        .withNano(0);
+                ActivityCheckinEntity entry = new ActivityCheckinEntity(
+                        UUID.randomUUID(),
+                        userId,
+                        activityTypes[(daysAgo + s) % activityTypes.length],
+                        25 + ((daysAgo + s) % 5) * 10,
+                        intensities[(daysAgo + s) % intensities.length],
+                        "Demo activity check-in",
+                        ts,
+                        ts,
+                        ts);
+                activityRepo.save(entry);
+            }
         }
     }
 }

@@ -286,4 +286,20 @@ public class GoalProgressService {
     public List<GoalProgressEntity> getUserProgress(UUID userId) {
         return progressRepository.findByUserIdOrderByRecordedAtDesc(userId);
     }
+
+    @Transactional
+    public Optional<GoalProgressEntity> recordCurrentActivityProgressForUser(UUID userId, BigDecimal currentDays) {
+        if (currentDays == null) {
+            return Optional.empty();
+        }
+        var goalOpt = goalRepository.findFirstByUserIdAndActiveTrue(userId);
+        if (goalOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        var goal = goalOpt.get();
+        if (goal.getTargetActivityDaysPerWeek() == null || goal.getTargetActivityDaysPerWeek() <= 0) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(recordProgress(goal.getId(), currentDays));
+    }
 }

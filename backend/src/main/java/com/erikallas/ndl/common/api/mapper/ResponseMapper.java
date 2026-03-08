@@ -3,9 +3,11 @@ package com.erikallas.ndl.common.api.mapper;
 import com.erikallas.ndl.common.api.dto.HealthProfileResponse;
 import com.erikallas.ndl.common.api.dto.WeightEntryResponse;
 import com.erikallas.ndl.common.api.dto.GoalResponse;
+import com.erikallas.ndl.common.api.dto.ActivityCheckinResponse;
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.goal.GoalEntity;
+import com.erikallas.ndl.health.activity.ActivityCheckinEntity;
 
 /**
  * Mapper utility for converting JPA entities to Response DTOs. Provides
@@ -57,5 +59,13 @@ public class ResponseMapper {
                 entity.getGoalType() != null ? entity.getGoalType().toString() : null, entity.getTargetWeightKg(),
                 entity.getTargetActivityDaysPerWeek(), entity.getTargetDate(), entity.getNotes(), entity.isActive(),
                 entity.getCreatedAt(), entity.getUpdatedAt());
+    }
+
+    public static ActivityCheckinResponse toActivityCheckinResponse(ActivityCheckinEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return new ActivityCheckinResponse(entity.getId(), entity.getActivityType(), entity.getDurationMinutes(),
+                entity.getIntensity(), entity.getNote(), entity.getCheckinAt());
     }
 }

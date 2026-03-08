@@ -40,10 +40,16 @@ export async function recordWeight(
     data: { weight: number; date?: string; notes?: string },
     token: string
 ): Promise<WeightEntry> {
+    const todayIso = new Date().toISOString().split("T")[0];
+    const measuredAt = data.date
+        ? (data.date === todayIso
+            ? new Date().toISOString()
+            : new Date(`${data.date}T12:00:00Z`).toISOString())
+        : undefined;
     // Transform frontend format to backend format
     const backendRequest = {
         weightKg: data.weight,
-        measuredAt: data.date ? new Date(`${data.date}T12:00:00Z`).toISOString() : undefined,
+        measuredAt,
         note: data.notes,
     };
 
@@ -101,10 +107,16 @@ export async function updateWeightEntry(
     data: Partial<WeightEntry>,
     token: string
 ): Promise<WeightEntry> {
+    const todayIso = new Date().toISOString().split("T")[0];
+    const measuredAt = data.date
+        ? (data.date === todayIso
+            ? new Date().toISOString()
+            : new Date(`${data.date}T12:00:00Z`).toISOString())
+        : undefined;
     // Transform frontend format to backend format
     const backendRequest = {
         weightKg: data.weight,
-        measuredAt: data.date ? new Date(`${data.date}T12:00:00Z`).toISOString() : undefined,
+        measuredAt,
         note: data.notes,
     };
     const response = await api.patch<WeightEntryBackendResponse>(`/api/weight/${id}`, backendRequest, token);

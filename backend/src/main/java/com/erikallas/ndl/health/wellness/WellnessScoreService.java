@@ -1,11 +1,13 @@
 package com.erikallas.ndl.health.wellness;
 
-import com.erikallas.ndl.health.profile.HealthProfileEntity;
-import com.erikallas.ndl.health.profile.BMICalculator;
-import com.erikallas.ndl.health.profile.HealthProfileRepository;
+import com.erikallas.ndl.health.activity.ActivityCheckinEntity;
+import com.erikallas.ndl.health.activity.ActivityCheckinRepository;
 import com.erikallas.ndl.health.goal.GoalProgressEntity;
 import com.erikallas.ndl.health.goal.GoalProgressRepository;
 import com.erikallas.ndl.health.goal.GoalRepository;
+import com.erikallas.ndl.health.profile.BMICalculator;
+import com.erikallas.ndl.health.profile.HealthProfileEntity;
+import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import java.time.LocalDate;
@@ -18,16 +20,6 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service for calculating and updating wellness scores.
- * 
- * Wellness score is a composite metric (0-100) that aggregates: - BMI
- * classification (30%) - Activity level (30%) - Goal progress (20%) - Health
- * habits (20%)
- * 
- * The score is calculated when health metrics change and stored in the
- * health_profiles table for trend analysis.
- */
 @Service
 public class WellnessScoreService {
 
@@ -35,25 +27,18 @@ public class WellnessScoreService {
     private final GoalRepository goalRepository;
     private final GoalProgressRepository goalProgressRepository;
     private final WeightEntryRepository weightEntryRepository;
+    private final ActivityCheckinRepository activityCheckinRepository;
 
     public WellnessScoreService(HealthProfileRepository profileRepository, GoalRepository goalRepository,
-            GoalProgressRepository goalProgressRepository, WeightEntryRepository weightEntryRepository) {
+            GoalProgressRepository goalProgressRepository, WeightEntryRepository weightEntryRepository,
+            ActivityCheckinRepository activityCheckinRepository) {
         this.profileRepository = profileRepository;
         this.goalRepository = goalRepository;
         this.goalProgressRepository = goalProgressRepository;
         this.weightEntryRepository = weightEntryRepository;
+        this.activityCheckinRepository = activityCheckinRepository;
     }
 
-    /**
-     * Calculate wellness score for a user and update their profile.
-     * 
-     * This method: 1. Retrieves the user's current health profile 2. Calculates
-     * component scores from their health data 3. Computes overall weighted score 4.
-     * Persists the score to database
-     * 
-     * @param userId the user whose wellness score should be calculated
-     * @return the calculated wellness score (0-100), or null if profile not found
-     */
     @Transactional
     public Integer calculateAndUpdateWellnessScore(UUID userId) {
         var profile = profileRepository.findById(userId).orElse(null);
@@ -61,91 +46,41 @@ public class WellnessScoreService {
             return null;
         }
 
-        // Calculate component scores from current health data
         int bmiScore = calculateBmiComponentScore(profile);
-        int activityScore = calculateActivityComponentScore(profile);
+        int activityScore = calculateActivityComponentScore(userId, profile);
         int goalScore = calculateGoalProgressComponentScore(userId);
         int habitsScore = calculateHabitsComponentScore(profile, userId);
 
-        // Calculate overall weighted score
         int overallScore = WellnessScoreCalculator.calculateOverallScore(bmiScore, activityScore, goalScore,
                 habitsScore);
 
-        // Update and persist the profile
         profile.setWellnessScore(overallScore);
         profileRepository.save(profile);
 
         return overallScore;
     }
 
-    /**
-     * Calculate BMI component score from health profile.
-     * 
-     * Returns 0 if BMI classification is not available.
-     * 
-     * @param profile the health profile
-     * @return BMI score (0-100)
-     */
     private int calculateBmiComponentScore(HealthProfileEntity profile) {
         String bmiClassification = profile.getBmiClassification();
         if (bmiClassification == null || bmiClassification.isBlank()) {
-            return 0; // No BMI data yet
+            return 0;
         }
         return WellnessScoreCalculator.calculateBmiScore(bmiClassification);
     }
 
-    /**
-     * Calculate activity level component score from health profile.
-     * 
-     * Extracts weekly activity frequency from fitness assessment data. Returns 0 if
-     * fitness assessment is not complete.
-     * 
-     * @param profile the health profile
-     * @return activity score (0-100)
-     */
-    private int calculateActivityComponentScore(HealthProfileEntity profile) {
-        // Check if fitness assessment is complete
-        if (profile.getFitnessAssessmentCompleted() == null || !profile.getFitnessAssessmentCompleted()) {
-            return 0; // Fitness assessment not completed yet
+    private int calculateActivityComponentScore(UUID userId, HealthProfileEntity profile) {
+        Integer activityDays = countRecentActivityDays(userId, OffsetDateTime.now().minusDays(7));
+        if (activityDays != null) {
+            return WellnessScoreCalculator.calculateActivityScore(activityDays);
         }
 
-        var fitnessAssessment = profile.getFitnessAssessment();
-        if (fitnessAssessment == null) {
-            return 0; // No fitness assessment data
+        Integer baseline = extractWeeklyActivityFrequency(profile);
+        if (baseline != null) {
+            return WellnessScoreCalculator.calculateActivityScore(baseline);
         }
-
-        // Extract weekly activity frequency from fitness assessment
-        // Expected format: {"current_activity_frequency": 5, ...}
-        Object frequencyObj = fitnessAssessment.get("current_activity_frequency");
-        if (frequencyObj == null) {
-            return 0; // No activity frequency data
-        }
-
-        try {
-            // Handle both Integer and Number types from JSON
-            int frequency;
-            if (frequencyObj instanceof Number num) {
-                frequency = num.intValue();
-            } else if (frequencyObj instanceof String str) {
-                frequency = Integer.parseInt(str);
-            } else {
-                return 0;
-            }
-
-            return WellnessScoreCalculator.calculateActivityScore(frequency);
-        } catch (Exception e) {
-            return 0; // Error parsing activity frequency
-        }
+        return 0;
     }
 
-    /**
-     * Calculate goal progress component score from active goal progress.
-     * 
-     * Scoring:
-     * - No active goal: neutral 50
-     * - Active goal with progress records: latest progress percentage
-     * - Active goal with no progress records yet: 0
-     */
     private int calculateGoalProgressComponentScore(UUID userId) {
         var activeGoal = goalRepository.findFirstByUserIdAndActiveTrue(userId);
         if (activeGoal.isEmpty()) {
@@ -159,23 +94,13 @@ public class WellnessScoreService {
                 .orElse(0);
     }
 
-    /**
-     * Calculate habits component score from concrete behavior signals.
-     * 
-     * Uses available data:
-     * - Weight check-in consistency over the last 7 days
-     * - Self-reported activity frequency from fitness assessment
-     * 
-     * If neither signal is available, returns neutral 50.
-     */
     private int calculateHabitsComponentScore(HealthProfileEntity profile, UUID userId) {
         List<Integer> signals = new ArrayList<>();
 
-        // Signal 1: recent check-in consistency (distinct days with entries in last 7 days)
-        var recentEntries = weightEntryRepository.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
-        if (!recentEntries.isEmpty()) {
+        var recentWeightEntries = weightEntryRepository.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
+        if (!recentWeightEntries.isEmpty()) {
             OffsetDateTime since = OffsetDateTime.now().minusDays(7);
-            long daysWithWeightEntries = recentEntries.stream()
+            long daysWithWeightEntries = recentWeightEntries.stream()
                     .filter(entry -> entry.getMeasuredAt() != null && !entry.getMeasuredAt().isBefore(since))
                     .map(entry -> entry.getMeasuredAt().toLocalDate())
                     .distinct()
@@ -184,7 +109,11 @@ public class WellnessScoreService {
             signals.add(checkinConsistencyScore);
         }
 
-        // Signal 2: self-reported activity frequency from fitness assessment
+        Integer activityDays = countRecentActivityDays(userId, OffsetDateTime.now().minusDays(7));
+        if (activityDays != null) {
+            signals.add((int) Math.min(100, Math.round((activityDays / 7.0) * 100.0)));
+        }
+
         Integer activityFrequency = extractWeeklyActivityFrequency(profile);
         if (activityFrequency != null) {
             signals.add(WellnessScoreCalculator.calculateActivityScore(activityFrequency));
@@ -223,12 +152,6 @@ public class WellnessScoreService {
         return Math.max(0, Math.min(100, score));
     }
 
-    /**
-     * Build weekly wellness score points for evolution charting.
-     * 
-     * Uses historical weight data and goal progress snapshots to reconstruct weekly
-     * wellness trend.
-     */
     public List<WellnessHistoryPointResponse> getWeeklyWellnessHistory(UUID userId, int weeks) {
         var profileOpt = profileRepository.findById(userId);
         if (profileOpt.isEmpty()) {
@@ -241,6 +164,7 @@ public class WellnessScoreService {
             return List.of();
         }
         List<GoalProgressEntity> progressHistory = goalProgressRepository.findByUserIdOrderByRecordedAtDesc(userId);
+        List<ActivityCheckinEntity> activityHistory = activityCheckinRepository.findByUserIdOrderByCheckinAtDesc(userId);
 
         List<WellnessHistoryPointResponse> points = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -256,9 +180,9 @@ public class WellnessScoreService {
             }
 
             int bmiScore = calculateBmiScoreAtWeight(profile, latestWeight);
-            int activityScore = calculateActivityComponentScore(profile);
+            int activityScore = calculateActivityScoreForWindow(profile, activityHistory, weekStart, weekEnd);
             int goalScore = calculateGoalProgressScoreAt(progressHistory, weekEnd);
-            int habitsScore = calculateHabitsScoreForWindow(profile, weights, weekStart, weekEnd);
+            int habitsScore = calculateHabitsScoreForWindow(profile, weights, activityHistory, weekStart, weekEnd);
 
             int overallScore = WellnessScoreCalculator.calculateOverallScore(bmiScore, activityScore, goalScore,
                     habitsScore);
@@ -301,7 +225,7 @@ public class WellnessScoreService {
     }
 
     private int calculateHabitsScoreForWindow(HealthProfileEntity profile, List<WeightEntryEntity> weights,
-            LocalDate weekStart, LocalDate weekEnd) {
+            List<ActivityCheckinEntity> activityHistory, LocalDate weekStart, LocalDate weekEnd) {
         List<Integer> signals = new ArrayList<>();
 
         long daysWithWeightEntries = weights.stream()
@@ -313,6 +237,15 @@ public class WellnessScoreService {
         int checkinConsistencyScore = (int) Math.min(100, Math.round((daysWithWeightEntries / 7.0) * 100.0));
         signals.add(checkinConsistencyScore);
 
+        long activityDays = activityHistory.stream()
+                .filter(entry -> entry.getCheckinAt() != null)
+                .map(entry -> entry.getCheckinAt().toLocalDate())
+                .filter(date -> !date.isBefore(weekStart) && !date.isAfter(weekEnd))
+                .distinct()
+                .count();
+        int activityConsistencyScore = (int) Math.min(100, Math.round((activityDays / 7.0) * 100.0));
+        signals.add(activityConsistencyScore);
+
         Integer activityFrequency = extractWeeklyActivityFrequency(profile);
         if (activityFrequency != null) {
             signals.add(WellnessScoreCalculator.calculateActivityScore(activityFrequency));
@@ -322,22 +255,37 @@ public class WellnessScoreService {
         return clampScore((int) Math.round(avg));
     }
 
-    /**
-     * Get the current wellness score for a user without recalculating.
-     * 
-     * @param userId the user ID
-     * @return the stored wellness score, or null if profile not found
-     */
+    private Integer countRecentActivityDays(UUID userId, OffsetDateTime since) {
+        var entries = activityCheckinRepository.findByUserIdAndCheckinAtAfterOrderByCheckinAtDesc(userId, since);
+        if (entries.isEmpty()) {
+            return null;
+        }
+        return (int) entries.stream().map(ActivityCheckinEntity::getCheckinAt).map(OffsetDateTime::toLocalDate)
+                .distinct().count();
+    }
+
+    private int calculateActivityScoreForWindow(HealthProfileEntity profile, List<ActivityCheckinEntity> entries,
+            LocalDate weekStart, LocalDate weekEnd) {
+        long activityDays = entries.stream()
+                .filter(entry -> entry.getCheckinAt() != null)
+                .map(entry -> entry.getCheckinAt().toLocalDate())
+                .filter(date -> !date.isBefore(weekStart) && !date.isAfter(weekEnd))
+                .distinct()
+                .count();
+        if (activityDays > 0) {
+            return WellnessScoreCalculator.calculateActivityScore((int) activityDays);
+        }
+        Integer baseline = extractWeeklyActivityFrequency(profile);
+        if (baseline != null) {
+            return WellnessScoreCalculator.calculateActivityScore(baseline);
+        }
+        return 0;
+    }
+
     public Integer getWellnessScore(UUID userId) {
         return profileRepository.findById(userId).map(HealthProfileEntity::getWellnessScore).orElse(null);
     }
 
-    /**
-     * Get a human-readable description of the wellness score.
-     * 
-     * @param userId the user ID
-     * @return description like "Excellent", "Good", "Needs Improvement", etc.
-     */
     public String getWellnessScoreDescription(UUID userId) {
         Integer score = getWellnessScore(userId);
         if (score == null) {
