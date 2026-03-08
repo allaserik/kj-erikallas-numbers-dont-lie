@@ -1,6 +1,5 @@
 import { UserCard } from "./components/UserCard";
 import { HealthProfileSection } from "./components/HealthProfileSection";
-import { AccountSettings } from "./components/AccountSettings";
 import type { ProfileState } from "./useProfileData";
 
 interface ProfileContentProps {
@@ -11,8 +10,8 @@ interface ProfileContentProps {
 export function ProfileContent({ isAuthenticated, data }: ProfileContentProps) {
     return (
         <div className="space-y-4 pb-32 md:pb-4">
-            <h1 className="text-2xl font-bold text-slate-900">Profile</h1>
-            <p className="text-slate-600">Manage your health profile and account settings.</p>
+            <h1 className="text-2xl font-bold text-slate-900">Health Profile</h1>
+            <p className="text-slate-600">Manage your baseline health data and fitness context.</p>
 
             <UserCard isAuthenticated={isAuthenticated} />
 
@@ -31,8 +30,6 @@ export function ProfileContent({ isAuthenticated, data }: ProfileContentProps) {
                 onSave={data.handleSave}
                 onCancel={data.handleCancel}
             />
-
-            <AccountSettings />
         </div>
     );
 }

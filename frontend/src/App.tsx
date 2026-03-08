@@ -6,6 +6,7 @@ import TrendsPage from './features/trends/TrendsPage';
 import GoalsPage from './features/goals/GoalsPage';
 import CheckInPage from './features/checkin/CheckInPage';
 import ProfilePage from './features/profile/ProfilePage';
+import SettingsPage from './features/settings/SettingsPage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './features/auth/ResetPasswordPage';
@@ -33,6 +34,7 @@ function AppContent({ isAuthenticated }: { isAuthenticated: boolean }) {
           <Route path="goals" element={<GoalsPage />} />
           <Route path="checkin" element={<CheckInPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
 

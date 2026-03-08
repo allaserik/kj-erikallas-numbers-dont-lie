@@ -5,6 +5,7 @@ import {
     ChartBarIcon,
     AdjustmentsHorizontalIcon,
     UserCircleIcon,
+    Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 
 // BottomNav: Mobile navigation with neutral palette. Soft green accents for active tabs.
@@ -12,7 +13,7 @@ import {
 export default function BottomNav() {
     return (
         <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-10">
-            <div className="max-w-md mx-auto flex justify-around py-2">
+            <div className="max-w-lg mx-auto flex justify-around py-2">
                 {/* Dashboard */}
                 <NavLink
                     to="/"
@@ -64,10 +65,21 @@ export default function BottomNav() {
                     className={({ isActive }) =>
                         `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs rounded-md transition-colors ${isActive ? "text-green-700 bg-green-50" : "text-slate-600"}`
                     }
-                    aria-label="Profile"
+                    aria-label="Health Profile"
                 >
                     <UserCircleIcon className="h-6 w-6" />
-                    <span>Profile</span>
+                    <span>Health</span>
+                </NavLink>
+                {/* Settings */}
+                <NavLink
+                    to="/settings"
+                    className={({ isActive }) =>
+                        `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs rounded-md transition-colors ${isActive ? "text-green-700 bg-green-50" : "text-slate-600"}`
+                    }
+                    aria-label="Settings"
+                >
+                    <Cog6ToothIcon className="h-6 w-6" />
+                    <span>Settings</span>
                 </NavLink>
             </div>
         </nav>
