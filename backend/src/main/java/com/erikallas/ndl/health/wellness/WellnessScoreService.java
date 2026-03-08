@@ -262,7 +262,8 @@ public class WellnessScoreService {
 
             int overallScore = WellnessScoreCalculator.calculateOverallScore(bmiScore, activityScore, goalScore,
                     habitsScore);
-            points.add(new WellnessHistoryPointResponse(weekStart, weekEnd, overallScore));
+            points.add(new WellnessHistoryPointResponse(weekStart, weekEnd, overallScore, bmiScore, activityScore,
+                    goalScore, habitsScore));
         }
 
         return points;

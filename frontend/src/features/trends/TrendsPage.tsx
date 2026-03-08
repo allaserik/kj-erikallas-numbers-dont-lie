@@ -8,6 +8,7 @@ import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 import { getWellnessHistory } from "../../shared/api/wellness";
 import { WellnessEvolutionChart } from "./components/WellnessEvolutionChart";
+import { WellnessComponentsStackedChart } from "./components/WellnessComponentsStackedChart";
 
 export default function TrendsPage() {
     const [range, setRange] = useState<"30" | "90" | "all">("90");
@@ -66,6 +67,7 @@ export default function TrendsPage() {
                         maxWeight={chartData.maxWeight}
                     />
                     <WellnessEvolutionChart points={wellnessQ.data || []} />
+                    <WellnessComponentsStackedChart points={wellnessQ.data || []} />
 
                     {chartData.points.length === 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

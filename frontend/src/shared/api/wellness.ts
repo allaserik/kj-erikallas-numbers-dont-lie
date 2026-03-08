@@ -11,6 +11,10 @@ export type WellnessHistoryPoint = {
     weekStart: string;
     weekEnd: string;
     score: number;
+    bmiScore: number;
+    activityScore: number;
+    goalScore: number;
+    habitsScore: number;
 };
 
 type WellnessScoreBackendResponse = {
@@ -22,6 +26,10 @@ type WellnessHistoryBackendResponse = {
     week_start: string;
     week_end: string;
     score: number;
+    bmi_score: number;
+    activity_score: number;
+    goal_score: number;
+    habits_score: number;
 };
 
 function transformWellnessScore(data: WellnessScoreBackendResponse): WellnessScore {
@@ -36,6 +44,10 @@ function transformWellnessHistoryPoint(data: WellnessHistoryBackendResponse): We
         weekStart: data.week_start,
         weekEnd: data.week_end,
         score: data.score,
+        bmiScore: data.bmi_score ?? 0,
+        activityScore: data.activity_score ?? 0,
+        goalScore: data.goal_score ?? 0,
+        habitsScore: data.habits_score ?? 0,
     };
 }
 

@@ -17,13 +17,30 @@ public class WellnessHistoryPointResponse {
     @JsonProperty("score")
     private Integer score;
 
+    @JsonProperty("bmi_score")
+    private Integer bmiScore;
+
+    @JsonProperty("activity_score")
+    private Integer activityScore;
+
+    @JsonProperty("goal_score")
+    private Integer goalScore;
+
+    @JsonProperty("habits_score")
+    private Integer habitsScore;
+
     public WellnessHistoryPointResponse() {
     }
 
-    public WellnessHistoryPointResponse(LocalDate weekStart, LocalDate weekEnd, Integer score) {
+    public WellnessHistoryPointResponse(LocalDate weekStart, LocalDate weekEnd, Integer score, Integer bmiScore,
+            Integer activityScore, Integer goalScore, Integer habitsScore) {
         this.weekStart = weekStart;
         this.weekEnd = weekEnd;
         this.score = score;
+        this.bmiScore = bmiScore;
+        this.activityScore = activityScore;
+        this.goalScore = goalScore;
+        this.habitsScore = habitsScore;
     }
 
     public LocalDate getWeekStart() {
@@ -48,5 +65,37 @@ public class WellnessHistoryPointResponse {
 
     public void setScore(Integer score) {
         this.score = score;
+    }
+
+    public Integer getBmiScore() {
+        return bmiScore;
+    }
+
+    public void setBmiScore(Integer bmiScore) {
+        this.bmiScore = bmiScore;
+    }
+
+    public Integer getActivityScore() {
+        return activityScore;
+    }
+
+    public void setActivityScore(Integer activityScore) {
+        this.activityScore = activityScore;
+    }
+
+    public Integer getGoalScore() {
+        return goalScore;
+    }
+
+    public void setGoalScore(Integer goalScore) {
+        this.goalScore = goalScore;
+    }
+
+    public Integer getHabitsScore() {
+        return habitsScore;
+    }
+
+    public void setHabitsScore(Integer habitsScore) {
+        this.habitsScore = habitsScore;
     }
 }
