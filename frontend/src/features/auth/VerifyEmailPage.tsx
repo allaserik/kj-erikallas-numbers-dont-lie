@@ -3,8 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Alert } from '../../shared/ui/Alert';
 import { Spinner } from '../../shared/ui/Spinner';
 import { Card } from '../../shared/ui/Card';
-
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
+import { verifyEmail } from '../../api/auth';
 
 export function VerifyEmailPage() {
     const [searchParams] = useSearchParams();
@@ -26,16 +25,7 @@ export function VerifyEmailPage() {
             }
 
             try {
-                const response = await fetch(`${API_BASE}/api/email-verification/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, code }),
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.message || 'Verification failed');
-                }
+                await verifyEmail(email, code);
 
                 setSuccess(true);
                 // Redirect to login after 2 seconds

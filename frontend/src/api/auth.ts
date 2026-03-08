@@ -36,6 +36,11 @@ export interface RegisterResponse {
     message?: string;
 }
 
+export interface VerifyEmailResponse {
+    message: string;
+    emailVerified: boolean;
+}
+
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 
 /**
@@ -83,4 +88,25 @@ export async function loginUser(email: string, password: string, twoFactorCode?:
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
     };
+}
+
+/**
+ * Verify email with one-time verification code.
+ */
+export async function verifyEmail(email: string, code: string): Promise<VerifyEmailResponse> {
+    const response = await fetch(`${API_BASE}/api/email-verification/verify`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, code }),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Verification failed');
+    }
+
+    const raw = await response.json();
+    return unwrapApiData(raw as VerifyEmailResponse | ApiResponse<VerifyEmailResponse>);
 }
