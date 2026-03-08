@@ -15,6 +15,8 @@ interface DashboardContentProps {
 }
 
 export function DashboardContent({ isAuthenticated, data }: DashboardContentProps) {
+    const isConsentError = (data.error?.message || "").toLowerCase().includes("consent");
+
     return (
         <div className="space-y-4 pb-32 md:pb-4">
             <div className="flex items-center justify-between">
@@ -41,12 +43,31 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
                 </>
             )}
 
-            {data.error && (
+            {data.error && !isConsentError && (
                 <Alert
                     tone="error"
                     title="Error Loading Dashboard"
                     message={data.error.message || "Failed to load dashboard data"}
                 />
+            )}
+
+            {data.error && isConsentError && (
+                <Card>
+                    <CardBody>
+                        <div className="space-y-3">
+                            <h3 className="text-lg font-semibold text-slate-900">Consent Needed</h3>
+                            <p className="text-sm text-slate-600">
+                                Please enable data usage consent to use AI insights.
+                            </p>
+                            <a
+                                href="/profile"
+                                className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
+                            >
+                                Open Profile Settings →
+                            </a>
+                        </div>
+                    </CardBody>
+                </Card>
             )}
 
             {isAuthenticated && !data.isLoading && !data.error && !data.profile && (

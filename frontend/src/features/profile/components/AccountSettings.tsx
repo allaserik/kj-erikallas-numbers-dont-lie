@@ -13,6 +13,11 @@ import {
     setupTwoFactor,
     type TwoFactorSetupResponse,
 } from "../../../shared/api/twofactor";
+import {
+    getPrivacyPreferences,
+    upsertPrivacyPreferences,
+    type PrivacyPreferences,
+} from "../../../shared/api/privacy";
 
 export function AccountSettings() {
     const { logout: auth0Logout } = useAuth0();
@@ -26,6 +31,8 @@ export function AccountSettings() {
     const [code, setCode] = useState("");
     const [message, setMessage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [privacy, setPrivacy] = useState<PrivacyPreferences | null>(null);
+    const [privacySaving, setPrivacySaving] = useState(false);
 
     useEffect(() => {
         if (authMethod !== "local") return;
@@ -47,6 +54,21 @@ export function AccountSettings() {
 
         loadStatus();
     }, [authMethod, getToken]);
+
+    useEffect(() => {
+        const loadPrivacy = async () => {
+            setError(null);
+            try {
+                const token = await getToken();
+                if (!token) return;
+                const prefs = await getPrivacyPreferences(token);
+                setPrivacy(prefs);
+            } catch (e) {
+                setError(e instanceof Error ? e.message : "Failed to load privacy preferences");
+            }
+        };
+        loadPrivacy();
+    }, [getToken]);
 
     const handleLogout = () => {
         if (authMethod === 'oauth') {
@@ -110,6 +132,28 @@ export function AccountSettings() {
             setError(e instanceof Error ? e.message : "Failed to disable 2FA");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const updatePrivacy = async (next: PrivacyPreferences) => {
+        setPrivacySaving(true);
+        setError(null);
+        setMessage(null);
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Not authenticated");
+            const saved = await upsertPrivacyPreferences({
+                data_usage_consent: next.data_usage_consent,
+                allow_anonymized_analytics: next.allow_anonymized_analytics,
+                public_profile_visible: next.public_profile_visible,
+                email_notifications_enabled: next.email_notifications_enabled,
+            }, token);
+            setPrivacy(saved);
+            setMessage("Privacy preferences updated.");
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Failed to update privacy preferences");
+        } finally {
+            setPrivacySaving(false);
         }
     };
 
@@ -197,6 +241,73 @@ export function AccountSettings() {
                                 </button>
                             </div>
                         )}
+                    </div>
+                )}
+
+                {privacy && (
+                    <div className="mb-6 rounded border border-slate-200 p-4 space-y-3">
+                        <p className="text-sm font-semibold text-slate-900">Privacy & Data Usage</p>
+                        <label className="flex items-start gap-2 text-sm text-slate-700">
+                            <input
+                                type="checkbox"
+                                checked={privacy.data_usage_consent}
+                                disabled={privacySaving}
+                                onChange={(e) =>
+                                    updatePrivacy({
+                                        ...privacy,
+                                        data_usage_consent: e.target.checked,
+                                        allow_anonymized_analytics: e.target.checked && privacy.allow_anonymized_analytics,
+                                        public_profile_visible: e.target.checked && privacy.public_profile_visible,
+                                    })
+                                }
+                            />
+                            <span>I agree to health data usage for app features, including AI insights.</span>
+                        </label>
+
+                        <label className="flex items-start gap-2 text-sm text-slate-700">
+                            <input
+                                type="checkbox"
+                                checked={privacy.allow_anonymized_analytics}
+                                disabled={privacySaving || !privacy.data_usage_consent}
+                                onChange={(e) =>
+                                    updatePrivacy({
+                                        ...privacy,
+                                        allow_anonymized_analytics: e.target.checked,
+                                    })
+                                }
+                            />
+                            <span>Allow anonymized analytics usage.</span>
+                        </label>
+
+                        <label className="flex items-start gap-2 text-sm text-slate-700">
+                            <input
+                                type="checkbox"
+                                checked={privacy.public_profile_visible}
+                                disabled={privacySaving || !privacy.data_usage_consent}
+                                onChange={(e) =>
+                                    updatePrivacy({
+                                        ...privacy,
+                                        public_profile_visible: e.target.checked,
+                                    })
+                                }
+                            />
+                            <span>Allow public profile visibility.</span>
+                        </label>
+
+                        <label className="flex items-start gap-2 text-sm text-slate-700">
+                            <input
+                                type="checkbox"
+                                checked={privacy.email_notifications_enabled}
+                                disabled={privacySaving}
+                                onChange={(e) =>
+                                    updatePrivacy({
+                                        ...privacy,
+                                        email_notifications_enabled: e.target.checked,
+                                    })
+                                }
+                            />
+                            <span>Receive email notifications.</span>
+                        </label>
                     </div>
                 )}
 

@@ -4,6 +4,7 @@ import com.erikallas.ndl.auth.user.model.UserEntity;
 import com.erikallas.ndl.health.goal.GoalRepository;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
+import com.erikallas.ndl.privacy.PrivacyPreferencesService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,12 +22,14 @@ public class SetupService {
     private final HealthProfileRepository profileRepo;
     private final GoalRepository goalRepo;
     private final WeightEntryRepository weightRepo;
+    private final PrivacyPreferencesService privacyPreferencesService;
 
     public SetupService(HealthProfileRepository profileRepo, GoalRepository goalRepo,
-            WeightEntryRepository weightRepo) {
+            WeightEntryRepository weightRepo, PrivacyPreferencesService privacyPreferencesService) {
         this.profileRepo = profileRepo;
         this.goalRepo = goalRepo;
         this.weightRepo = weightRepo;
+        this.privacyPreferencesService = privacyPreferencesService;
     }
 
     /**
@@ -51,6 +54,11 @@ public class SetupService {
         // Check at least one weight entry exists
         if (!weightRepo.existsByUserId(user.getId())) {
             missing.add("weight");
+        }
+
+        // Data usage consent is required before health-data processing features.
+        if (!privacyPreferencesService.hasDataUsageConsent(user.getId())) {
+            missing.add("consent");
         }
 
         boolean isComplete = missing.isEmpty();

@@ -47,12 +47,12 @@ export function WeightChart({
         return padding.top + chartHeight - ((weight - minWeight) / weightRange) * chartHeight;
     };
 
-    // Generate SVG path for the line
-    const pathData = points
-        .map((point, idx) => {
+    // Polyline expects points in "x,y x,y ..." format (no M/L commands).
+    const polylinePoints = points
+        .map((point) => {
             const x = scaleX(point.daysAgo);
             const y = scaleY(point.weight);
-            return `${idx === 0 ? "M" : "L"} ${x} ${y}`;
+            return `${x},${y}`;
         })
         .join(" ");
 
@@ -158,7 +158,7 @@ export function WeightChart({
 
                         {/* Weight line chart */}
                         <polyline
-                            points={pathData}
+                            points={polylinePoints}
                             fill="none"
                             stroke="#3b82f6"
                             strokeWidth="2"

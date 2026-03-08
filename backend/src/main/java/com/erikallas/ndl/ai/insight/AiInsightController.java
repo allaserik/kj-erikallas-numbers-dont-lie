@@ -3,6 +3,7 @@ package com.erikallas.ndl.ai.insight;
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
 import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
+import com.erikallas.ndl.privacy.PrivacyPreferencesService;
 
 import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -18,12 +19,14 @@ public class AiInsightController {
     private final UserService userService;
     private final AiInsightService insightService;
     private final AiInsightRepository insightRepository;
+    private final PrivacyPreferencesService privacyPreferencesService;
 
     public AiInsightController(UserService userService, AiInsightService insightService,
-            AiInsightRepository insightRepository) {
+            AiInsightRepository insightRepository, PrivacyPreferencesService privacyPreferencesService) {
         this.userService = userService;
         this.insightService = insightService;
         this.insightRepository = insightRepository;
+        this.privacyPreferencesService = privacyPreferencesService;
     }
 
     /**
@@ -35,6 +38,9 @@ public class AiInsightController {
     @GetMapping("/api/insights/current")
     public AiInsightResult current(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        if (!privacyPreferencesService.hasDataUsageConsent(user.getId())) {
+            throw new IllegalStateException("Data usage consent is required before generating AI insights");
+        }
         return insightService.getCurrent(user.getId());
     }
 
