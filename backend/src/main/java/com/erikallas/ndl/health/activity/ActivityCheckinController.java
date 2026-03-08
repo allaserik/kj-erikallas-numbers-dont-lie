@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.activity;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.dto.ActivityCheckinResponse;
 import com.erikallas.ndl.common.api.dto.PaginatedResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
@@ -53,6 +54,7 @@ public class ActivityCheckinController {
         @Max(value = 720, message = "durationMinutes must be <= 720")
         public Integer durationMinutes;
 
+        @NotBlank(message = "intensity is required")
         @Size(max = 24, message = "intensity must be <= 24 chars")
         public String intensity;
 
@@ -92,6 +94,12 @@ public class ActivityCheckinController {
     public List<ActivityCheckinResponse> latest(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
         return activityService.latest(user.getId()).stream().map(ResponseMapper::toActivityCheckinResponse).toList();
+    }
+
+    @GetMapping("/api/activity/latest")
+    public ApiSuccess<ActivityCheckinResponse> latestSingle(JwtAuthenticationToken auth) {
+        var user = userService.ensureUserFromJwt(auth);
+        return ApiSuccess.of(ResponseMapper.toActivityCheckinResponse(activityService.latestSingle(user.getId())));
     }
 
     @GetMapping("/api/activity/history")

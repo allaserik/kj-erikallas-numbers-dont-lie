@@ -30,11 +30,14 @@ public class ActivityCheckinService {
     @Transactional
     public ActivityCheckinEntity add(UUID userId, String activityType, Integer durationMinutes, String intensity,
             String note, OffsetDateTime checkinAt) {
+        ActivityType normalizedType = ActivityType.fromInput(activityType);
+        ActivityIntensity normalizedIntensity = ActivityIntensity.fromInput(intensity);
         OffsetDateTime normalized = resolveUniqueTimestamp(userId,
                 checkinAt != null ? checkinAt : OffsetDateTime.now());
 
         ActivityCheckinEntity entity = new ActivityCheckinEntity(
-                UUID.randomUUID(), userId, activityType, durationMinutes, intensity, note, normalized,
+                UUID.randomUUID(), userId, normalizedType.name().toLowerCase(), durationMinutes,
+                normalizedIntensity.name().toLowerCase(), note, normalized,
                 OffsetDateTime.now(), OffsetDateTime.now());
 
         ActivityCheckinEntity saved = repository.save(entity);
@@ -44,6 +47,8 @@ public class ActivityCheckinService {
 
     @Transactional
     public ActivityCheckinEntity update(UUID userId, ActivityCheckinEntity entity) {
+        entity.setActivityType(ActivityType.fromInput(entity.getActivityType()).name().toLowerCase());
+        entity.setIntensity(ActivityIntensity.fromInput(entity.getIntensity()).name().toLowerCase());
         OffsetDateTime normalized = resolveUniqueTimestampForUpdate(userId, entity.getCheckinAt(), entity.getId());
         entity.setCheckinAt(normalized);
         entity.setUpdatedAt(OffsetDateTime.now());
@@ -61,6 +66,10 @@ public class ActivityCheckinService {
 
     public List<ActivityCheckinEntity> latest(UUID userId) {
         return repository.findTop100ByUserIdOrderByCheckinAtDesc(userId);
+    }
+
+    public ActivityCheckinEntity latestSingle(UUID userId) {
+        return repository.findTop100ByUserIdOrderByCheckinAtDesc(userId).stream().findFirst().orElse(null);
     }
 
     public Page<ActivityCheckinEntity> getHistory(UUID userId, Pageable pageable) {

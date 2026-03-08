@@ -71,6 +71,8 @@ export default function CheckInPage() {
     const [activityError, setActivityError] = useState<string | null>(null);
     const [activitySuccess, setActivitySuccess] = useState(false);
     const [activityValidationErrors, setActivityValidationErrors] = useState<ActivityValidationErrors>({});
+    const activityTypes = ["walking", "running", "cycling", "strength", "cardio", "sports", "mobility", "yoga", "other"];
+    const intensityLevels = ["low", "medium", "high"];
 
     const activityQ = useAuthedQuery(
         `activity-history-checkin-${reloadKey}`,
@@ -262,18 +264,26 @@ export default function CheckInPage() {
                     )}
 
                     <form onSubmit={handleActivitySubmit} className="space-y-4">
-                        <TextField
-                            label="Activity Type"
-                            value={activityType}
-                            onChange={(e) => {
-                                setActivityType(e.target.value);
-                                if (activityValidationErrors.activityType) setActivityValidationErrors({});
-                            }}
-                            error={activityValidationErrors.activityType}
-                            placeholder="walking, cardio, strength"
-                            disabled={isActivitySubmitting || !isAuthenticated}
-                            required
-                        />
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-700">Activity Type</label>
+                            <select
+                                value={activityType}
+                                onChange={(e) => {
+                                    setActivityType(e.target.value);
+                                    if (activityValidationErrors.activityType) setActivityValidationErrors({});
+                                }}
+                                disabled={isActivitySubmitting || !isAuthenticated}
+                                required
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-200 transition"
+                            >
+                                {activityTypes.map((type) => (
+                                    <option key={type} value={type}>{type}</option>
+                                ))}
+                            </select>
+                            {activityValidationErrors.activityType && (
+                                <div className="text-sm text-red-700">{activityValidationErrors.activityType}</div>
+                            )}
+                        </div>
 
                         <TextField
                             label="Duration (minutes)"
@@ -290,13 +300,19 @@ export default function CheckInPage() {
                             disabled={isActivitySubmitting || !isAuthenticated}
                         />
 
-                        <TextField
-                            label="Intensity"
-                            value={activityIntensity}
-                            onChange={(e) => setActivityIntensity(e.target.value)}
-                            placeholder="low, medium, high"
-                            disabled={isActivitySubmitting || !isAuthenticated}
-                        />
+                        <div className="space-y-1">
+                            <label className="block text-sm font-medium text-slate-700">Intensity</label>
+                            <select
+                                value={activityIntensity}
+                                onChange={(e) => setActivityIntensity(e.target.value)}
+                                disabled={isActivitySubmitting || !isAuthenticated}
+                                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-200 transition"
+                            >
+                                {intensityLevels.map((level) => (
+                                    <option key={level} value={level}>{level}</option>
+                                ))}
+                            </select>
+                        </div>
 
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Notes (optional)</label>

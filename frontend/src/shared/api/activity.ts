@@ -1,5 +1,7 @@
 import { api } from "./client";
 import type { ActivityCheckin, PaginatedResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
+import type { ApiResponse } from "../types";
 
 type ActivityBackendResponse = {
     id: string;
@@ -51,4 +53,13 @@ export async function getActivityHistory(
         ...response,
         content: response.content.map(toActivityCheckin),
     };
+}
+
+export async function getLatestActivity(token: string): Promise<ActivityCheckin | null> {
+    const response = await api.get<ActivityBackendResponse | null | ApiResponse<ActivityBackendResponse | null>>(
+        "/api/activity/latest",
+        token
+    );
+    const unwrapped = unwrapApiData(response);
+    return unwrapped ? toActivityCheckin(unwrapped) : null;
 }

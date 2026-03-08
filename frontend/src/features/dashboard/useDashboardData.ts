@@ -7,6 +7,7 @@ import { getCurrentGoalProgress } from "../../shared/api/goalProgress";
 import { getHealthSummary } from "../../shared/api/summary";
 import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
 import { getPrivacyPreferences } from "../../shared/api/privacy";
+import { getActivityHistory } from "../../shared/api/activity";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary, PeriodSummary } from "../../shared/types";
 
@@ -19,6 +20,7 @@ export interface DashboardData {
     summary: HealthSummary | null;
     weeklySummary: PeriodSummary | null;
     monthlySummary: PeriodSummary | null;
+    activeDaysLast7: number;
     insightConsentRequired: boolean;
 }
 
@@ -46,6 +48,11 @@ export function useDashboardData(): DashboardState {
         (token: string) => getCurrentGoalProgress(activeGoalId as string, token),
         meReady && !!activeGoalId
     );
+    const activityQ = useAuthedQuery(
+        "activityDashboard",
+        (token: string) => getActivityHistory({ size: 100 }, token),
+        meReady
+    );
     const hasProfile = !!profileQ.data;
     const hasWeight = !!latestWeightQ.data;
     const hasConsent = !!privacyQ.data?.data_usage_consent;
@@ -66,6 +73,7 @@ export function useDashboardData(): DashboardState {
         privacyQ.loading ||
         goalsQ.loading ||
         goalProgressQ.loading ||
+        activityQ.loading ||
         summaryQ.loading ||
         weeklySummaryQ.loading ||
         monthlySummaryQ.loading ||
@@ -82,6 +90,7 @@ export function useDashboardData(): DashboardState {
         privacyQ.error ||
         goalsQ.error ||
         goalProgressQ.error ||
+        activityQ.error ||
         (insightConsentRequired ? null : insightQ.error) ||
         null;
 
@@ -97,6 +106,17 @@ export function useDashboardData(): DashboardState {
         }
         : null;
 
+    const activeDaysLast7 = (() => {
+        const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const unique = new Set<string>();
+        for (const item of activityQ.data?.content || []) {
+            const ts = new Date(item.checkinAt).getTime();
+            if (!Number.isFinite(ts) || ts < since) continue;
+            unique.add(new Date(item.checkinAt).toISOString().split("T")[0]);
+        }
+        return unique.size;
+    })();
+
     return {
         me: meQ.data || null,
         profile: profileQ.data || null,
@@ -106,6 +126,7 @@ export function useDashboardData(): DashboardState {
         summary: summaryQ.data || null,
         weeklySummary: weeklySummaryQ.data || null,
         monthlySummary: monthlySummaryQ.data || null,
+        activeDaysLast7,
         insightConsentRequired,
         isLoading,
         error,
