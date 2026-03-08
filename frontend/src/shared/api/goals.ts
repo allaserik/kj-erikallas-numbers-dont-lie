@@ -90,7 +90,7 @@ export function updateGoal(id: string, data: Partial<Goal>, token: string): Prom
     if (data.targetActivityDaysPerWeek !== undefined) updateData.targetActivityDaysPerWeek = data.targetActivityDaysPerWeek;
     if (data.description !== undefined) updateData.notes = data.description;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
-    return api.put<any>(`/api/goals/${id}`, updateData, token).then(transformGoalResponse);
+    return api.patch<any>(`/api/goals/${id}`, updateData, token).then(transformGoalResponse);
 }
 
 /**

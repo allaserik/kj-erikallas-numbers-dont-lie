@@ -26,6 +26,22 @@ public class UserService {
     public UserEntity ensureUser(String auth0Sub, String emailOrNull) {
         log.debug("ensureUser called: auth0Sub={}, email={}", auth0Sub, emailOrNull);
 
+        // Local JWT tokens use subject = internal user UUID; never create a new user in this flow.
+        try {
+            UUID localUserId = UUID.fromString(auth0Sub);
+            var localUser = repo.findById(localUserId).orElse(null);
+            if (localUser != null) {
+                if (emailOrNull != null && !emailOrNull.equals(localUser.getEmail())) {
+                    localUser.setEmail(emailOrNull);
+                    localUser.setUpdatedAt(OffsetDateTime.now());
+                    repo.save(localUser);
+                }
+                return localUser;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Not a UUID subject, continue with OAuth subject flow.
+        }
+
         var user = repo.findByAuth0Sub(auth0Sub).orElseGet(() -> {
             // First login: create new user
             log.info("Creating new user: auth0Sub={}, email={}", auth0Sub, emailOrNull);

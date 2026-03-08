@@ -16,6 +16,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [twoFactorCode, setTwoFactorCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
                 setTimeout(() => onSwitchMode(), 2000);
             } else {
                 // Login
-                const response = await loginUser(email, password);
+                const response = await loginUser(email, password, twoFactorCode || undefined);
                 // Store tokens and update auth state
                 login(response.accessToken, response.refreshToken);
                 // Trigger success callback to close modal
@@ -100,6 +101,18 @@ export function EmailPasswordForm({ mode, onSuccess, onSwitchMode }: EmailPasswo
                     disabled={loading}
                     required
                 />
+
+                {!isRegister && (
+                    <TextField
+                        label="2FA Code (if enabled)"
+                        type="text"
+                        value={twoFactorCode}
+                        onChange={(e) => setTwoFactorCode(e.target.value)}
+                        placeholder="123456"
+                        disabled={loading}
+                        maxLength={6}
+                    />
+                )}
 
                 {isRegister && (
                     <TextField

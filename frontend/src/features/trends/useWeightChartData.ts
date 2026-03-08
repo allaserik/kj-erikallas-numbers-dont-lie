@@ -2,7 +2,7 @@ import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { getWeightHistory } from "../../shared/api/weight";
 import { getHealthProfile } from "../../shared/api/profile";
 import type { WeightEntry, PaginatedResponse } from "../../shared/types";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 
 export interface ChartDataPoint {
     date: string; // YYYY-MM-DD
@@ -20,7 +20,7 @@ export interface WeightChartState {
 }
 
 export function useWeightChartData(): WeightChartState {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
 
     // Fetch weight history (last 90 days)
     const weightQ = useAuthedQuery(
@@ -38,7 +38,7 @@ export function useWeightChartData(): WeightChartState {
     let maxWeight = -Infinity;
 
     if (weightQ.data) {
-        const entries = (weightQ.data as unknown as PaginatedResponse<WeightEntry>).data || [];
+        const entries = (weightQ.data as unknown as PaginatedResponse<WeightEntry>).content || [];
 
         // Sort by date ascending for proper plotting
         const sorted = [...entries].sort(

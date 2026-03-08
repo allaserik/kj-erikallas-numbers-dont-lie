@@ -8,6 +8,7 @@ import com.erikallas.ndl.auth.email.EmailService;
 import com.erikallas.ndl.auth.api.dto.AuthLoginRequest;
 import com.erikallas.ndl.auth.api.dto.AuthRegisterRequest;
 import com.erikallas.ndl.auth.model.RefreshTokenEntity;
+import com.erikallas.ndl.auth.twofactor.TwoFactorService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +23,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailService emailService;
+    private final TwoFactorService twoFactorService;
 
-    public AuthController(AuthService authService, EmailService emailService) {
+    public AuthController(AuthService authService, EmailService emailService, TwoFactorService twoFactorService) {
         this.authService = authService;
         this.emailService = emailService;
+        this.twoFactorService = twoFactorService;
     }
 
     /**
@@ -74,6 +77,18 @@ public class AuthController {
         UserEntity user = authService.authenticateUser(request.getEmail(), request.getPassword());
         if (user == null) {
             throw new IllegalArgumentException("Invalid email or password");
+        }
+        if (!Boolean.TRUE.equals(user.getEmailVerified())) {
+            throw new IllegalStateException("Email verification is required before login");
+        }
+        if (twoFactorService.isEnabled(user.getId())) {
+            if (request.getTwoFactorCode() == null || request.getTwoFactorCode().isBlank()) {
+                throw new IllegalStateException("Two-factor code is required");
+            }
+            boolean validCode = twoFactorService.verifyCode(user.getId(), request.getTwoFactorCode().trim());
+            if (!validCode) {
+                throw new IllegalArgumentException("Invalid two-factor code");
+            }
         }
         // Generate JWT access token
         String accessToken = authService.generateAccessToken(user);

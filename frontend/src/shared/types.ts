@@ -110,9 +110,13 @@ export type ApiResponse<T> = {
 };
 
 export type PaginatedResponse<T> = {
-    data: T[];
-    total: number;
-    page: number;
-    size: number;
-    timestamp?: string;
+    content: T[];
+    page_number: number;
+    page_size: number;
+    total_elements: number;
+    total_pages: number;
+    is_first: boolean;
+    is_last: boolean;
+    has_previous: boolean;
+    has_next: boolean;
 };

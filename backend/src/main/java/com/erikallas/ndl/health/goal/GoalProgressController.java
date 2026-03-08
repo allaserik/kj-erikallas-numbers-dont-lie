@@ -3,6 +3,7 @@ package com.erikallas.ndl.health.goal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.erikallas.ndl.auth.user.UserService;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -26,10 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Goal Progress", description = "Track progress towards health goals")
 public class GoalProgressController {
 
+    private final UserService userService;
     private final GoalProgressService goalProgressService;
     private final GoalRepository goalRepository;
 
-    public GoalProgressController(GoalProgressService goalProgressService, GoalRepository goalRepository) {
+    public GoalProgressController(UserService userService, GoalProgressService goalProgressService, GoalRepository goalRepository) {
+        this.userService = userService;
         this.goalProgressService = goalProgressService;
         this.goalRepository = goalRepository;
     }
@@ -48,10 +51,14 @@ public class GoalProgressController {
     @Operation(summary = "Get current goal progress", description = "Returns the latest progress record for a goal")
     public ResponseEntity<GoalProgressResponse> getCurrentProgress(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
 
         // Verify goal exists and belongs to user
         var goalOpt = goalRepository.findById(goalId);
         if (goalOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!goalOpt.get().getUserId().equals(user.getId())) {
             return ResponseEntity.notFound().build();
         }
 
@@ -77,9 +84,11 @@ public class GoalProgressController {
     @Operation(summary = "Get progress history", description = "Returns historical progress records for a goal (last 30)")
     public ResponseEntity<List<GoalProgressResponse>> getProgressHistory(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
 
-        // Verify goal exists
-        if (!goalRepository.existsById(goalId)) {
+        // Verify goal exists and belongs to user
+        var goalOpt = goalRepository.findById(goalId);
+        if (goalOpt.isEmpty() || !goalOpt.get().getUserId().equals(user.getId())) {
             return ResponseEntity.notFound().build();
         }
 
@@ -105,9 +114,11 @@ public class GoalProgressController {
     @Operation(summary = "Record goal progress", description = "Records a new progress point and calculates all metrics")
     public ResponseEntity<GoalProgressResponse> recordProgress(@PathVariable("id") UUID goalId,
             @RequestParam BigDecimal currentValue, JwtAuthenticationToken auth) {
+        var user = userService.ensureUser(auth.getToken().getSubject(), null);
 
-        // Verify goal exists
-        if (!goalRepository.existsById(goalId)) {
+        // Verify goal exists and belongs to user
+        var goalOpt = goalRepository.findById(goalId);
+        if (goalOpt.isEmpty() || !goalOpt.get().getUserId().equals(user.getId())) {
             return ResponseEntity.notFound().build();
         }
 

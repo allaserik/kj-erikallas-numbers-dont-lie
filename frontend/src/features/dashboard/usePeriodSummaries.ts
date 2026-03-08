@@ -1,7 +1,7 @@
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
 import type { PeriodSummary } from "../../shared/types";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 
 export interface SummaryState {
     weekly: PeriodSummary | null;
@@ -11,7 +11,7 @@ export interface SummaryState {
 }
 
 export function usePeriodSummaries(): SummaryState {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
 
     const weeklyQ = useAuthedQuery("weeklySummary", getWeeklySummary, isAuthenticated);
     const monthlyQ = useAuthedQuery("monthlySummary", getMonthlySummary, isAuthenticated);

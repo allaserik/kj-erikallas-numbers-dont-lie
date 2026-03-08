@@ -1,4 +1,3 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { getMe, getHealthProfile } from "../../shared/api/profile";
 import { getLatestWeight } from "../../shared/api/weight";
@@ -6,6 +5,7 @@ import { getLatestInsight } from "../../shared/api/insights";
 import { getActiveGoals } from "../../shared/api/goals";
 import { getHealthSummary } from "../../shared/api/summary";
 import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary, PeriodSummary } from "../../shared/types";
 
 export interface DashboardData {
@@ -26,7 +26,7 @@ export interface DashboardState extends DashboardData {
 
 // Custom hook to orchestrate all dashboard data fetching
 export function useDashboardData(): DashboardState {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
 
     // Load individual data endpoints in parallel
     const meQ = useAuthedQuery("me", getMe, isAuthenticated);

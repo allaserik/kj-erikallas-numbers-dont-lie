@@ -5,6 +5,7 @@
 export interface AuthLoginRequest {
     email: string;
     password: string;
+    twoFactorCode?: string;
 }
 
 export interface AuthRegisterRequest {
@@ -59,13 +60,13 @@ export async function registerUser(email: string, password: string): Promise<Reg
  * Login with email and password
  * Returns JWT access token and refresh token
  */
-export async function loginUser(email: string, password: string): Promise<LoginResponse> {
+export async function loginUser(email: string, password: string, twoFactorCode?: string): Promise<LoginResponse> {
     const response = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password } as AuthLoginRequest),
+        body: JSON.stringify({ email, password, twoFactorCode } as AuthLoginRequest),
     });
 
     if (!response.ok) {

@@ -89,6 +89,6 @@ export async function updateHealthProfile(
     data: unknown,
     token: string
 ): Promise<HealthProfile> {
-    const response = await api.put<HealthProfileBackendResponse>("/api/profile", data, token);
+    const response = await api.post<HealthProfileBackendResponse>("/api/profile", data, token);
     return transformHealthProfile(response)!;
 }

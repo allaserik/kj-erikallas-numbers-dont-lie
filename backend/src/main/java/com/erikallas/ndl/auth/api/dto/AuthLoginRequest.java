@@ -3,6 +3,7 @@ package com.erikallas.ndl.auth.api.dto;
 public class AuthLoginRequest {
     private String email;
     private String password;
+    private String twoFactorCode;
 
     public AuthLoginRequest() {
     }
@@ -21,5 +22,13 @@ public class AuthLoginRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getTwoFactorCode() {
+        return twoFactorCode;
+    }
+
+    public void setTwoFactorCode(String twoFactorCode) {
+        this.twoFactorCode = twoFactorCode;
     }
 }

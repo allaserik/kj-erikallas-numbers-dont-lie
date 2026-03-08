@@ -20,10 +20,10 @@ public class MultiIssuerJwtDecoder implements JwtDecoder {
     private static final Logger log = LoggerFactory.getLogger(MultiIssuerJwtDecoder.class);
     private final Map<String, JwtDecoder> decoders = new HashMap<>();
 
-    public MultiIssuerJwtDecoder(String auth0Issuer, JwtDecoder auth0Decoder, JwtDecoder localDecoder) {
+    public MultiIssuerJwtDecoder(String auth0Issuer, String localIssuer, JwtDecoder auth0Decoder, JwtDecoder localDecoder) {
         // Register decoders for each issuer
         this.decoders.put(auth0Issuer, auth0Decoder);
-        this.decoders.put("numbers-dont-lie", localDecoder);
+        this.decoders.put(localIssuer, localDecoder);
         log.info("MultiIssuerJwtDecoder initialized with decoders for: {}", decoders.keySet());
     }
 

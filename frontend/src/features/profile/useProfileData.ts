@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import { useAuth0 } from "@auth0/auth0-react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { useAuthToken } from "../../shared/auth/useAuthToken";
+import { useAppAuth } from "../../shared/auth/AuthContext";
 import { getHealthProfile, upsertHealthProfile } from "../../shared/api/profile";
 import { recordWeight, getLatestWeight } from "../../shared/api/weight";
 import { ApiError } from "../../shared/api/client";
@@ -73,7 +73,7 @@ function initializeFormData(profile: HealthProfile | null, latestWeight?: number
 }
 
 export function useProfileData(): ProfileState {
-    const { isAuthenticated } = useAuth0();
+    const { isAuthenticated } = useAppAuth();
     const getToken = useAuthToken();
 
     const [isEditing, setIsEditing] = useState(false);

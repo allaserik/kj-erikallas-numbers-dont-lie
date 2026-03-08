@@ -48,7 +48,9 @@ auth0:
 app:
   jwt:
     access-token-expiry-minutes: 15
-    issuer: ndl-api
+    issuer: numbers-dont-lie
+  two-factor:
+    issuer: NumbersDontLie
   email:
     # In local dev, email is disabled so codes appear in console logs
     enabled: false

@@ -91,14 +91,16 @@ public class SecurityConfig {
      * Validates issuer and signature using the local RSA key.
      */
     @Bean
-    public JwtDecoder localJwtDecoder(JWKSource<SecurityContext> localJwkSource) {
+    public JwtDecoder localJwtDecoder(
+            JWKSource<SecurityContext> localJwkSource,
+            @Value("${app.jwt.issuer}") String localIssuer) {
         DefaultJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
         JWSKeySelector<SecurityContext> keySelector = new JWSAlgorithmFamilyJWSKeySelector<SecurityContext>(
                 JWSAlgorithm.Family.RSA, localJwkSource);
         processor.setJWSKeySelector(keySelector);
 
         NimbusJwtDecoder decoder = new NimbusJwtDecoder(processor);
-        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer("numbers-dont-lie");
+        OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(localIssuer);
         decoder.setJwtValidator(withIssuer);
         return decoder;
     }
@@ -115,10 +117,11 @@ public class SecurityConfig {
     @org.springframework.context.annotation.Primary
     public JwtDecoder jwtDecoder(
         @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String auth0Issuer,
+        @Value("${app.jwt.issuer}") String localIssuer,
         JwtDecoder auth0Decoder,
         JwtDecoder localJwtDecoder
     ) {
-        return new MultiIssuerJwtDecoder(auth0Issuer, auth0Decoder, localJwtDecoder);
+        return new MultiIssuerJwtDecoder(auth0Issuer, localIssuer, auth0Decoder, localJwtDecoder);
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.erikallas.ndl.auth.service;
 
+import com.erikallas.ndl.auth.email.EmailConfig;
+import com.erikallas.ndl.auth.email.EmailSender;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,15 +19,19 @@ public class PasswordResetService {
     private final PasswordResetTokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailSender emailSender;
+    private final EmailConfig emailConfig;
 
     // Password reset token validity period (hours)
     private static final int TOKEN_VALIDITY_HOURS = 1;
 
     public PasswordResetService(PasswordResetTokenRepository tokenRepository, UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, EmailSender emailSender, EmailConfig emailConfig) {
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailSender = emailSender;
+        this.emailConfig = emailConfig;
     }
 
     /**
@@ -38,7 +44,13 @@ public class PasswordResetService {
 
         if (user != null) {
             // Generate and save token (will be sent to user via email)
-            generateResetToken(user);
+            String token = generateResetToken(user);
+            String resetUrl = emailConfig.getFrontendUrl()
+                    + "/reset-password?email="
+                    + java.net.URLEncoder.encode(user.getEmail(), java.nio.charset.StandardCharsets.UTF_8)
+                    + "&token="
+                    + java.net.URLEncoder.encode(token, java.nio.charset.StandardCharsets.UTF_8);
+            emailSender.sendPasswordReset(user.getEmail(), resetUrl);
         }
         // Silently return even if user doesn't exist (for security)
     }

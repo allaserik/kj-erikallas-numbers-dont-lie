@@ -14,6 +14,7 @@ Demo mode allows you to run the application with pre-populated sample data for t
 ### Option 1: Full Docker (All Services)
 
 **Start everything in containers:**
+
 ```bash
 DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
 ```
@@ -21,15 +22,18 @@ DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
 **Important:** Always use `--build` to ensure the frontend is built with `VITE_DEMO_MODE=true` baked in. Without it, the demo tab won't appear (Vite bakes env vars at build time).
 
 Then visit `http://localhost:5173` and click the **Demo** tab, or log in with:
+
 - **Email:** demo@example.com
 - **Password:** demo@example.com
 
 **Stop everything:**
+
 ```bash
 docker-compose down
 ```
 
 **Full reset (clears database):**
+
 ```bash
 docker-compose down -v
 DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
@@ -38,17 +42,21 @@ DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build
 ### Option 2: Local Development (Frontend + Backend locally, Database in Docker)
 
 **Terminal 1 - Start database only:**
+
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 ```
 
 **Terminal 2 - Start backend:**
+
 ```bash
 cd backend
+./mvnw -U clean test
 DEMO_MODE=true ./mvnw spring-boot:run
 ```
 
 **Terminal 3 - Start frontend:**
+
 ```bash
 cd frontend
 VITE_DEMO_MODE=true npm run dev
@@ -57,6 +65,7 @@ VITE_DEMO_MODE=true npm run dev
 Then visit `http://localhost:5173`
 
 **Cleanup:**
+
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env down
 ```
@@ -144,12 +153,14 @@ DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
 ### Reset Demo Data
 
 **Local dev:**
+
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env down -v
 docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 ```
 
 **Full Docker:**
+
 ```bash
 docker-compose down -v
 DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
@@ -166,6 +177,7 @@ DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
 ## Troubleshooting
 
 **Demo tab not showing:**
+
 - Ensure `VITE_DEMO_MODE=true` is set when running docker-compose
 - **IMPORTANT:** Use `--build` flag: `DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d --build`
 - Vite bakes env vars at build time, so without rebuild they won't be in the app
@@ -173,12 +185,14 @@ DEMO_MODE=true VITE_DEMO_MODE=true docker-compose up -d
 - Check container build: `docker logs ndl_frontend` should show build output
 
 **Demo user not seeding / Already exists error:**
+
 - If demo user already exists, the initializer skips silently (idempotent)
 - This is fine - the demo tab will still show if `VITE_DEMO_MODE=true`
 - To force recreate demo user: `docker-compose down -v` then `up -d --build`
 - The `-v` flag removes database volumes
 
 **Login fails with demo credentials:**
+
 - Backend needs to support email/password auth (not just OAuth)
 - Ensure `EmailPasswordAuthService` is configured
 - Check backend logs: `docker logs ndl_backend | grep -i auth`

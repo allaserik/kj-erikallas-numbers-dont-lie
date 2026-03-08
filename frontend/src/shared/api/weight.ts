@@ -74,7 +74,7 @@ export async function getWeightHistory(
     const response = await api.get<PaginatedResponse<WeightEntryBackendResponse>>(path, token);
     return {
         ...response,
-        data: response.data.map(transformWeightEntry).filter((w) => w !== null) as WeightEntry[],
+        content: response.content.map(transformWeightEntry).filter((w) => w !== null) as WeightEntry[],
     };
 }
 
@@ -105,7 +105,7 @@ export async function updateWeightEntry(
         measuredAt: data.date ? new Date(`${data.date}T12:00:00Z`).toISOString() : undefined,
         note: data.notes,
     };
-    const response = await api.put<WeightEntryBackendResponse>(`/api/weight/${id}`, backendRequest, token);
+    const response = await api.patch<WeightEntryBackendResponse>(`/api/weight/${id}`, backendRequest, token);
     return transformWeightEntry(response)!;
 }
 
