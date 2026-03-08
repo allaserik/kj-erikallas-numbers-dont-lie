@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import { Auth0Provider } from '@auth0/auth0-react'
 import { AuthProvider } from './shared/auth/AuthContext'
+import { AUTH0_AUDIENCE } from './shared/config'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -12,7 +13,8 @@ createRoot(document.getElementById('root')!).render(
       clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
       authorizationParams={{
         redirect_uri: window.location.origin,
-        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        audience: AUTH0_AUDIENCE,
+        scope: 'openid profile email',
       }}
       cacheLocation="localstorage"
       useRefreshTokens={true}

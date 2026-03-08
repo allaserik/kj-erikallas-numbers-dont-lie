@@ -38,7 +38,7 @@ public class AiInsightController {
      */
     @GetMapping("/api/insights/current")
     public ApiSuccess<AiInsightResult> current(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         if (!privacyPreferencesService.hasDataUsageConsent(user.getId())) {
             throw new IllegalStateException("Data usage consent is required before generating AI insights");
         }
@@ -54,7 +54,7 @@ public class AiInsightController {
     @DeleteMapping("/api/insights/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = insightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Insight");
         entity = Objects.requireNonNull(entity);

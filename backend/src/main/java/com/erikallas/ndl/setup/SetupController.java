@@ -37,7 +37,7 @@ public class SetupController {
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/status")
     public SetupStatusDto getSetupStatus(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         return setupService.getSetupStatus(user);
     }
 }

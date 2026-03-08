@@ -5,6 +5,7 @@ import { getLatestInsight } from "../../shared/api/insights";
 import { getActiveGoals } from "../../shared/api/goals";
 import { getHealthSummary } from "../../shared/api/summary";
 import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
+import { getPrivacyPreferences } from "../../shared/api/privacy";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 import type { UserProfile, HealthProfile, WeightEntry, Goal, Insight, HealthSummary, PeriodSummary } from "../../shared/types";
 
@@ -29,23 +30,33 @@ export interface DashboardState extends DashboardData {
 export function useDashboardData(): DashboardState {
     const { isAuthenticated } = useAppAuth();
 
-    // Load individual data endpoints in parallel
+    // Step 1: Establish user context first.
     const meQ = useAuthedQuery("me", getMe, isAuthenticated);
-    const profileQ = useAuthedQuery("profile", getHealthProfile, isAuthenticated);
-    const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, isAuthenticated);
-    const goalsQ = useAuthedQuery("goals", getActiveGoals, isAuthenticated);
-    const summaryQ = useAuthedQuery("summary", getHealthSummary, isAuthenticated);
-    const weeklySummaryQ = useAuthedQuery("weeklySummary", getWeeklySummary, isAuthenticated);
-    const monthlySummaryQ = useAuthedQuery("monthlySummary", getMonthlySummary, isAuthenticated);
+    const meReady = isAuthenticated && !!meQ.data && !meQ.loading && !meQ.error;
 
-    // Always fetch insights - backend returns generic fallback if goal/profile missing
-    const insightQ = useAuthedQuery("latestInsight", getLatestInsight, isAuthenticated);
+    // Step 2: Fetch independent user resources after /me succeeds.
+    const profileQ = useAuthedQuery("profile", getHealthProfile, meReady);
+    const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, meReady);
+    const privacyQ = useAuthedQuery("privacyPreferences", getPrivacyPreferences, meReady);
+    const goalsQ = useAuthedQuery("goals", getActiveGoals, meReady);
+    const hasProfile = !!profileQ.data;
+    const hasWeight = !!latestWeightQ.data;
+    const hasConsent = !!privacyQ.data?.data_usage_consent;
+
+    // Step 3: Fetch dependent resources only when prerequisites are present.
+    const summaryQ = useAuthedQuery("summary", getHealthSummary, meReady && hasProfile && hasWeight);
+    const weeklySummaryQ = useAuthedQuery("weeklySummary", getWeeklySummary, meReady && hasProfile && hasWeight);
+    const monthlySummaryQ = useAuthedQuery("monthlySummary", getMonthlySummary, meReady && hasProfile && hasWeight);
+
+    // Insights require explicit data usage consent and a completed profile context.
+    const insightQ = useAuthedQuery("latestInsight", getLatestInsight, meReady && hasProfile && hasConsent);
 
     // Determine overall loading state
     const isLoading =
         meQ.loading ||
         profileQ.loading ||
         latestWeightQ.loading ||
+        privacyQ.loading ||
         goalsQ.loading ||
         summaryQ.loading ||
         weeklySummaryQ.loading ||
@@ -53,12 +64,14 @@ export function useDashboardData(): DashboardState {
         insightQ.loading;
 
     // Determine overall error state (return first error found, ignore summary errors)
-    const insightConsentRequired = (insightQ.error?.message || "").toLowerCase().includes("consent");
+    const insightConsentRequired =
+        (hasProfile && !hasConsent) || (insightQ.error?.message || "").toLowerCase().includes("consent");
 
     const error =
         meQ.error ||
         profileQ.error ||
         latestWeightQ.error ||
+        privacyQ.error ||
         goalsQ.error ||
         (insightConsentRequired ? null : insightQ.error) ||
         null;

@@ -62,7 +62,7 @@ public class GoalController {
      */
     @GetMapping("/api/goals/active")
     public ApiSuccess<GoalResponse> active(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = goalService.getActive(user.getId());
         return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
     }
@@ -75,7 +75,7 @@ public class GoalController {
      */
     @GetMapping("/api/goals")
     public ApiSuccess<List<GoalResponse>> getAll(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entities = goalRepository.findAllByUserIdNotDeleted(user.getId());
         return ApiSuccess.of(entities.stream().map(ResponseMapper::toGoalResponse).collect(Collectors.toList()));
     }
@@ -91,7 +91,7 @@ public class GoalController {
     @PostMapping("/api/goals")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiSuccess<GoalResponse> create(@Valid @RequestBody CreateGoalRequest body, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
 
         if (body.goalType == null) {
             throw new IllegalArgumentException("goalType is required");
@@ -111,7 +111,7 @@ public class GoalController {
      */
     @GetMapping("/api/goals/{id}")
     public ApiSuccess<GoalResponse> get(@PathVariable UUID id, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = goalRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Goal");
         return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
@@ -128,7 +128,7 @@ public class GoalController {
     @PatchMapping("/api/goals/{id}")
     public ApiSuccess<GoalResponse> update(@PathVariable UUID id, @Valid @RequestBody UpdateGoalRequest body,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = goalRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Goal");
 
@@ -146,7 +146,7 @@ public class GoalController {
     @DeleteMapping("/api/goals/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = goalRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Goal");
         goalRepository.delete(entity);

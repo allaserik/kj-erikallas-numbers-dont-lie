@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocalAuth } from './useLocalAuth';
+import { AUTH0_AUDIENCE } from '../config';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -45,7 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getAccessToken = async (): Promise<string | null> => {
     if (authMethod === 'oauth') {
       try {
-        return await getAccessTokenSilently();
+        return await getAccessTokenSilently({
+          authorizationParams: {
+            audience: AUTH0_AUDIENCE,
+            scope: 'openid profile email',
+          },
+        });
       } catch (e) {
         console.error('Failed to get OAuth token:', e);
         return null;

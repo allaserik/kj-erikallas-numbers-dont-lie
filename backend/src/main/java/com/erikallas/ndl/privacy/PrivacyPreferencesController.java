@@ -54,7 +54,7 @@ public class PrivacyPreferencesController {
 
     @GetMapping("/api/privacy-preferences")
     public ApiSuccess<PrivacyPreferencesResponse> getPreferences(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var prefs = privacyPreferencesService.getOrDefault(user.getId());
         return ApiSuccess.of(toResponse(prefs));
     }
@@ -62,7 +62,7 @@ public class PrivacyPreferencesController {
     @PostMapping("/api/privacy-preferences")
     public ApiSuccess<PrivacyPreferencesResponse> upsertPreferences(@Valid @RequestBody PrivacyPreferencesRequest request,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var prefs = privacyPreferencesService.upsert(user.getId(), request.dataUsageConsent,
                 request.allowAnonymizedAnalytics, request.publicProfileVisible, request.emailNotificationsEnabled);
         return ApiSuccess.of(toResponse(prefs));

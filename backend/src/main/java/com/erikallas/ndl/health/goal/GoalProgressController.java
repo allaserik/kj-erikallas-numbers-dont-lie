@@ -51,7 +51,7 @@ public class GoalProgressController {
     @Operation(summary = "Get current goal progress", description = "Returns the latest progress record for a goal")
     public ResponseEntity<GoalProgressResponse> getCurrentProgress(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
 
         // Verify goal exists and belongs to user
         var goalOpt = goalRepository.findById(goalId);
@@ -84,7 +84,7 @@ public class GoalProgressController {
     @Operation(summary = "Get progress history", description = "Returns historical progress records for a goal (last 30)")
     public ResponseEntity<List<GoalProgressResponse>> getProgressHistory(@PathVariable("id") UUID goalId,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
 
         // Verify goal exists and belongs to user
         var goalOpt = goalRepository.findById(goalId);
@@ -114,7 +114,7 @@ public class GoalProgressController {
     @Operation(summary = "Record goal progress", description = "Records a new progress point and calculates all metrics")
     public ResponseEntity<GoalProgressResponse> recordProgress(@PathVariable("id") UUID goalId,
             @RequestParam BigDecimal currentValue, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
 
         // Verify goal exists and belongs to user
         var goalOpt = goalRepository.findById(goalId);

@@ -35,7 +35,7 @@ public class HealthSummaryController {
 
     @GetMapping("/api/summary")
     public ApiSuccess<HealthSummaryDto> summary(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
 
         HealthProfileEntity profile = profileService.find(user.getId())
                 .orElseThrow(() -> new IllegalStateException("Profile required"));
@@ -58,7 +58,7 @@ public class HealthSummaryController {
      */
     @GetMapping("/api/summary/weekly")
     public ApiSuccess<PeriodSummaryDto> weeklySummary(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         HealthProfileEntity profile = profileService.find(user.getId()).orElse(null);
 
         var weights = weightRepo.findTop90ByUserIdOrderByMeasuredAtDesc(user.getId());
@@ -87,7 +87,7 @@ public class HealthSummaryController {
      */
     @GetMapping("/api/summary/monthly")
     public ApiSuccess<PeriodSummaryDto> monthlySummary(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         HealthProfileEntity profile = profileService.find(user.getId()).orElse(null);
 
         var weights = weightRepo.findTop90ByUserIdOrderByMeasuredAtDesc(user.getId());

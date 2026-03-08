@@ -39,7 +39,7 @@ public class WellnessScoreController {
      */
     @GetMapping("/api/wellness-score")
     public ApiSuccess<WellnessScoreResponse> getWellnessScore(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         Integer score = wellnessScoreService.getWellnessScore(user.getId());
 
         // Handle case where user has no profile yet
@@ -63,7 +63,7 @@ public class WellnessScoreController {
      */
     @PostMapping("/api/wellness-score/calculate")
     public ApiSuccess<WellnessScoreResponse> calculateWellnessScore(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         Integer score = wellnessScoreService.calculateAndUpdateWellnessScore(user.getId());
 
         // Handle case where user has no profile yet

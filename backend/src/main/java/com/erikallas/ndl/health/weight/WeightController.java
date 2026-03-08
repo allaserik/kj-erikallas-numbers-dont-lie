@@ -61,7 +61,7 @@ public class WeightController {
     @PostMapping("/api/weight")
     @ResponseStatus(HttpStatus.CREATED)
     public WeightEntryResponse add(@Valid @RequestBody AddWeightRequest body, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = weightService.add(user.getId(), body.weightKg, body.measuredAt, body.note);
         return ResponseMapper.toWeightEntryResponse(entity);
     }
@@ -74,7 +74,7 @@ public class WeightController {
      */
     @GetMapping("/api/weight")
     public List<WeightEntryResponse> list(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entities = weightService.latest(user.getId());
         return entities.stream().map(ResponseMapper::toWeightEntryResponse).toList();
     }
@@ -87,7 +87,7 @@ public class WeightController {
     */
    @GetMapping("/api/weight/latest")
     public ApiSuccess<WeightEntryResponse> getLatest(JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = weightService.latest(user.getId()).stream().findFirst().orElse(null);
         return ApiSuccess.of(ResponseMapper.toWeightEntryResponse(entity));
     }
@@ -101,7 +101,7 @@ public class WeightController {
      */
     @GetMapping("/api/weight/{id}")
     public WeightEntryResponse get(@PathVariable UUID id, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = weightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Weight entry");
         entity = Objects.requireNonNull(entity);
@@ -119,7 +119,7 @@ public class WeightController {
     @PatchMapping("/api/weight/{id}")
     public WeightEntryResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateWeightRequest body,
             JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = weightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Weight entry");
         entity = Objects.requireNonNull(entity);
@@ -149,7 +149,7 @@ public class WeightController {
     @GetMapping("/api/weight/history")
     public PaginatedResponse<WeightEntryResponse> getHistory(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var pageRequest = PageRequest.of(page, size, Sort.by("measuredAt").descending());
         var weightPage = weightService.getHistory(user.getId(), pageRequest);
 
@@ -168,7 +168,7 @@ public class WeightController {
     @DeleteMapping("/api/weight/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id, JwtAuthenticationToken auth) {
-        var user = userService.ensureUser(auth.getToken().getSubject(), null);
+        var user = userService.ensureUserFromJwt(auth);
         var entity = weightRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Weight entry");
         weightRepository.delete(entity);

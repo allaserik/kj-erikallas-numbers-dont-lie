@@ -18,6 +18,7 @@ export function useAuthToken() {
     return getAccessTokenSilently({
       authorizationParams: {
         audience: AUTH0_AUDIENCE,
+        scope: "openid profile email",
       },
     });
   }, [isAuthenticated, getAccessTokenSilently, getLocalToken]);
