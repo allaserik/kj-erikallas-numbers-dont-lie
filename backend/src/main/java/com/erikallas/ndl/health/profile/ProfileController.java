@@ -5,6 +5,7 @@ import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.dto.HealthProfileResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
+import com.erikallas.ndl.health.unit.UnitConversionService;
 import com.erikallas.ndl.health.wellness.WellnessScoreService;
 
 import java.util.Objects;
@@ -22,13 +23,16 @@ public class ProfileController {
     private final HealthProfileService profileService;
     private final WellnessScoreService wellnessScoreService;
     private final HealthProfileRepository profileRepository;
+    private final UnitConversionService unitConversionService;
 
     public ProfileController(UserService userService, HealthProfileService profileService,
-            WellnessScoreService wellnessScoreService, HealthProfileRepository profileRepository) {
+            WellnessScoreService wellnessScoreService, HealthProfileRepository profileRepository,
+            UnitConversionService unitConversionService) {
         this.userService = userService;
         this.profileService = profileService;
         this.wellnessScoreService = wellnessScoreService;
         this.profileRepository = profileRepository;
+        this.unitConversionService = unitConversionService;
     }
 
     /**
@@ -51,8 +55,9 @@ public class ProfileController {
     public HealthProfileResponse upsertProfile(@Valid @RequestBody HealthProfileRequest request,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
+        int normalizedHeightCm = unitConversionService.toCentimeters(request.getHeightCm(), request.getHeightUnit());
         var profile = profileService.upsert(user.getId(), request.getBirthYear(), request.getGender(),
-                request.getHeightCm(), request.getBaselineActivityLevel(), request.getDietaryPreferences(),
+                normalizedHeightCm, request.getBaselineActivityLevel(), request.getDietaryPreferences(),
                 request.getDietaryRestrictions(), request.getFitnessAssessment(),
                 request.getFitnessAssessmentCompleted());
 

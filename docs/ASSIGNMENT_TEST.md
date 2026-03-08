@@ -64,8 +64,8 @@ How to do testing?
 * [X] Student can explain how normalization of health metrics impacts data visualization accuracy
   - Explanation prepared in `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
-* [ ] Health metrics are converted to standard units before storage
-  - Partially implied by schema (kg/cm), but no explicit conversion pipeline for mixed-unit input.
+* [X] Health metrics are converted to standard units before storage
+  - Implemented explicit backend conversion pipeline: `height_unit` (`cm`/`in`) converts to stored `height_cm`, and `weight_unit` (`kg`/`lb`) converts to stored `weight_kg`.
 
 * [X] Platform allows user to change their data sharing preferences
   - Implemented via privacy preferences settings endpoint/UI.

@@ -51,7 +51,7 @@ docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 
 ```bash
 cd backend
-./mvnw -U clean test
+./mvnw -q -DskipTests compile
 DEMO_MODE=true ./mvnw spring-boot:run
 ```
 

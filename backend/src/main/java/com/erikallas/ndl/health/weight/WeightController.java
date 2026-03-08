@@ -6,6 +6,7 @@ import com.erikallas.ndl.common.api.dto.PaginatedResponse;
 import com.erikallas.ndl.common.api.dto.WeightEntryResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
+import com.erikallas.ndl.health.unit.UnitConversionService;
 
 import java.util.Objects;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -27,17 +28,22 @@ public class WeightController {
     private final UserService userService;
     private final WeightService weightService;
     private final WeightEntryRepository weightRepository;
+    private final UnitConversionService unitConversionService;
 
     public WeightController(UserService userService, WeightService weightService,
-            WeightEntryRepository weightRepository) {
+            WeightEntryRepository weightRepository, UnitConversionService unitConversionService) {
         this.userService = userService;
         this.weightService = weightService;
         this.weightRepository = weightRepository;
+        this.unitConversionService = unitConversionService;
     }
 
     public static class AddWeightRequest {
         @DecimalMin(value = "1.0", message = "weightKg must be > 0")
         public double weightKg;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("weight_unit")
+        public String weightUnit;
 
         public OffsetDateTime measuredAt;
         public String note;
@@ -46,6 +52,9 @@ public class WeightController {
     public static class UpdateWeightRequest {
         @DecimalMin(value = "1.0", message = "weightKg must be > 0")
         public Double weightKg;
+
+        @com.fasterxml.jackson.annotation.JsonProperty("weight_unit")
+        public String weightUnit;
 
         public OffsetDateTime measuredAt;
         public String note;
@@ -62,7 +71,8 @@ public class WeightController {
     @ResponseStatus(HttpStatus.CREATED)
     public WeightEntryResponse add(@Valid @RequestBody AddWeightRequest body, JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
-        var entity = weightService.add(user.getId(), body.weightKg, body.measuredAt, body.note);
+        double normalizedWeightKg = unitConversionService.toKilograms(body.weightKg, body.weightUnit);
+        var entity = weightService.add(user.getId(), normalizedWeightKg, body.measuredAt, body.note);
         return ResponseMapper.toWeightEntryResponse(entity);
     }
 
@@ -125,7 +135,7 @@ public class WeightController {
         entity = Objects.requireNonNull(entity);
 
         if (body.weightKg != null) {
-            entity.setWeightKg(body.weightKg);
+            entity.setWeightKg(unitConversionService.toKilograms(body.weightKg, body.weightUnit));
         }
         if (body.measuredAt != null) {
             entity.setMeasuredAt(body.measuredAt);

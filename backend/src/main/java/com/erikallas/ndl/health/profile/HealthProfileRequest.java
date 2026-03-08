@@ -23,6 +23,9 @@ public class HealthProfileRequest {
     @JsonProperty("height_cm")
     public int heightCm;
 
+    @JsonProperty("height_unit")
+    public String heightUnit;
+
     // Activity
     @NotBlank(message = "baselineActivityLevel is required")
     @Pattern(regexp = "^(sedentary|light|moderate|active|very_active)$", message = "baselineActivityLevel must be one of: sedentary, light, moderate, active, very_active")
@@ -57,6 +60,10 @@ public class HealthProfileRequest {
 
     public int getHeightCm() {
         return heightCm;
+    }
+
+    public String getHeightUnit() {
+        return heightUnit;
     }
 
     public String getBaselineActivityLevel() {
