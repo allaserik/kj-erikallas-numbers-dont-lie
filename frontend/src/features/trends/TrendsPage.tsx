@@ -9,6 +9,7 @@ import { useAppAuth } from "../../shared/auth/AuthContext";
 import { getWellnessHistory } from "../../shared/api/wellness";
 import { WellnessEvolutionChart } from "./components/WellnessEvolutionChart";
 import { WellnessComponentsStackedChart } from "./components/WellnessComponentsStackedChart";
+import { ActivityHeatmap } from "./components/ActivityHeatmap";
 
 export default function TrendsPage() {
     const [range, setRange] = useState<"30" | "90" | "all">("90");
@@ -68,6 +69,7 @@ export default function TrendsPage() {
                     />
                     <WellnessEvolutionChart points={wellnessQ.data || []} />
                     <WellnessComponentsStackedChart points={wellnessQ.data || []} />
+                    <ActivityHeatmap points={chartData.points} />
 
                     {chartData.points.length === 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
