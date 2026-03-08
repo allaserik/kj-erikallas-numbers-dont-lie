@@ -34,45 +34,27 @@ Then visit: http://localhost:5173
 docker-compose down
 ```
 
-## Local Development (Frontend + Backend local, Database in Docker)
+Local Development (Frontend + Backend locally, Database in Docker)
 
-Start the database:
-
-```bash
-docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
-```
-
-With demo data:
-
-```bash
-source .env.demo && docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
-```
-
-## Legacy: Start just database (for local development)
+**Terminal 1 - Start database only:**
 
 ```bash
 docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
-docker compose -f ./infra/docker-compose.yml --env-file ./.env down
 ```
 
-Run the backend
+**Terminal 2 - Start backend:**
 
 ```bash
 cd backend
 ./mvnw -U clean test
-./mvnw spring-boot:run
-
-./mvnw clean test 2>&1 | grep -A 10 "Caused by"
-
-./mvnw clean compile -DskipTests 2>&1 | tail -60
+DEMO_MODE=true ./mvnw spring-boot:run
 ```
 
-Run the frontend
+**Terminal 3 - Start frontend:**
 
 ```bash
 cd frontend
-npm install
-npm run dev
+VITE_DEMO_MODE=true npm run dev
 ```
 
 install ollama

@@ -3,6 +3,7 @@ import { getMe, getHealthProfile } from "../../shared/api/profile";
 import { getLatestWeight } from "../../shared/api/weight";
 import { getLatestInsight } from "../../shared/api/insights";
 import { getActiveGoals } from "../../shared/api/goals";
+import { getCurrentGoalProgress } from "../../shared/api/goalProgress";
 import { getHealthSummary } from "../../shared/api/summary";
 import { getWeeklySummary, getMonthlySummary } from "../../shared/api/summaries";
 import { getPrivacyPreferences } from "../../shared/api/privacy";
@@ -39,6 +40,12 @@ export function useDashboardData(): DashboardState {
     const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, meReady);
     const privacyQ = useAuthedQuery("privacyPreferences", getPrivacyPreferences, meReady);
     const goalsQ = useAuthedQuery("goals", getActiveGoals, meReady);
+    const activeGoalId = goalsQ.data?.id;
+    const goalProgressQ = useAuthedQuery(
+        "activeGoalProgress",
+        (token: string) => getCurrentGoalProgress(activeGoalId as string, token),
+        meReady && !!activeGoalId
+    );
     const hasProfile = !!profileQ.data;
     const hasWeight = !!latestWeightQ.data;
     const hasConsent = !!privacyQ.data?.data_usage_consent;
@@ -58,6 +65,7 @@ export function useDashboardData(): DashboardState {
         latestWeightQ.loading ||
         privacyQ.loading ||
         goalsQ.loading ||
+        goalProgressQ.loading ||
         summaryQ.loading ||
         weeklySummaryQ.loading ||
         monthlySummaryQ.loading ||
@@ -73,12 +81,21 @@ export function useDashboardData(): DashboardState {
         latestWeightQ.error ||
         privacyQ.error ||
         goalsQ.error ||
+        goalProgressQ.error ||
         (insightConsentRequired ? null : insightQ.error) ||
         null;
 
     // Extract data from individual queries
     const latestWeight = latestWeightQ.data;
-    const activeGoal = goalsQ.data || null;
+    const activeGoal = goalsQ.data
+        ? {
+            ...goalsQ.data,
+            progress:
+                goalProgressQ.data?.progressPercentage ??
+                goalsQ.data.progress ??
+                0,
+        }
+        : null;
 
     return {
         me: meQ.data || null,

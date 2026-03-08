@@ -1,5 +1,6 @@
 import { Card, CardBody, CardTitle } from "../../../shared/ui/Card";
 import type { Insight } from "../../../shared/types";
+import { Link } from "react-router-dom";
 
 interface InsightCardProps {
     insight: Insight | null;
@@ -15,12 +16,12 @@ export function InsightCard({ insight, consentRequired = false }: InsightCardPro
                     <p className="text-sm text-slate-700 mb-3">
                         AI insights are disabled until data usage consent is enabled.
                     </p>
-                    <a
-                        href="/profile"
+                    <Link
+                        to="/settings"
                         className="inline-block px-3 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition"
                     >
-                        Open Profile Settings →
-                    </a>
+                        Open Settings →
+                    </Link>
                 </CardBody>
             </Card>
         );

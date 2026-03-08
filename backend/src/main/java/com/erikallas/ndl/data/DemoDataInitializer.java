@@ -79,19 +79,19 @@ public class DemoDataInitializer {
             );
             profile.setDietaryPreferences(List.of("High-protein", "Low-sugar"));
             profile.setDietaryRestrictions(List.of("Lactose"));
-            profile.setFitnessAssessment(Map.of(
-                    "occupation_type", "Office",
-                    "current_activity_frequency", 4,
-                    "exercise_types", List.of("Cardio", "Strength", "Outdoors"),
-                    "average_session_duration", "30_60",
-                    "self_assessed_fitness_level", "INTERMEDIATE",
-                    "preferred_exercise_environment", "GYM",
-                    "exercise_time_preference", "EVENING",
-                    "current_endurance_minutes", 35,
-                    "pushups_count", 30,
-                    "situps_count", 45,
-                    "pullups_count", 8,
-                    "run_3km_time_sec", 980
+            profile.setFitnessAssessment(Map.<String, Object>ofEntries(
+                    Map.entry("occupation_type", "Office"),
+                    Map.entry("current_activity_frequency", 4),
+                    Map.entry("exercise_types", List.of("Cardio", "Strength", "Outdoors")),
+                    Map.entry("average_session_duration", "30_60"),
+                    Map.entry("self_assessed_fitness_level", "INTERMEDIATE"),
+                    Map.entry("preferred_exercise_environment", "GYM"),
+                    Map.entry("exercise_time_preference", "EVENING"),
+                    Map.entry("current_endurance_minutes", 35),
+                    Map.entry("pushups_count", 30),
+                    Map.entry("situps_count", 45),
+                    Map.entry("pullups_count", 8),
+                    Map.entry("run_3km_time_sec", 980)
             ));
             profile.setFitnessAssessmentCompleted(true);
             profileRepo.save(profile);

@@ -8,6 +8,7 @@ import { PeriodSummaryCard } from "./components/PeriodSummaryCard";
 import { QuickNav } from "./components/QuickNav";
 import { BMICardSkeleton, WellnessScoreCardSkeleton, GoalCardSkeleton, InsightCardSkeleton } from "./components/SkeletonCards";
 import type { DashboardState } from "./useDashboardData";
+import { Link } from "react-router-dom";
 
 interface DashboardContentProps {
     isAuthenticated: boolean;
@@ -90,12 +91,12 @@ export function DashboardContent({
                             <p className="text-sm text-slate-600">
                                 Please fill in your health profile to get started with tracking your wellness.
                             </p>
-                            <a
-                                href="/profile"
+                            <Link
+                                to="/profile"
                                 className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
                             >
                                 Go to Profile →
-                            </a>
+                            </Link>
                         </div>
                     </CardBody>
                 </Card>

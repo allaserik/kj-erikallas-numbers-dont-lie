@@ -150,7 +150,8 @@ public class WellnessScoreService {
 
         return goalProgressRepository.findFirstByGoalIdOrderByRecordedAtDesc(activeGoal.get().getId())
                 .map(GoalProgressEntity::getProgressPercentage)
-                .map(this::clampScore)
+                .filter(Objects::nonNull)
+                .map(value -> clampScore(value.intValue()))
                 .orElse(0);
     }
 
