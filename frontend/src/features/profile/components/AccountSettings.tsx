@@ -331,6 +331,10 @@ export function AccountSettings() {
                 {privacy && (
                     <div className="mb-6 rounded border border-slate-200 p-4 space-y-3">
                         <p className="text-sm font-semibold text-slate-900">Privacy & Data Usage</p>
+                        <p className="text-xs text-slate-600">
+                            We collect health profile details, weight check-ins, and goal progress to calculate BMI/wellness metrics,
+                            generate summaries, and provide personalized AI insights. You can withdraw consent at any time in this section.
+                        </p>
                         <label className="flex items-start gap-2 text-sm text-slate-700">
                             <input
                                 type="checkbox"
@@ -345,7 +349,9 @@ export function AccountSettings() {
                                     })
                                 }
                             />
-                            <span>I agree to health data usage for app features, including AI insights.</span>
+                            <span>
+                                I explicitly consent to collecting and processing my health data for analytics, recommendations, and AI insights.
+                            </span>
                         </label>
 
                         <label className="flex items-start gap-2 text-sm text-slate-700">
