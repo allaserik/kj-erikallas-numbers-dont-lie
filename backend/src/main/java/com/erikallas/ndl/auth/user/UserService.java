@@ -1,6 +1,7 @@
 package com.erikallas.ndl.auth.user;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.erikallas.ndl.auth.user.model.UserEntity;
+import com.erikallas.ndl.auth.user.model.UserIdentityEntity;
+import com.erikallas.ndl.auth.user.model.UserIdentityRepository;
 import com.erikallas.ndl.auth.user.model.UserRepository;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -21,12 +24,17 @@ public class UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository repo;
+    private final UserIdentityRepository identityRepo;
     private final Auth0UserInfoService auth0UserInfoService;
     private final ConcurrentHashMap<String, Object> userLocks = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> userInfoAttemptAt = new ConcurrentHashMap<>();
 
-    public UserService(UserRepository repo, Auth0UserInfoService auth0UserInfoService) {
+    public UserService(
+            UserRepository repo,
+            UserIdentityRepository identityRepo,
+            Auth0UserInfoService auth0UserInfoService) {
         this.repo = repo;
+        this.identityRepo = identityRepo;
         this.auth0UserInfoService = auth0UserInfoService;
     }
 
@@ -66,43 +74,22 @@ public class UserService {
                     // Not a UUID subject, continue with OAuth subject flow.
                 }
 
-                UserEntity user = repo.findByAuth0Sub(auth0Sub).orElse(null);
+                IdentityKey key = IdentityKey.fromSubject(auth0Sub);
+                UserEntity user = findUserByIdentityKey(key);
                 if (user == null) {
-                    // First login: create new user. If concurrent requests race, recover by
-                    // re-reading the row instead of failing.
+                    // Legacy fallback while users.auth0_sub still exists.
+                    user = repo.findByAuth0Sub(auth0Sub).orElse(null);
+                    if (user != null) {
+                        ensureIdentityLinked(user, key, emailOrNull);
+                    }
+                }
+
+                if (user == null) {
+                    rejectEmailCollisionIfAny(emailOrNull, auth0Sub, key.provider());
+                    // First login: create user + identity.
                     log.info("Creating new user: auth0Sub={}, email={}", auth0Sub, emailOrNull);
-                    var newUser = new UserEntity(UUID.randomUUID(), auth0Sub, emailOrNull, OffsetDateTime.now());
-                    if (emailOrNull != null && emailVerifiedOrNull != null) {
-                        newUser.setEmailVerified(emailVerifiedOrNull);
-                    }
-                    try {
-                        user = repo.save(newUser);
-                    } catch (DataIntegrityViolationException ex) {
-                        user = repo.findByAuth0Sub(auth0Sub).orElse(null);
-                        if (user == null && emailOrNull != null) {
-                            var sameEmailUser = repo.findByEmailIgnoreCase(emailOrNull).orElse(null);
-                            if (sameEmailUser != null
-                                    && (sameEmailUser.getAuth0Sub() == null
-                                            || auth0Sub.equals(sameEmailUser.getAuth0Sub()))) {
-                                sameEmailUser.setAuth0Sub(auth0Sub);
-                                if (emailVerifiedOrNull != null) {
-                                    sameEmailUser.setEmailVerified(emailVerifiedOrNull);
-                                }
-                                sameEmailUser.setUpdatedAt(OffsetDateTime.now());
-                                user = repo.save(sameEmailUser);
-                            }
-                        }
-                        if (user == null) {
-                            // Last fallback: persist OAuth identity without email and continue.
-                            var fallbackUser = new UserEntity(UUID.randomUUID(), auth0Sub, null, OffsetDateTime.now());
-                            fallbackUser.setEmailVerified(false);
-                            try {
-                                user = repo.save(fallbackUser);
-                            } catch (DataIntegrityViolationException secondEx) {
-                                user = repo.findByAuth0Sub(auth0Sub).orElseThrow(() -> secondEx);
-                            }
-                        }
-                    }
+                    user = createOAuthUser(auth0Sub, emailOrNull, emailVerifiedOrNull, key.provider());
+                    ensureIdentityLinked(user, key, emailOrNull);
                 }
 
                 boolean changed = false;
@@ -125,7 +112,8 @@ public class UserService {
                         // instead of failing all parallel dashboard calls.
                         log.warn("Skipping user email sync due to unique constraint: auth0Sub={}, email={}", auth0Sub,
                                 emailOrNull);
-                        user = repo.findByAuth0Sub(auth0Sub).orElse(user);
+                        UserEntity byIdentity = findUserByIdentityKey(key);
+                        user = byIdentity != null ? byIdentity : repo.findByAuth0Sub(auth0Sub).orElse(user);
                     }
                 }
 
@@ -145,7 +133,7 @@ public class UserService {
         String auth0Sub = auth.getToken().getSubject();
         Map<String, Object> claims = auth.getToken().getClaims();
         String issuer = auth.getToken().getClaimAsString("iss");
-        UserEntity existingUser = repo.findByAuth0Sub(auth0Sub).orElse(null);
+        UserEntity existingUser = resolveUserBySubject(auth0Sub);
 
         String email = getClaimAsString(claims, "email");
         Boolean emailVerified = getClaimAsBoolean(claims, "email_verified");
@@ -193,6 +181,166 @@ public class UserService {
         return ensureUser(auth0Sub, email, emailVerified);
     }
 
+    @Transactional(readOnly = true)
+    public AccountAuthMethods getAccountAuthMethods(UUID userId) {
+        var user = repo.findById(userId).orElseThrow();
+        List<LinkedIdentity> identities = identityRepo.findAllByUserId(userId).stream()
+                .map(identity -> new LinkedIdentity(
+                        identity.getProvider(),
+                        identity.getProviderSub(),
+                        identity.getCreatedAt()))
+                .sorted((a, b) -> a.provider().compareToIgnoreCase(b.provider()))
+                .toList();
+        return new AccountAuthMethods(user.getPasswordHash() != null, identities);
+    }
+
+    @Transactional
+    public AccountLinkResult linkCurrentOAuthIdentityByEmail(JwtAuthenticationToken auth) {
+        String auth0Sub = auth.getToken().getSubject();
+        IdentityKey key = IdentityKey.fromSubject(auth0Sub);
+
+        try {
+            UUID.fromString(auth0Sub);
+            throw new IllegalStateException("Local accounts cannot be linked through OAuth identity linking");
+        } catch (IllegalArgumentException ignored) {
+            // OAuth subject flow.
+        }
+
+        var existingIdentity = identityRepo.findByProviderAndProviderSub(key.provider(), key.providerSub()).orElse(null);
+        if (existingIdentity != null) {
+            if (repo.findById(existingIdentity.getUserId()).isPresent()) {
+                return new AccountLinkResult(existingIdentity.getUserId(), true, "Identity already linked");
+            }
+            throw new IllegalStateException("Identity is linked to a missing user record");
+        }
+
+        String issuer = auth.getToken().getClaimAsString("iss");
+        String email = getClaimAsString(auth.getToken().getClaims(), "email");
+        Boolean emailVerified = getClaimAsBoolean(auth.getToken().getClaims(), "email_verified");
+
+        if (email == null && shouldAttemptUserInfo(auth0Sub)) {
+            userInfoAttemptAt.put(auth0Sub, System.currentTimeMillis());
+            var userInfo = auth0UserInfoService.fetchUserInfo(auth.getToken().getTokenValue(), issuer);
+            email = userInfo.email();
+            if (emailVerified == null) {
+                emailVerified = userInfo.emailVerified();
+            }
+            if (email != null) {
+                userInfoAttemptAt.remove(auth0Sub);
+            }
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalStateException(
+                    "Cannot link account because email is missing from identity provider");
+        }
+        if (!Boolean.TRUE.equals(emailVerified)) {
+            throw new IllegalStateException(
+                    "Cannot link account because provider email is not verified");
+        }
+
+        var existingUser = repo.findByEmailIgnoreCase(email).orElse(null);
+        if (existingUser == null) {
+            throw new IllegalStateException(
+                    "No existing account found for this email. Sign in with your intended primary method first.");
+        }
+
+        ensureIdentityLinked(existingUser, key, email);
+
+        if (!Boolean.TRUE.equals(existingUser.getEmailVerified())) {
+            existingUser.setEmailVerified(true);
+            existingUser.setUpdatedAt(OffsetDateTime.now());
+            repo.save(existingUser);
+        }
+
+        return new AccountLinkResult(existingUser.getId(), false, "Identity linked successfully");
+    }
+
+    private UserEntity resolveUserBySubject(String auth0Sub) {
+        try {
+            UUID localUserId = UUID.fromString(auth0Sub);
+            return repo.findById(localUserId).orElse(null);
+        } catch (IllegalArgumentException ignored) {
+            // OAuth subject.
+        }
+        IdentityKey key = IdentityKey.fromSubject(auth0Sub);
+        UserEntity byIdentity = findUserByIdentityKey(key);
+        if (byIdentity != null) {
+            return byIdentity;
+        }
+        return repo.findByAuth0Sub(auth0Sub).orElse(null);
+    }
+
+    private UserEntity findUserByIdentityKey(IdentityKey key) {
+        return identityRepo.findByProviderAndProviderSub(key.provider(), key.providerSub())
+                .flatMap(identity -> repo.findById(identity.getUserId()))
+                .orElse(null);
+    }
+
+    private void ensureIdentityLinked(UserEntity user, IdentityKey key, String emailAtLinkTime) {
+        var existing = identityRepo.findByProviderAndProviderSub(key.provider(), key.providerSub()).orElse(null);
+        if (existing != null) {
+            if (!user.getId().equals(existing.getUserId())) {
+                throw new IllegalStateException("This identity is already linked to a different account");
+            }
+            return;
+        }
+        var now = OffsetDateTime.now();
+        var identity = new UserIdentityEntity();
+        identity.setId(UUID.randomUUID());
+        identity.setUserId(user.getId());
+        identity.setProvider(key.provider());
+        identity.setProviderSub(key.providerSub());
+        identity.setEmailAtLinkTime(emailAtLinkTime);
+        identity.setCreatedAt(now);
+        identity.setUpdatedAt(now);
+        try {
+            identityRepo.save(identity);
+        } catch (DataIntegrityViolationException ex) {
+            // Concurrent insert by another request: verify ownership.
+            var concurrent = identityRepo.findByProviderAndProviderSub(key.provider(), key.providerSub())
+                    .orElseThrow(() -> ex);
+            if (!user.getId().equals(concurrent.getUserId())) {
+                throw new IllegalStateException("This identity is already linked to a different account");
+            }
+        }
+    }
+
+    private UserEntity createOAuthUser(
+            String auth0Sub,
+            String emailOrNull,
+            Boolean emailVerifiedOrNull,
+            String provider) {
+        var now = OffsetDateTime.now();
+        var newUser = new UserEntity(UUID.randomUUID(), auth0Sub, emailOrNull, now);
+        if (emailOrNull != null && emailVerifiedOrNull != null) {
+            newUser.setEmailVerified(emailVerifiedOrNull);
+        }
+        try {
+            return repo.save(newUser);
+        } catch (DataIntegrityViolationException ex) {
+            UserEntity existingBySub = repo.findByAuth0Sub(auth0Sub).orElse(null);
+            if (existingBySub != null) {
+                return existingBySub;
+            }
+            // If another account already owns this email, block and guide the user.
+            if (emailOrNull != null) {
+                var existingByEmail = repo.findByEmailIgnoreCase(emailOrNull).orElse(null);
+                if (existingByEmail != null) {
+                    throw new IllegalStateException(emailCollisionMessage(provider));
+                }
+            }
+            // Keep auth working even when email unique constraint is hit.
+            var fallbackUser = new UserEntity(UUID.randomUUID(), auth0Sub, null, now);
+            fallbackUser.setEmailVerified(false);
+            try {
+                return repo.save(fallbackUser);
+            } catch (DataIntegrityViolationException secondEx) {
+                return repo.findByAuth0Sub(auth0Sub).orElseThrow(() -> secondEx);
+            }
+        }
+    }
+
     private String getClaimAsString(Map<String, Object> claims, String key) {
         Object value = claims.get(key);
         return value instanceof String ? (String) value : null;
@@ -209,5 +357,56 @@ public class UserService {
             return true;
         }
         return (System.currentTimeMillis() - lastAttempt) > 30_000;
+    }
+
+    private void rejectEmailCollisionIfAny(String emailOrNull, String auth0Sub, String provider) {
+        if (emailOrNull == null || emailOrNull.isBlank()) {
+            return;
+        }
+        var existingByEmail = repo.findByEmailIgnoreCase(emailOrNull).orElse(null);
+        if (existingByEmail == null) {
+            return;
+        }
+        if (auth0Sub.equals(existingByEmail.getAuth0Sub())) {
+            return;
+        }
+        throw new IllegalStateException(emailCollisionMessage(provider));
+    }
+
+    private String emailCollisionMessage(String provider) {
+        return "An account with this email already exists. Sign in with your existing method, then link "
+                + providerDisplayName(provider) + " in account settings.";
+    }
+
+    private String providerDisplayName(String provider) {
+        if ("google-oauth2".equalsIgnoreCase(provider)) {
+            return "Google";
+        }
+        if ("github".equalsIgnoreCase(provider)) {
+            return "GitHub";
+        }
+        if (provider == null || provider.isBlank()) {
+            return "this provider";
+        }
+        return provider;
+    }
+
+    private record IdentityKey(String provider, String providerSub) {
+        static IdentityKey fromSubject(String subject) {
+            int separator = subject.indexOf('|');
+            if (separator <= 0 || separator >= subject.length() - 1) {
+                return new IdentityKey("auth0", subject);
+            }
+            return new IdentityKey(subject.substring(0, separator), subject.substring(separator + 1));
+        }
+    }
+
+    public record LinkedIdentity(String provider, String providerSub, OffsetDateTime linkedAt) {
+    }
+
+    public record AccountAuthMethods(boolean hasPassword, List<LinkedIdentity> identities) {
+    }
+
+    public record AccountLinkResult(UUID userId, boolean alreadyLinked, String message) {
     }
 }

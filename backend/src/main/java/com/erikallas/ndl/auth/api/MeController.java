@@ -56,7 +56,7 @@ public class MeController {
             claims.put("keys", jwt.getClaims().keySet());
             return ApiSuccess.of(new MeResponse(
                     user.getId().toString(),
-                    user.getAuth0Sub(),
+                    user.getAuth0Sub() != null ? user.getAuth0Sub() : jwt.getSubject(),
                     user.getEmail(),
                     user.getCreatedAt(),
                     user.getUpdatedAt(),

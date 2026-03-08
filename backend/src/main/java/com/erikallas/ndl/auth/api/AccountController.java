@@ -2,12 +2,15 @@ package com.erikallas.ndl.auth.api;
 
 import com.erikallas.ndl.auth.user.AccountDeletionService;
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +32,17 @@ public class AccountController {
     public static class DeleteAccountRequest {
         @NotBlank(message = "confirmation is required")
         public String confirmation;
+    }
+
+    @GetMapping("/api/account/identities")
+    public ApiSuccess<UserService.AccountAuthMethods> getAccountIdentities(JwtAuthenticationToken auth) {
+        var user = userService.ensureUserFromJwt(auth);
+        return ApiSuccess.of(userService.getAccountAuthMethods(user.getId()));
+    }
+
+    @PostMapping("/api/account/identities/link-by-email")
+    public ApiSuccess<UserService.AccountLinkResult> linkCurrentIdentityByEmail(JwtAuthenticationToken auth) {
+        return ApiSuccess.of(userService.linkCurrentOAuthIdentityByEmail(auth));
     }
 
     @DeleteMapping("/api/account")

@@ -12,9 +12,22 @@ import type { DashboardState } from "./useDashboardData";
 interface DashboardContentProps {
     isAuthenticated: boolean;
     data: DashboardState;
+    collisionError: string | null;
+    isResolvingCollision: boolean;
+    collisionResolveError: string | null;
+    collisionResolveMessage: string | null;
+    onResolveCollision: () => Promise<void>;
 }
 
-export function DashboardContent({ isAuthenticated, data }: DashboardContentProps) {
+export function DashboardContent({
+    isAuthenticated,
+    data,
+    collisionError,
+    isResolvingCollision,
+    collisionResolveError,
+    collisionResolveMessage,
+    onResolveCollision,
+}: DashboardContentProps) {
     return (
         <div className="space-y-4 pb-32 md:pb-4">
             <div className="flex items-center justify-between">
@@ -47,6 +60,26 @@ export function DashboardContent({ isAuthenticated, data }: DashboardContentProp
                     title="Error Loading Dashboard"
                     message={data.error.message || "Failed to load dashboard data"}
                 />
+            )}
+
+            {collisionError && (
+                <Alert
+                    tone="warning"
+                    title="Sign-In Method Conflict"
+                    message={collisionError}
+                >
+                    <div className="mt-2">
+                        <button
+                            className="px-3 py-2 rounded bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                            onClick={() => void onResolveCollision()}
+                            disabled={isResolvingCollision}
+                        >
+                            {isResolvingCollision ? "Linking..." : "Link Current Provider To Existing Account"}
+                        </button>
+                    </div>
+                    {collisionResolveMessage && <div className="mt-2 text-green-800">{collisionResolveMessage}</div>}
+                    {collisionResolveError && <div className="mt-2 text-red-800">{collisionResolveError}</div>}
+                </Alert>
             )}
 
             {isAuthenticated && !data.isLoading && !data.error && !data.profile && (

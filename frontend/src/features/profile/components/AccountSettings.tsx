@@ -19,7 +19,12 @@ import {
     type PrivacyPreferences,
 } from "../../../shared/api/privacy";
 import { downloadDataExport } from "../../../shared/api/export";
-import { deleteMyAccount } from "../../../shared/api/account";
+import {
+    deleteMyAccount,
+    getAccountIdentities,
+    linkCurrentIdentityByEmail,
+    type AccountAuthMethods,
+} from "../../../shared/api/account";
 
 export function AccountSettings() {
     const { logout: auth0Logout } = useAuth0();
@@ -40,6 +45,10 @@ export function AccountSettings() {
     const [deleteConfirmation, setDeleteConfirmation] = useState("");
     const [isDeletingAccount, setIsDeletingAccount] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [authMethods, setAuthMethods] = useState<AccountAuthMethods | null>(null);
+    const [isLinkingIdentity, setIsLinkingIdentity] = useState(false);
+    const [identityError, setIdentityError] = useState<string | null>(null);
+    const [identityMessage, setIdentityMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (authMethod !== "local") return;
@@ -75,6 +84,21 @@ export function AccountSettings() {
             }
         };
         loadPrivacy();
+    }, [getToken]);
+
+    useEffect(() => {
+        const loadAuthMethods = async () => {
+            setIdentityError(null);
+            try {
+                const token = await getToken();
+                if (!token) return;
+                const methods = await getAccountIdentities(token);
+                setAuthMethods(methods);
+            } catch (e) {
+                setIdentityError(e instanceof Error ? e.message : "Failed to load linked accounts");
+            }
+        };
+        loadAuthMethods();
     }, [getToken]);
 
     const handleLogout = () => {
@@ -191,6 +215,30 @@ export function AccountSettings() {
         } finally {
             setIsDeletingAccount(false);
         }
+    };
+
+    const handleLinkIdentityByEmail = async () => {
+        setIdentityError(null);
+        setIdentityMessage(null);
+        setIsLinkingIdentity(true);
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Not authenticated");
+            const result = await linkCurrentIdentityByEmail(token);
+            setIdentityMessage(result.message || "Identity linked successfully");
+            const methods = await getAccountIdentities(token);
+            setAuthMethods(methods);
+        } catch (e) {
+            setIdentityError(e instanceof Error ? e.message : "Failed to link identity");
+        } finally {
+            setIsLinkingIdentity(false);
+        }
+    };
+
+    const formatProviderName = (provider: string) => {
+        if (provider.toLowerCase() === "google-oauth2") return "Google";
+        if (provider.toLowerCase() === "github") return "GitHub";
+        return provider;
     };
 
     return (
@@ -394,6 +442,37 @@ export function AccountSettings() {
                         </p>
                     </div>
                 )}
+
+                <div className="mb-6 rounded border border-slate-200 p-4 space-y-2">
+                    <p className="text-sm font-semibold text-slate-900">Linked Sign-In Methods</p>
+                    {authMethods?.identities?.length ? (
+                        <ul className="text-sm text-slate-700 space-y-1">
+                            {authMethods.identities.map((identity) => (
+                                <li key={`${identity.provider}:${identity.providerSub}`}>
+                                    {formatProviderName(identity.provider)}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-xs text-slate-600">No linked OAuth providers yet.</p>
+                    )}
+                    {identityMessage && <Alert tone="success" title="Linked Accounts" message={identityMessage} />}
+                    {identityError && <Alert tone="error" title="Linked Accounts Error" message={identityError} />}
+
+                    {authMethod === "oauth" && (
+                        <button
+                            className="px-3 py-2 rounded bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+                            onClick={handleLinkIdentityByEmail}
+                            disabled={isLinkingIdentity}
+                        >
+                            {isLinkingIdentity ? "Linking..." : "Link Current OAuth Identity By Email"}
+                        </button>
+                    )}
+                    <p className="text-xs text-slate-600">
+                        If sign-in was blocked due to an existing account with the same email, use this action while logged in with
+                        that provider to attach it to your existing account.
+                    </p>
+                </div>
 
                 <div className="fixed bottom-0 left-0 right-0 md:static md:bg-transparent md:border-0 md:p-0 md:flex md:justify-start bg-white border-t border-slate-200 p-4 flex justify-center z-50 mb-16 md:mb-0">
                     <button
