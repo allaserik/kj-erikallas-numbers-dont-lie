@@ -19,6 +19,7 @@ import {
     type PrivacyPreferences,
 } from "../../../shared/api/privacy";
 import { downloadDataExport } from "../../../shared/api/export";
+import { deleteMyAccount } from "../../../shared/api/account";
 
 export function AccountSettings() {
     const { logout: auth0Logout } = useAuth0();
@@ -36,6 +37,9 @@ export function AccountSettings() {
     const [privacySaving, setPrivacySaving] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [exportError, setExportError] = useState<string | null>(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState("");
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
         if (authMethod !== "local") return;
@@ -171,6 +175,21 @@ export function AccountSettings() {
             setExportError(e instanceof Error ? e.message : "Failed to export data");
         } finally {
             setIsExporting(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeleteError(null);
+        setIsDeletingAccount(true);
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Not authenticated");
+            await deleteMyAccount(token, deleteConfirmation.trim());
+            handleLogout();
+        } catch (e) {
+            setDeleteError(e instanceof Error ? e.message : "Failed to delete account");
+        } finally {
+            setIsDeletingAccount(false);
         }
     };
 
@@ -342,6 +361,30 @@ export function AccountSettings() {
                         {isExporting ? "Exporting..." : "Export Data (JSON)"}
                     </button>
                     {exportError && <Alert tone="error" title="Export Error" message={exportError} />}
+                </div>
+
+                <div className="mb-6 rounded border border-red-200 bg-red-50 p-4 space-y-2">
+                    <p className="text-sm font-semibold text-red-900">Delete Account</p>
+                    <p className="text-xs text-red-800">
+                        This permanently deletes your account and associated data (profile, goals, weights, insights,
+                        and preferences). This action cannot be undone.
+                    </p>
+                    <p className="text-xs text-red-800">Type <span className="font-mono font-semibold">DELETE MY ACCOUNT</span> to confirm.</p>
+                    <input
+                        type="text"
+                        value={deleteConfirmation}
+                        onChange={(e) => setDeleteConfirmation(e.target.value)}
+                        placeholder="DELETE MY ACCOUNT"
+                        className="w-full px-3 py-2 border border-red-300 rounded text-sm"
+                    />
+                    <button
+                        className="px-3 py-2 rounded bg-red-700 text-white text-sm font-semibold hover:bg-red-800 disabled:opacity-50"
+                        onClick={handleDeleteAccount}
+                        disabled={isDeletingAccount || deleteConfirmation.trim() !== "DELETE MY ACCOUNT"}
+                    >
+                        {isDeletingAccount ? "Deleting..." : "Permanently Delete Account"}
+                    </button>
+                    {deleteError && <Alert tone="error" title="Delete Error" message={deleteError} />}
                 </div>
 
                 {authMethod === "oauth" && (

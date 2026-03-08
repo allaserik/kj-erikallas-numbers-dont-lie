@@ -1,0 +1,44 @@
+package com.erikallas.ndl.auth.api;
+
+import com.erikallas.ndl.auth.user.AccountDeletionService;
+import com.erikallas.ndl.auth.user.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+@SecurityRequirement(name = "bearerAuth")
+@RestController
+public class AccountController {
+
+    private static final String REQUIRED_CONFIRMATION = "DELETE MY ACCOUNT";
+
+    private final UserService userService;
+    private final AccountDeletionService accountDeletionService;
+
+    public AccountController(UserService userService, AccountDeletionService accountDeletionService) {
+        this.userService = userService;
+        this.accountDeletionService = accountDeletionService;
+    }
+
+    public static class DeleteAccountRequest {
+        @NotBlank(message = "confirmation is required")
+        public String confirmation;
+    }
+
+    @DeleteMapping("/api/account")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAccount(@Valid @RequestBody DeleteAccountRequest request, JwtAuthenticationToken auth) {
+        if (!REQUIRED_CONFIRMATION.equals(request.confirmation == null ? "" : request.confirmation.trim())) {
+            throw new IllegalArgumentException("Invalid confirmation phrase");
+        }
+
+        var user = userService.ensureUserFromJwt(auth);
+        accountDeletionService.deleteAccountAndData(user.getId());
+    }
+}
