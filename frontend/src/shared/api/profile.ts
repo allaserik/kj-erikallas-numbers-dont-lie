@@ -91,8 +91,11 @@ export async function getMe(token: string): Promise<UserProfile> {
  * Get user's health profile (height, weight, age, goals, etc.)
  */
 export async function getHealthProfile(token: string): Promise<HealthProfile | null> {
-    const response = await api.get<HealthProfileBackendResponse | null>("/api/profile", token);
-    return transformHealthProfile(response);
+    const response = await api.get<HealthProfileBackendResponse | null | ApiResponse<HealthProfileBackendResponse | null>>("/api/profile", token);
+    if (response && typeof response === "object" && "data" in response) {
+        return transformHealthProfile((response as ApiResponse<HealthProfileBackendResponse | null>).data);
+    }
+    return transformHealthProfile(response as HealthProfileBackendResponse | null);
 }
 
 /**

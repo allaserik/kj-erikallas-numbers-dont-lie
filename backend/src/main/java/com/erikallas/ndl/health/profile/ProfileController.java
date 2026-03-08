@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.profile;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.dto.HealthProfileResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
@@ -34,10 +35,10 @@ public class ProfileController {
      * Get user's health profile.
      */
     @GetMapping("/api/profile")
-    public HealthProfileResponse getProfile(JwtAuthenticationToken auth) {
+    public ApiSuccess<HealthProfileResponse> getProfile(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
         var entity = profileService.find(user.getId()).orElse(null);
-        return ResponseMapper.toHealthProfileResponse(entity);
+        return ApiSuccess.of(ResponseMapper.toHealthProfileResponse(entity));
     }
 
     /**

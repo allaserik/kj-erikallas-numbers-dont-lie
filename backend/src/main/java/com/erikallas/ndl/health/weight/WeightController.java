@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.weight;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.dto.PaginatedResponse;
 import com.erikallas.ndl.common.api.dto.WeightEntryResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
@@ -85,10 +86,10 @@ public class WeightController {
      * @return the latest weight entry
     */
    @GetMapping("/api/weight/latest")
-    public WeightEntryResponse getLatest(JwtAuthenticationToken auth) {
+    public ApiSuccess<WeightEntryResponse> getLatest(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = weightService.latest(user.getId()).stream().findFirst().orElse(null);
-        return ResponseMapper.toWeightEntryResponse(entity);
+        return ApiSuccess.of(ResponseMapper.toWeightEntryResponse(entity));
     }
 
     /**

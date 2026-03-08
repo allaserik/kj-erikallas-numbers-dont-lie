@@ -4,6 +4,7 @@
  */
 import { api } from "./client";
 import type { WeightEntry, PaginatedResponse } from "../types";
+import type { ApiResponse } from "../types";
 
 // Backend response structure (snake_case)
 type WeightEntryBackendResponse = {
@@ -53,8 +54,11 @@ export async function recordWeight(
  * Get latest weight entry
  */
 export async function getLatestWeight(token: string): Promise<WeightEntry | null> {
-    const response = await api.get<WeightEntryBackendResponse | null>("/api/weight/latest", token);
-    return transformWeightEntry(response);
+    const response = await api.get<WeightEntryBackendResponse | null | ApiResponse<WeightEntryBackendResponse | null>>("/api/weight/latest", token);
+    if (response && typeof response === "object" && "data" in response) {
+        return transformWeightEntry((response as ApiResponse<WeightEntryBackendResponse | null>).data);
+    }
+    return transformWeightEntry(response as WeightEntryBackendResponse | null);
 }
 
 /**

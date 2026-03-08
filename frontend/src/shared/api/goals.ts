@@ -4,6 +4,7 @@
  */
 import { api } from "./client";
 import type { Goal } from "../types";
+import type { ApiResponse } from "../types";
 
 /**
  * Transform backend goal response (snake_case) to frontend format (camelCase)
@@ -65,10 +66,14 @@ export function getAllGoals(token: string): Promise<Goal[]> {
  * Get active goals only - returns single active goal or null
  */
 export function getActiveGoals(token: string): Promise<Goal | null> {
-    return api.get<any>("/api/goals/active", token)
+    return api.get<any | ApiResponse<any>>("/api/goals/active", token)
         .then((data) => {
             if (!data) return null;
-            return transformGoalResponse(data);
+            const payload = (typeof data === "object" && "data" in data)
+                ? (data as ApiResponse<any>).data
+                : data;
+            if (!payload) return null;
+            return transformGoalResponse(payload);
         })
         .catch(() => null); // Return null if no active goal exists
 }

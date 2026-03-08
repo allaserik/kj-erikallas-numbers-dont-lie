@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.goal;
 
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.dto.GoalResponse;
 import com.erikallas.ndl.common.api.mapper.ResponseMapper;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
@@ -60,10 +61,10 @@ public class GoalController {
      * @return the active goal
      */
     @GetMapping("/api/goals/active")
-    public GoalResponse active(JwtAuthenticationToken auth) {
+    public ApiSuccess<GoalResponse> active(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = goalService.getActive(user.getId());
-        return ResponseMapper.toGoalResponse(entity);
+        return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
     }
 
     /**
