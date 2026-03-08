@@ -36,6 +36,7 @@ function transformGoalRequest(data: any): any {
         goalType: data.goalType,
         targetWeightKg: data.targetValue,
         targetActivityDaysPerWeek: data.targetActivityDaysPerWeek,
+        targetDate: data.targetDate,
         notes: data.description,
     };
 }
@@ -96,6 +97,7 @@ export function updateGoal(id: string, data: Partial<Goal>, token: string): Prom
     if (data.goalType !== undefined) updateData.goalType = data.goalType;
     if (data.targetValue !== undefined) updateData.targetWeightKg = data.targetValue;
     if (data.targetActivityDaysPerWeek !== undefined) updateData.targetActivityDaysPerWeek = data.targetActivityDaysPerWeek;
+    if (data.targetDate !== undefined) updateData.targetDate = data.targetDate;
     if (data.description !== undefined) updateData.notes = data.description;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
     return api

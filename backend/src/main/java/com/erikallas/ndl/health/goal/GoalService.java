@@ -1,5 +1,6 @@
 package com.erikallas.ndl.health.goal;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class GoalService {
             GoalType goalType,
             Double targetWeightKg,
             Integer targetActivityDaysPerWeek,
+            LocalDate targetDate,
             String notes) {
         // Deactivate existing active goal (if any)
         repo.findFirstByUserIdAndActiveTrue(userId).ifPresent(existing -> {
@@ -34,6 +36,7 @@ public class GoalService {
                     existing.getGoalType(),
                     existing.getTargetWeightKg(),
                     existing.getTargetActivityDaysPerWeek(),
+                    existing.getTargetDate(),
                     existing.getNotes(),
                     false,
                     existing.getCreatedAt(),
@@ -48,6 +51,7 @@ public class GoalService {
                 goalType,
                 targetWeightKg,
                 targetActivityDaysPerWeek,
+                targetDate != null ? targetDate : now.toLocalDate().plusDays(90),
                 notes,
                 true,
                 now,
@@ -58,7 +62,7 @@ public class GoalService {
 
     @Transactional
     public GoalEntity update(UUID userId, UUID goalId, GoalType goalType, Double targetWeightKg,
-            Integer targetActivityDaysPerWeek, String notes, Boolean isActive) {
+            Integer targetActivityDaysPerWeek, LocalDate targetDate, String notes, Boolean isActive) {
 
         GoalEntity existing = repo.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("Goal not found"));
@@ -78,6 +82,7 @@ public class GoalService {
                             active.getGoalType(),
                             active.getTargetWeightKg(),
                             active.getTargetActivityDaysPerWeek(),
+                            active.getTargetDate(),
                             active.getNotes(),
                             false,
                             active.getCreatedAt(),
@@ -95,6 +100,7 @@ public class GoalService {
                 goalType != null ? goalType : existing.getGoalType(),
                 targetWeightKg != null ? targetWeightKg : existing.getTargetWeightKg(),
                 targetActivityDaysPerWeek != null ? targetActivityDaysPerWeek : existing.getTargetActivityDaysPerWeek(),
+                targetDate != null ? targetDate : existing.getTargetDate(),
                 notes != null ? notes : existing.getNotes(),
                 isActive != null ? isActive : existing.isActive(),
                 existing.getCreatedAt(),

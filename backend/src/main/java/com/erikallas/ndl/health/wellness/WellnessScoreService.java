@@ -2,6 +2,14 @@ package com.erikallas.ndl.health.wellness;
 
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
+import com.erikallas.ndl.health.goal.GoalProgressEntity;
+import com.erikallas.ndl.health.goal.GoalProgressRepository;
+import com.erikallas.ndl.health.goal.GoalRepository;
+import com.erikallas.ndl.health.weight.WeightEntryRepository;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,9 +28,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class WellnessScoreService {
 
     private final HealthProfileRepository profileRepository;
+    private final GoalRepository goalRepository;
+    private final GoalProgressRepository goalProgressRepository;
+    private final WeightEntryRepository weightEntryRepository;
 
-    public WellnessScoreService(HealthProfileRepository profileRepository) {
+    public WellnessScoreService(HealthProfileRepository profileRepository, GoalRepository goalRepository,
+            GoalProgressRepository goalProgressRepository, WeightEntryRepository weightEntryRepository) {
         this.profileRepository = profileRepository;
+        this.goalRepository = goalRepository;
+        this.goalProgressRepository = goalProgressRepository;
+        this.weightEntryRepository = weightEntryRepository;
     }
 
     /**
@@ -31,9 +46,6 @@ public class WellnessScoreService {
      * This method: 1. Retrieves the user's current health profile 2. Calculates
      * component scores from their health data 3. Computes overall weighted score 4.
      * Persists the score to database
-     * 
-     * Note: Goal progress and health habits scores default to 50 (neutral) until
-     * goal tracking and habit compliance systems are implemented.
      * 
      * @param userId the user whose wellness score should be calculated
      * @return the calculated wellness score (0-100), or null if profile not found
@@ -48,8 +60,8 @@ public class WellnessScoreService {
         // Calculate component scores from current health data
         int bmiScore = calculateBmiComponentScore(profile);
         int activityScore = calculateActivityComponentScore(profile);
-        int goalScore = 50; // Default neutral score - will be updated when goal tracking implemented
-        int habitsScore = 50; // Default neutral score - will be updated when habit tracking implemented
+        int goalScore = calculateGoalProgressComponentScore(userId);
+        int habitsScore = calculateHabitsComponentScore(profile, userId);
 
         // Calculate overall weighted score
         int overallScore = WellnessScoreCalculator.calculateOverallScore(bmiScore, activityScore, goalScore,
@@ -120,6 +132,90 @@ public class WellnessScoreService {
         } catch (Exception e) {
             return 0; // Error parsing activity frequency
         }
+    }
+
+    /**
+     * Calculate goal progress component score from active goal progress.
+     * 
+     * Scoring:
+     * - No active goal: neutral 50
+     * - Active goal with progress records: latest progress percentage
+     * - Active goal with no progress records yet: 0
+     */
+    private int calculateGoalProgressComponentScore(UUID userId) {
+        var activeGoal = goalRepository.findFirstByUserIdAndActiveTrue(userId);
+        if (activeGoal.isEmpty()) {
+            return 50;
+        }
+
+        return goalProgressRepository.findFirstByGoalIdOrderByRecordedAtDesc(activeGoal.get().getId())
+                .map(GoalProgressEntity::getProgressPercentage)
+                .map(this::clampScore)
+                .orElse(0);
+    }
+
+    /**
+     * Calculate habits component score from concrete behavior signals.
+     * 
+     * Uses available data:
+     * - Weight check-in consistency over the last 7 days
+     * - Self-reported activity frequency from fitness assessment
+     * 
+     * If neither signal is available, returns neutral 50.
+     */
+    private int calculateHabitsComponentScore(HealthProfileEntity profile, UUID userId) {
+        List<Integer> signals = new ArrayList<>();
+
+        // Signal 1: recent check-in consistency (distinct days with entries in last 7 days)
+        var recentEntries = weightEntryRepository.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
+        if (!recentEntries.isEmpty()) {
+            OffsetDateTime since = OffsetDateTime.now().minusDays(7);
+            long daysWithWeightEntries = recentEntries.stream()
+                    .filter(entry -> entry.getMeasuredAt() != null && !entry.getMeasuredAt().isBefore(since))
+                    .map(entry -> entry.getMeasuredAt().toLocalDate())
+                    .distinct()
+                    .count();
+            int checkinConsistencyScore = (int) Math.min(100, Math.round((daysWithWeightEntries / 7.0) * 100.0));
+            signals.add(checkinConsistencyScore);
+        }
+
+        // Signal 2: self-reported activity frequency from fitness assessment
+        Integer activityFrequency = extractWeeklyActivityFrequency(profile);
+        if (activityFrequency != null) {
+            signals.add(WellnessScoreCalculator.calculateActivityScore(activityFrequency));
+        }
+
+        if (signals.isEmpty()) {
+            return 50;
+        }
+
+        double avg = signals.stream().filter(Objects::nonNull).mapToInt(Integer::intValue).average().orElse(50.0);
+        return clampScore((int) Math.round(avg));
+    }
+
+    private Integer extractWeeklyActivityFrequency(HealthProfileEntity profile) {
+        if (profile.getFitnessAssessment() == null) {
+            return null;
+        }
+        Object frequencyObj = profile.getFitnessAssessment().get("current_activity_frequency");
+        if (frequencyObj == null) {
+            return null;
+        }
+        try {
+            if (frequencyObj instanceof Number num) {
+                return num.intValue();
+            }
+            if (frequencyObj instanceof String str) {
+                return Integer.parseInt(str);
+            }
+        } catch (Exception ignored) {
+            return null;
+        }
+        return null;
+    }
+
+    private int clampScore(int score) {
+        return Math.max(0, Math.min(100, score));
     }
 
     /**

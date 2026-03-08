@@ -4,6 +4,9 @@ import com.erikallas.ndl.auth.user.UserService;
 import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
 import com.erikallas.ndl.health.profile.HealthProfileService;
+import com.erikallas.ndl.health.goal.GoalProgressEntity;
+import com.erikallas.ndl.health.goal.GoalProgressRepository;
+import com.erikallas.ndl.health.goal.GoalRepository;
 import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
 
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @SecurityRequirement(name = "bearerAuth")
@@ -24,13 +28,18 @@ public class HealthSummaryController {
     private final HealthProfileService profileService;
     private final WeightEntryRepository weightRepo;
     private final HealthSummaryService summaryService;
+    private final GoalRepository goalRepository;
+    private final GoalProgressRepository goalProgressRepository;
 
     public HealthSummaryController(UserService userService, HealthProfileService profileService,
-            WeightEntryRepository weightRepo, HealthSummaryService summaryService) {
+            WeightEntryRepository weightRepo, HealthSummaryService summaryService,
+            GoalRepository goalRepository, GoalProgressRepository goalProgressRepository) {
         this.userService = userService;
         this.profileService = profileService;
         this.weightRepo = weightRepo;
         this.summaryService = summaryService;
+        this.goalRepository = goalRepository;
+        this.goalProgressRepository = goalProgressRepository;
     }
 
     @GetMapping("/api/summary")
@@ -69,16 +78,15 @@ public class HealthSummaryController {
         Double weightChange = summaryService.weightDeltaForPeriod(weights, 7);
         List<WeightEntryEntity> periodWeights = summaryService.entriesInRange(weights, startDate, endDate);
 
-        // Collect weight values for averaging (wellness score proxy)
-        double avgWellness = periodWeights.isEmpty() ? (profile != null ? 75.0 : 50.0) : 75.0; // Placeholder: could
-                                                                                               // include wellness
-                                                                                               // calculation
+        Double avgWellness = profile != null && profile.getWellnessScore() != null
+                ? profile.getWellnessScore().doubleValue()
+                : 0.0;
+        Integer goalProgressPercentage = getGoalProgressPercentageForPeriod(user.getId(), startDate, endDate);
 
         return ApiSuccess.of(new PeriodSummaryDto("weekly", startDate.toString(), endDate.toString(),
                 !periodWeights.isEmpty() ? periodWeights.get(periodWeights.size() - 1).getWeightKg() : null,
                 !periodWeights.isEmpty() ? periodWeights.get(0).getWeightKg() : null, weightChange, avgWellness,
-                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", 0, // Goal progress would need more
-                                                                                     // context
+                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", goalProgressPercentage,
                 7, periodWeights.size()));
     }
 
@@ -98,11 +106,47 @@ public class HealthSummaryController {
         Double weightChange = summaryService.weightDeltaForPeriod(weights, 30);
         List<WeightEntryEntity> periodWeights = summaryService.entriesInRange(weights, startDate, endDate);
 
-        double avgWellness = periodWeights.isEmpty() ? (profile != null ? 75.0 : 50.0) : 75.0;
+        Double avgWellness = profile != null && profile.getWellnessScore() != null
+                ? profile.getWellnessScore().doubleValue()
+                : 0.0;
+        Integer goalProgressPercentage = getGoalProgressPercentageForPeriod(user.getId(), startDate, endDate);
 
         return ApiSuccess.of(new PeriodSummaryDto("monthly", startDate.toString(), endDate.toString(),
                 !periodWeights.isEmpty() ? periodWeights.get(periodWeights.size() - 1).getWeightKg() : null,
                 !periodWeights.isEmpty() ? periodWeights.get(0).getWeightKg() : null, weightChange, avgWellness,
-                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", 0, 30, periodWeights.size()));
+                profile != null ? profile.getBaselineActivityLevel() : "UNKNOWN", goalProgressPercentage, 30,
+                periodWeights.size()));
+    }
+
+    private Integer getGoalProgressPercentageForPeriod(java.util.UUID userId, LocalDate startDate, LocalDate endDate) {
+        var activeGoalOpt = goalRepository.findFirstByUserIdAndActiveTrue(userId);
+        if (activeGoalOpt.isEmpty()) {
+            return 0;
+        }
+
+        var goalId = activeGoalOpt.get().getId();
+        OffsetDateTime start = startDate.atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime end = endDate.plusDays(1).atStartOfDay().atOffset(OffsetDateTime.now().getOffset());
+
+        List<GoalProgressEntity> periodProgress = goalProgressRepository.findByGoalIdOrderByRecordedAtDesc(goalId)
+                .stream()
+                .filter(p -> p.getRecordedAt() != null
+                        && !p.getRecordedAt().isBefore(start)
+                        && p.getRecordedAt().isBefore(end))
+                .toList();
+
+        if (periodProgress.isEmpty()) {
+            return goalProgressRepository.findFirstByGoalIdOrderByRecordedAtDesc(goalId)
+                    .map(GoalProgressEntity::getProgressPercentage)
+                    .orElse(0);
+        }
+
+        double average = periodProgress.stream()
+                .map(GoalProgressEntity::getProgressPercentage)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+        return (int) Math.round(average);
     }
 }

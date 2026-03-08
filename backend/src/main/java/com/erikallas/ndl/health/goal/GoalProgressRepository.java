@@ -50,6 +50,16 @@ public interface GoalProgressRepository extends JpaRepository<GoalProgressEntity
     Optional<GoalProgressEntity> findFirstByGoalIdOrderByRecordedAtDesc(UUID goalId);
 
     /**
+     * Get the earliest progress record for a goal.
+     * 
+     * Used as baseline for progress calculations.
+     * 
+     * @param goalId the goal ID
+     * @return optional containing earliest progress record, or empty if none exists
+     */
+    Optional<GoalProgressEntity> findFirstByGoalIdOrderByRecordedAtAsc(UUID goalId);
+
+    /**
      * Get progress records for a goal in descending time order, limited to N most
      * recent.
      * 

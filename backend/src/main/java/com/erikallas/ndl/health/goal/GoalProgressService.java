@@ -1,6 +1,9 @@
 package com.erikallas.ndl.health.goal;
 
+import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -9,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import com.erikallas.ndl.health.wellness.WellnessScoreService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +28,19 @@ public class GoalProgressService {
 
     private final GoalProgressRepository progressRepository;
     private final GoalRepository goalRepository;
+    private final WellnessScoreService wellnessScoreService;
+    private final WeightEntryRepository weightEntryRepository;
 
     // Milestone interval: track every 5% of progress
     private static final int MILESTONE_INTERVAL = 5;
+    private static final int DEFAULT_GOAL_DURATION_DAYS = 90;
 
-    public GoalProgressService(GoalProgressRepository progressRepository, GoalRepository goalRepository) {
+    public GoalProgressService(GoalProgressRepository progressRepository, GoalRepository goalRepository,
+            WellnessScoreService wellnessScoreService, WeightEntryRepository weightEntryRepository) {
         this.progressRepository = progressRepository;
         this.goalRepository = goalRepository;
+        this.wellnessScoreService = wellnessScoreService;
+        this.weightEntryRepository = weightEntryRepository;
     }
 
     /**
@@ -75,7 +85,9 @@ public class GoalProgressService {
         progress.setMilestoneDetails(milestoneDetails);
         progress.setMilestonesCompleted(milestonesCompleted);
 
-        return progressRepository.save(progress);
+        GoalProgressEntity saved = progressRepository.save(progress);
+        wellnessScoreService.calculateAndUpdateWellnessScore(goal.getUserId());
+        return saved;
     }
 
     /**
@@ -92,39 +104,30 @@ public class GoalProgressService {
      * @return progress percentage 0-100 (capped at 100 for completion)
      */
     private int calculateProgressPercentage(GoalEntity goal, BigDecimal currentValue) {
-        if (goal.getGoalType() == GoalType.WEIGHT_LOSS) {
+        if (currentValue == null) {
+            return 0;
+        }
+
+        if (goal.getGoalType() == GoalType.WEIGHT_LOSS || goal.getGoalType() == GoalType.WEIGHT_GAIN
+                || goal.getGoalType() == GoalType.MAINTAIN_WEIGHT) {
             if (goal.getTargetWeightKg() == null) {
                 return 0;
             }
+            return calculateWeightGoalProgress(goal, currentValue.doubleValue());
+        }
 
-            // Assuming starting weight comes from health profile
-            // For now, we'll use a placeholder - in production, fetch from health profile
-            // progress = (start - current) / (start - target) * 100
-            // Simplified: just track how close to target
-            double distance_to_target = currentValue.doubleValue() - goal.getTargetWeightKg();
-
-            // If we've reached or passed target, 100%
-            if (distance_to_target <= 0) {
-                return 100;
-            }
-
-            // Estimate progress (this would need actual start weight)
-            // For now return percentage-like value
-            return Math.min((int) (100 - (distance_to_target * 2)), 100); // Rough estimate
-
-        } else if (goal.getGoalType() == GoalType.IMPROVE_FITNESS || goal.getGoalType() == GoalType.ENHANCE_ENDURANCE) {
+        if (goal.getGoalType() == GoalType.IMPROVE_FITNESS || goal.getGoalType() == GoalType.ENHANCE_ENDURANCE
+                || goal.getGoalType() == GoalType.BUILD_MUSCLE || goal.getGoalType() == GoalType.IMPROVE_FLEXIBILITY) {
             if (goal.getTargetActivityDaysPerWeek() == null || goal.getTargetActivityDaysPerWeek() == 0) {
                 return 0;
             }
 
             int targetDays = goal.getTargetActivityDaysPerWeek();
-            int currentDays = currentValue.intValue();
-            int progress = (currentDays * 100) / targetDays;
-
-            return Math.min(progress, 100);
+            int currentDays = Math.max(0, currentValue.intValue());
+            int progress = Math.round((currentDays * 100.0f) / targetDays);
+            return clamp(progress);
         }
 
-        // For other goal types, not yet implemented
         return 0;
     }
 
@@ -140,14 +143,22 @@ public class GoalProgressService {
      * @return true if on-track, false if behind
      */
     private boolean determineOnTrackStatus(GoalEntity goal, int progressPercentage) {
-        // If no target date, assume on-track if making progress
-        if (goal.getUpdatedAt() == null) {
+        OffsetDateTime targetDateTime = getTargetDateTime(goal);
+        OffsetDateTime start = goal.getCreatedAt();
+        if (targetDateTime == null || start == null) {
             return progressPercentage > 0;
         }
 
-        // Simple check: if progress >= 50%, generally on-track
-        // In production, compare against days elapsed vs. target deadline
-        return progressPercentage >= 50;
+        if (OffsetDateTime.now().isAfter(targetDateTime)) {
+            return progressPercentage >= 100;
+        }
+
+        long totalSeconds = Math.max(1, ChronoUnit.SECONDS.between(start, targetDateTime));
+        long elapsedSeconds = Math.max(0, ChronoUnit.SECONDS.between(start, OffsetDateTime.now()));
+        elapsedSeconds = Math.min(elapsedSeconds, totalSeconds);
+
+        double expectedProgress = (elapsedSeconds * 100.0) / totalSeconds;
+        return progressPercentage + 5 >= Math.round(expectedProgress);
     }
 
     /**
@@ -157,19 +168,62 @@ public class GoalProgressService {
      * @return days remaining, or null if no target date
      */
     private Integer calculateDaysRemaining(GoalEntity goal) {
-        if (goal.getUpdatedAt() == null) {
+        OffsetDateTime targetDateTime = getTargetDateTime(goal);
+        if (targetDateTime == null) {
             return null;
         }
+        long remaining = ChronoUnit.DAYS.between(OffsetDateTime.now(), targetDateTime);
+        return (int) Math.max(remaining, 0);
+    }
 
-        // For now, estimate based on goal type
-        // In production, fetch actual target_date from goal
-        long daysElapsed = ChronoUnit.DAYS.between(goal.getCreatedAt(), OffsetDateTime.now());
+    private int calculateWeightGoalProgress(GoalEntity goal, double currentWeight) {
+        double targetWeight = goal.getTargetWeightKg();
+        double baselineWeight = resolveWeightBaseline(goal).orElse(currentWeight);
 
-        // Assume 90-day goals by default
-        int totalDays = 90;
-        int remaining = (int) (totalDays - daysElapsed);
+        if (goal.getGoalType() == GoalType.MAINTAIN_WEIGHT) {
+            double diff = Math.abs(currentWeight - targetWeight);
+            int score = (int) Math.round(100 - (diff * 20.0));
+            return clamp(score);
+        }
 
-        return Math.max(remaining, 0);
+        double totalDelta = targetWeight - baselineWeight;
+        if (Math.abs(totalDelta) < 0.0001) {
+            return Math.abs(currentWeight - targetWeight) < 0.0001 ? 100 : 0;
+        }
+
+        double achievedDelta = currentWeight - baselineWeight;
+        double ratio = achievedDelta / totalDelta;
+        int score = (int) Math.round(ratio * 100.0);
+        return clamp(score);
+    }
+
+    private Optional<Double> resolveWeightBaseline(GoalEntity goal) {
+        Optional<Double> firstProgressBaseline = progressRepository.findFirstByGoalIdOrderByRecordedAtAsc(goal.getId())
+                .map(GoalProgressEntity::getCurrentValue)
+                .map(BigDecimal::doubleValue);
+        if (firstProgressBaseline.isPresent()) {
+            return firstProgressBaseline;
+        }
+
+        return weightEntryRepository.findTop30ByUserIdOrderByMeasuredAtDesc(goal.getUserId()).stream()
+                .map(entry -> BigDecimal.valueOf(entry.getWeightKg()).setScale(2, RoundingMode.HALF_UP))
+                .map(BigDecimal::doubleValue)
+                .findFirst();
+    }
+
+    private OffsetDateTime getTargetDateTime(GoalEntity goal) {
+        LocalDate targetDate = goal.getTargetDate();
+        if (targetDate != null) {
+            return targetDate.plusDays(1).atStartOfDay().atOffset(OffsetDateTime.now().getOffset()).minusSeconds(1);
+        }
+        if (goal.getCreatedAt() != null) {
+            return goal.getCreatedAt().plusDays(DEFAULT_GOAL_DURATION_DAYS);
+        }
+        return null;
+    }
+
+    private int clamp(int value) {
+        return Math.max(0, Math.min(100, value));
     }
 
     /**

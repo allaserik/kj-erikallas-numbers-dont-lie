@@ -1,6 +1,7 @@
 package com.erikallas.ndl.health.goal;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.hibernate.annotations.SQLDelete;
@@ -28,6 +29,9 @@ public class GoalEntity {
     @Column(name = "target_activity_days_per_week")
     private Integer targetActivityDaysPerWeek;
 
+    @Column(name = "target_date")
+    private LocalDate targetDate;
+
     @Column(name = "notes")
     private String notes;
 
@@ -47,12 +51,13 @@ public class GoalEntity {
     }
 
     public GoalEntity(UUID id, UUID userId, GoalType goalType, Double targetWeightKg, Integer targetActivityDaysPerWeek,
-            String notes, boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+            LocalDate targetDate, String notes, boolean active, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.goalType = goalType;
         this.targetWeightKg = targetWeightKg;
         this.targetActivityDaysPerWeek = targetActivityDaysPerWeek;
+        this.targetDate = targetDate;
         this.notes = notes;
         this.active = active;
         this.createdAt = createdAt;
@@ -77,6 +82,10 @@ public class GoalEntity {
 
     public Integer getTargetActivityDaysPerWeek() {
         return targetActivityDaysPerWeek;
+    }
+
+    public LocalDate getTargetDate() {
+        return targetDate;
     }
 
     public String getNotes() {

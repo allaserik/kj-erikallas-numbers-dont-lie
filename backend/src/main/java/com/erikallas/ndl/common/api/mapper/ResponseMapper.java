@@ -55,7 +55,7 @@ public class ResponseMapper {
         }
         return new GoalResponse(entity.getId(), entity.getUserId(),
                 entity.getGoalType() != null ? entity.getGoalType().toString() : null, entity.getTargetWeightKg(),
-                entity.getTargetActivityDaysPerWeek(), entity.getNotes(), entity.isActive(), entity.getCreatedAt(),
-                entity.getUpdatedAt());
+                entity.getTargetActivityDaysPerWeek(), entity.getTargetDate(), entity.getNotes(), entity.isActive(),
+                entity.getCreatedAt(), entity.getUpdatedAt());
     }
 }

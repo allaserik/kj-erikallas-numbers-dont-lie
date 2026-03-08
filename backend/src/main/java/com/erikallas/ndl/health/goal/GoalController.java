@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ public class GoalController {
         @Max(7)
         public Integer targetActivityDaysPerWeek;
 
+        public LocalDate targetDate;
         public String notes;
     }
 
@@ -50,6 +52,7 @@ public class GoalController {
         @Max(7)
         public Integer targetActivityDaysPerWeek;
 
+        public LocalDate targetDate;
         public String notes;
         public Boolean isActive;
     }
@@ -98,7 +101,7 @@ public class GoalController {
         }
 
         var entity = goalService.createAndActivate(user.getId(), body.goalType, body.targetWeightKg,
-                body.targetActivityDaysPerWeek, body.notes);
+                body.targetActivityDaysPerWeek, body.targetDate, body.notes);
         return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
     }
 
@@ -133,7 +136,7 @@ public class GoalController {
         OwnershipValidator.validateResourceExists(entity != null, "Goal");
 
         var updated = goalService.update(user.getId(), id, body.goalType, body.targetWeightKg,
-                body.targetActivityDaysPerWeek, body.notes, body.isActive);
+                body.targetActivityDaysPerWeek, body.targetDate, body.notes, body.isActive);
         return ApiSuccess.of(ResponseMapper.toGoalResponse(updated));
     }
 

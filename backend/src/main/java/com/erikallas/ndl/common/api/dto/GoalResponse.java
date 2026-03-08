@@ -2,6 +2,7 @@ package com.erikallas.ndl.common.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -28,6 +29,9 @@ public class GoalResponse implements Serializable {
     @JsonProperty("target_activity_days_per_week")
     private Integer targetActivityDaysPerWeek;
 
+    @JsonProperty("target_date")
+    private LocalDate targetDate;
+
     @JsonProperty("notes")
     private String notes;
 
@@ -44,12 +48,13 @@ public class GoalResponse implements Serializable {
     }
 
     public GoalResponse(UUID id, UUID userId, String goalType, Double targetWeightKg, Integer targetActivityDaysPerWeek,
-            String notes, Boolean isActive, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+            LocalDate targetDate, String notes, Boolean isActive, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         this.id = id;
         this.userId = userId;
         this.goalType = goalType;
         this.targetWeightKg = targetWeightKg;
         this.targetActivityDaysPerWeek = targetActivityDaysPerWeek;
+        this.targetDate = targetDate;
         this.notes = notes;
         this.isActive = isActive;
         this.createdAt = createdAt;
@@ -95,6 +100,14 @@ public class GoalResponse implements Serializable {
 
     public void setTargetActivityDaysPerWeek(Integer targetActivityDaysPerWeek) {
         this.targetActivityDaysPerWeek = targetActivityDaysPerWeek;
+    }
+
+    public LocalDate getTargetDate() {
+        return targetDate;
+    }
+
+    public void setTargetDate(LocalDate targetDate) {
+        this.targetDate = targetDate;
     }
 
     public String getNotes() {
