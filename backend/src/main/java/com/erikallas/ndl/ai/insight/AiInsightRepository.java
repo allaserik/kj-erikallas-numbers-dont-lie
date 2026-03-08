@@ -1,5 +1,6 @@
 package com.erikallas.ndl.ai.insight;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,8 @@ public interface AiInsightRepository extends JpaRepository<AiInsightEntity, UUID
     Optional<AiInsightEntity> findFirstByUserIdAndInputHashOrderByCreatedAtDesc(UUID userId, String inputHash);
 
     Optional<AiInsightEntity> findFirstByUserIdOrderByCreatedAtDesc(UUID userId);
+
+    List<AiInsightEntity> findByUserIdOrderByCreatedAtDesc(UUID userId);
 
     // Paginated queries
     Page<AiInsightEntity> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);

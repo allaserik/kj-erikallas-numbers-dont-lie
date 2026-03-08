@@ -18,6 +18,7 @@ import {
     upsertPrivacyPreferences,
     type PrivacyPreferences,
 } from "../../../shared/api/privacy";
+import { downloadDataExport } from "../../../shared/api/export";
 
 export function AccountSettings() {
     const { logout: auth0Logout } = useAuth0();
@@ -33,6 +34,8 @@ export function AccountSettings() {
     const [error, setError] = useState<string | null>(null);
     const [privacy, setPrivacy] = useState<PrivacyPreferences | null>(null);
     const [privacySaving, setPrivacySaving] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportError, setExportError] = useState<string | null>(null);
 
     useEffect(() => {
         if (authMethod !== "local") return;
@@ -154,6 +157,20 @@ export function AccountSettings() {
             setError(e instanceof Error ? e.message : "Failed to update privacy preferences");
         } finally {
             setPrivacySaving(false);
+        }
+    };
+
+    const handleExportData = async () => {
+        setIsExporting(true);
+        setExportError(null);
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Not authenticated");
+            await downloadDataExport(token);
+        } catch (e) {
+            setExportError(e instanceof Error ? e.message : "Failed to export data");
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -310,6 +327,22 @@ export function AccountSettings() {
                         </label>
                     </div>
                 )}
+
+                <div className="mb-6 rounded border border-slate-200 p-4 space-y-2">
+                    <p className="text-sm font-semibold text-slate-900">Export Your Data</p>
+                    <p className="text-xs text-slate-600">
+                        Download your account, health profile, privacy settings, goals, progress, weight history, and
+                        AI insights in JSON format.
+                    </p>
+                    <button
+                        className="px-3 py-2 rounded bg-slate-800 text-white text-sm font-semibold hover:bg-slate-900 disabled:opacity-50"
+                        onClick={handleExportData}
+                        disabled={isExporting}
+                    >
+                        {isExporting ? "Exporting..." : "Export Data (JSON)"}
+                    </button>
+                    {exportError && <Alert tone="error" title="Export Error" message={exportError} />}
+                </div>
 
                 {authMethod === "oauth" && (
                     <div className="mb-6 rounded border border-slate-200 p-4">

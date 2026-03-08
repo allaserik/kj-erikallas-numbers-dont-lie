@@ -14,6 +14,8 @@ public interface WeightEntryRepository extends JpaRepository<WeightEntryEntity, 
 
     List<WeightEntryEntity> findTop90ByUserIdOrderByMeasuredAtDesc(UUID userId);
 
+    List<WeightEntryEntity> findByUserIdOrderByMeasuredAtDesc(UUID userId);
+
     boolean existsByUserId(UUID userId);
 
     // Paginated queries
