@@ -5,6 +5,7 @@
 import { api } from "./client";
 import type { UserProfile, HealthProfile } from "../types";
 import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 // Backend response structure (snake_case)
 type HealthProfileBackendResponse = {
@@ -81,10 +82,7 @@ function toUserProfile(data: MeBackendResponse): UserProfile {
 
 export async function getMe(token: string): Promise<UserProfile> {
     const response = await api.get<MeBackendResponse | ApiResponse<MeBackendResponse>>("/api/me", token);
-    if (response && typeof response === "object" && "data" in response) {
-        return toUserProfile((response as ApiResponse<MeBackendResponse>).data);
-    }
-    return toUserProfile(response as MeBackendResponse);
+    return toUserProfile(unwrapApiData(response));
 }
 
 /**
@@ -92,10 +90,7 @@ export async function getMe(token: string): Promise<UserProfile> {
  */
 export async function getHealthProfile(token: string): Promise<HealthProfile | null> {
     const response = await api.get<HealthProfileBackendResponse | null | ApiResponse<HealthProfileBackendResponse | null>>("/api/profile", token);
-    if (response && typeof response === "object" && "data" in response) {
-        return transformHealthProfile((response as ApiResponse<HealthProfileBackendResponse | null>).data);
-    }
-    return transformHealthProfile(response as HealthProfileBackendResponse | null);
+    return transformHealthProfile(unwrapApiData(response));
 }
 
 /**

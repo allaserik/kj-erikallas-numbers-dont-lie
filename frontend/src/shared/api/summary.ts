@@ -4,6 +4,8 @@
  */
 import { api } from "./client";
 import type { HealthSummary } from "../types";
+import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 // Backend response structure (snake_case)
 type HealthSummaryBackendResponse = {
@@ -30,7 +32,9 @@ function transformHealthSummary(data: HealthSummaryBackendResponse | null): Heal
  * Requires profile and weight data to exist
  */
 export function getHealthSummary(token: string): Promise<HealthSummary | null> {
-    return api.get<HealthSummaryBackendResponse>("/api/summary", token).then(transformHealthSummary);
+    return api
+        .get<HealthSummaryBackendResponse | ApiResponse<HealthSummaryBackendResponse>>("/api/summary", token)
+        .then((response) => transformHealthSummary(unwrapApiData(response)));
 }
 
 /**

@@ -4,12 +4,16 @@
  */
 import { api } from "./client";
 import type { Insight } from "../types";
+import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 /**
  * Get latest AI insight
  */
 export function getLatestInsight(token: string): Promise<Insight | null> {
-    return api.get<Insight | null>("/api/insights/current", token);
+    return api
+        .get<Insight | null | ApiResponse<Insight | null>>("/api/insights/current", token)
+        .then((response) => unwrapApiData(response));
 }
 
 /**

@@ -5,6 +5,7 @@
 import { api } from "./client";
 import type { Goal } from "../types";
 import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 /**
  * Transform backend goal response (snake_case) to frontend format (camelCase)
@@ -46,14 +47,17 @@ export function createGoal(
     data: Omit<Goal, "id" | "userId" | "createdAt" | "updatedAt">,
     token: string
 ): Promise<Goal> {
-    return api.post<any>("/api/goals", transformGoalRequest(data), token).then(transformGoalResponse);
+    return api
+        .post<any | ApiResponse<any>>("/api/goals", transformGoalRequest(data), token)
+        .then((response) => transformGoalResponse(unwrapApiData(response)));
 }
 
 /**
  * Get all goals for user
  */
 export function getAllGoals(token: string): Promise<Goal[]> {
-    return api.get<any[]>("/api/goals", token).then((goals) => {
+    return api.get<any[] | ApiResponse<any[]>>("/api/goals", token).then((data) => {
+        const goals = unwrapApiData(data);
         if (!Array.isArray(goals)) {
             console.warn("Expected array from /api/goals but got:", goals);
             return [];
@@ -68,10 +72,7 @@ export function getAllGoals(token: string): Promise<Goal[]> {
 export function getActiveGoals(token: string): Promise<Goal | null> {
     return api.get<any | ApiResponse<any>>("/api/goals/active", token)
         .then((data) => {
-            if (!data) return null;
-            const payload = (typeof data === "object" && "data" in data)
-                ? (data as ApiResponse<any>).data
-                : data;
+            const payload = unwrapApiData(data);
             if (!payload) return null;
             return transformGoalResponse(payload);
         })
@@ -82,7 +83,9 @@ export function getActiveGoals(token: string): Promise<Goal | null> {
  * Get a specific goal by ID
  */
 export function getGoal(id: string, token: string): Promise<Goal> {
-    return api.get<any>(`/api/goals/${id}`, token).then(transformGoalResponse);
+    return api
+        .get<any | ApiResponse<any>>(`/api/goals/${id}`, token)
+        .then((response) => transformGoalResponse(unwrapApiData(response)));
 }
 
 /**
@@ -95,7 +98,9 @@ export function updateGoal(id: string, data: Partial<Goal>, token: string): Prom
     if (data.targetActivityDaysPerWeek !== undefined) updateData.targetActivityDaysPerWeek = data.targetActivityDaysPerWeek;
     if (data.description !== undefined) updateData.notes = data.description;
     if (data.isActive !== undefined) updateData.isActive = data.isActive;
-    return api.patch<any>(`/api/goals/${id}`, updateData, token).then(transformGoalResponse);
+    return api
+        .patch<any | ApiResponse<any>>(`/api/goals/${id}`, updateData, token)
+        .then((response) => transformGoalResponse(unwrapApiData(response)));
 }
 
 /**

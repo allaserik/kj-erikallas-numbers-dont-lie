@@ -2,6 +2,7 @@ package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.insight.AiInsightService.AiInsightResult;
 import com.erikallas.ndl.auth.user.UserService;
+import com.erikallas.ndl.common.api.dto.ApiSuccess;
 import com.erikallas.ndl.common.api.validation.OwnershipValidator;
 import com.erikallas.ndl.privacy.PrivacyPreferencesService;
 
@@ -36,12 +37,12 @@ public class AiInsightController {
      * @return the current insight
      */
     @GetMapping("/api/insights/current")
-    public AiInsightResult current(JwtAuthenticationToken auth) {
+    public ApiSuccess<AiInsightResult> current(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         if (!privacyPreferencesService.hasDataUsageConsent(user.getId())) {
             throw new IllegalStateException("Data usage consent is required before generating AI insights");
         }
-        return insightService.getCurrent(user.getId());
+        return ApiSuccess.of(insightService.getCurrent(user.getId()));
     }
 
     /**

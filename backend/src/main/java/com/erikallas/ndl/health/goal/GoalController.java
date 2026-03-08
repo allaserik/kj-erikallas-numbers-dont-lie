@@ -74,10 +74,10 @@ public class GoalController {
      * @return list of all goals for the user, ordered by creation date descending
      */
     @GetMapping("/api/goals")
-    public List<GoalResponse> getAll(JwtAuthenticationToken auth) {
+    public ApiSuccess<List<GoalResponse>> getAll(JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entities = goalRepository.findAllByUserIdNotDeleted(user.getId());
-        return entities.stream().map(ResponseMapper::toGoalResponse).collect(Collectors.toList());
+        return ApiSuccess.of(entities.stream().map(ResponseMapper::toGoalResponse).collect(Collectors.toList()));
     }
 
     /**
@@ -90,7 +90,7 @@ public class GoalController {
      */
     @PostMapping("/api/goals")
     @ResponseStatus(HttpStatus.CREATED)
-    public GoalResponse create(@Valid @RequestBody CreateGoalRequest body, JwtAuthenticationToken auth) {
+    public ApiSuccess<GoalResponse> create(@Valid @RequestBody CreateGoalRequest body, JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
 
         if (body.goalType == null) {
@@ -99,7 +99,7 @@ public class GoalController {
 
         var entity = goalService.createAndActivate(user.getId(), body.goalType, body.targetWeightKg,
                 body.targetActivityDaysPerWeek, body.notes);
-        return ResponseMapper.toGoalResponse(entity);
+        return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
     }
 
     /**
@@ -110,11 +110,11 @@ public class GoalController {
      * @return the goal
      */
     @GetMapping("/api/goals/{id}")
-    public GoalResponse get(@PathVariable UUID id, JwtAuthenticationToken auth) {
+    public ApiSuccess<GoalResponse> get(@PathVariable UUID id, JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = goalRepository.findByIdAndUserId(id, user.getId()).orElse(null);
         OwnershipValidator.validateResourceExists(entity != null, "Goal");
-        return ResponseMapper.toGoalResponse(entity);
+        return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
     }
 
     /**
@@ -126,7 +126,7 @@ public class GoalController {
      * @return the updated goal
      */
     @PatchMapping("/api/goals/{id}")
-    public GoalResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateGoalRequest body,
+    public ApiSuccess<GoalResponse> update(@PathVariable UUID id, @Valid @RequestBody UpdateGoalRequest body,
             JwtAuthenticationToken auth) {
         var user = userService.ensureUser(auth.getToken().getSubject(), null);
         var entity = goalRepository.findByIdAndUserId(id, user.getId()).orElse(null);
@@ -134,7 +134,7 @@ public class GoalController {
 
         var updated = goalService.update(user.getId(), id, body.goalType, body.targetWeightKg,
                 body.targetActivityDaysPerWeek, body.notes, body.isActive);
-        return ResponseMapper.toGoalResponse(updated);
+        return ApiSuccess.of(ResponseMapper.toGoalResponse(updated));
     }
 
     /**

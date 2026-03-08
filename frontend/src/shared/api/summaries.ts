@@ -4,6 +4,8 @@
  */
 import { api } from "./client";
 import type { PeriodSummary } from "../types";
+import type { ApiResponse } from "../types";
+import { unwrapApiData } from "./unwrap";
 
 // Backend response structure (snake_case)
 type PeriodSummaryBackendResponse = {
@@ -44,8 +46,8 @@ function transformPeriodSummary(data: PeriodSummaryBackendResponse): PeriodSumma
  */
 export function getWeeklySummary(token: string): Promise<PeriodSummary> {
     return api
-        .get<PeriodSummaryBackendResponse>("/api/summary/weekly", token)
-        .then(transformPeriodSummary);
+        .get<PeriodSummaryBackendResponse | ApiResponse<PeriodSummaryBackendResponse>>("/api/summary/weekly", token)
+        .then((response) => transformPeriodSummary(unwrapApiData(response)));
 }
 
 /**
@@ -53,6 +55,6 @@ export function getWeeklySummary(token: string): Promise<PeriodSummary> {
  */
 export function getMonthlySummary(token: string): Promise<PeriodSummary> {
     return api
-        .get<PeriodSummaryBackendResponse>("/api/summary/monthly", token)
-        .then(transformPeriodSummary);
+        .get<PeriodSummaryBackendResponse | ApiResponse<PeriodSummaryBackendResponse>>("/api/summary/monthly", token)
+        .then((response) => transformPeriodSummary(unwrapApiData(response)));
 }
