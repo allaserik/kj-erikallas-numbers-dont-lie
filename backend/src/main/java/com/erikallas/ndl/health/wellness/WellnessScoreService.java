@@ -1,13 +1,17 @@
 package com.erikallas.ndl.health.wellness;
 
 import com.erikallas.ndl.health.profile.HealthProfileEntity;
+import com.erikallas.ndl.health.profile.BMICalculator;
 import com.erikallas.ndl.health.profile.HealthProfileRepository;
 import com.erikallas.ndl.health.goal.GoalProgressEntity;
 import com.erikallas.ndl.health.goal.GoalProgressRepository;
 import com.erikallas.ndl.health.goal.GoalRepository;
+import com.erikallas.ndl.health.weight.WeightEntryEntity;
 import com.erikallas.ndl.health.weight.WeightEntryRepository;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -217,6 +221,104 @@ public class WellnessScoreService {
 
     private int clampScore(int score) {
         return Math.max(0, Math.min(100, score));
+    }
+
+    /**
+     * Build weekly wellness score points for evolution charting.
+     * 
+     * Uses historical weight data and goal progress snapshots to reconstruct weekly
+     * wellness trend.
+     */
+    public List<WellnessHistoryPointResponse> getWeeklyWellnessHistory(UUID userId, int weeks) {
+        var profileOpt = profileRepository.findById(userId);
+        if (profileOpt.isEmpty()) {
+            return List.of();
+        }
+        HealthProfileEntity profile = profileOpt.get();
+
+        List<WeightEntryEntity> weights = weightEntryRepository.findByUserIdOrderByMeasuredAtDesc(userId);
+        if (weights.isEmpty()) {
+            return List.of();
+        }
+        List<GoalProgressEntity> progressHistory = goalProgressRepository.findByUserIdOrderByRecordedAtDesc(userId);
+
+        List<WellnessHistoryPointResponse> points = new ArrayList<>();
+        LocalDate today = LocalDate.now();
+        int safeWeeks = Math.max(4, Math.min(52, weeks));
+
+        for (int i = safeWeeks - 1; i >= 0; i--) {
+            LocalDate weekEnd = today.minusWeeks(i);
+            LocalDate weekStart = weekEnd.minusDays(6);
+
+            Double latestWeight = latestWeightUpTo(weights, weekEnd);
+            if (latestWeight == null) {
+                continue;
+            }
+
+            int bmiScore = calculateBmiScoreAtWeight(profile, latestWeight);
+            int activityScore = calculateActivityComponentScore(profile);
+            int goalScore = calculateGoalProgressScoreAt(progressHistory, weekEnd);
+            int habitsScore = calculateHabitsScoreForWindow(profile, weights, weekStart, weekEnd);
+
+            int overallScore = WellnessScoreCalculator.calculateOverallScore(bmiScore, activityScore, goalScore,
+                    habitsScore);
+            points.add(new WellnessHistoryPointResponse(weekStart, weekEnd, overallScore));
+        }
+
+        return points;
+    }
+
+    private Double latestWeightUpTo(List<WeightEntryEntity> weights, LocalDate cutoffDate) {
+        return weights.stream()
+                .filter(w -> w.getMeasuredAt() != null && !w.getMeasuredAt().toLocalDate().isAfter(cutoffDate))
+                .max(Comparator.comparing(WeightEntryEntity::getMeasuredAt))
+                .map(WeightEntryEntity::getWeightKg)
+                .orElse(null);
+    }
+
+    private int calculateBmiScoreAtWeight(HealthProfileEntity profile, double weightKg) {
+        if (profile.getHeightCm() <= 0) {
+            return 0;
+        }
+        try {
+            var bmi = BMICalculator.calculateBMI(weightKg, profile.getHeightCm());
+            String classification = BMICalculator.classifyBMI(bmi);
+            return WellnessScoreCalculator.calculateBmiScore(classification);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    private int calculateGoalProgressScoreAt(List<GoalProgressEntity> progressHistory, LocalDate weekEnd) {
+        return progressHistory.stream()
+                .filter(p -> p.getRecordedAt() != null && !p.getRecordedAt().toLocalDate().isAfter(weekEnd))
+                .max(Comparator.comparing(GoalProgressEntity::getRecordedAt))
+                .map(GoalProgressEntity::getProgressPercentage)
+                .filter(Objects::nonNull)
+                .map(this::clampScore)
+                .orElse(50);
+    }
+
+    private int calculateHabitsScoreForWindow(HealthProfileEntity profile, List<WeightEntryEntity> weights,
+            LocalDate weekStart, LocalDate weekEnd) {
+        List<Integer> signals = new ArrayList<>();
+
+        long daysWithWeightEntries = weights.stream()
+                .filter(entry -> entry.getMeasuredAt() != null)
+                .map(entry -> entry.getMeasuredAt().toLocalDate())
+                .filter(date -> !date.isBefore(weekStart) && !date.isAfter(weekEnd))
+                .distinct()
+                .count();
+        int checkinConsistencyScore = (int) Math.min(100, Math.round((daysWithWeightEntries / 7.0) * 100.0));
+        signals.add(checkinConsistencyScore);
+
+        Integer activityFrequency = extractWeeklyActivityFrequency(profile);
+        if (activityFrequency != null) {
+            signals.add(WellnessScoreCalculator.calculateActivityScore(activityFrequency));
+        }
+
+        double avg = signals.stream().filter(Objects::nonNull).mapToInt(Integer::intValue).average().orElse(50.0);
+        return clampScore((int) Math.round(avg));
     }
 
     /**

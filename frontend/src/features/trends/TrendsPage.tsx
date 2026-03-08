@@ -4,10 +4,21 @@ import { Spinner } from "../../shared/ui/Spinner";
 import { useWeightChartData } from "./useWeightChartData";
 import { WeightChart } from "./components/WeightChart";
 import { Link } from "react-router-dom";
+import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
+import { useAppAuth } from "../../shared/auth/AuthContext";
+import { getWellnessHistory } from "../../shared/api/wellness";
+import { WellnessEvolutionChart } from "./components/WellnessEvolutionChart";
 
 export default function TrendsPage() {
     const [range, setRange] = useState<"30" | "90" | "all">("90");
     const chartData = useWeightChartData(range);
+    const { isAuthenticated } = useAppAuth();
+    const weeksByRange = { "30": 4, "90": 12, all: 24 } as const;
+    const wellnessQ = useAuthedQuery(
+        `wellnessHistory-${range}`,
+        (token: string) => getWellnessHistory(token, weeksByRange[range]),
+        isAuthenticated
+    );
 
     return (
         <div className="space-y-4 pb-32 md:pb-4">
@@ -54,6 +65,7 @@ export default function TrendsPage() {
                         minWeight={chartData.minWeight}
                         maxWeight={chartData.maxWeight}
                     />
+                    <WellnessEvolutionChart points={wellnessQ.data || []} />
 
                     {chartData.points.length === 0 && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

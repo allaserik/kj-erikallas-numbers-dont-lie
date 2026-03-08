@@ -7,15 +7,35 @@ export type WellnessScore = {
     description: string;
 };
 
+export type WellnessHistoryPoint = {
+    weekStart: string;
+    weekEnd: string;
+    score: number;
+};
+
 type WellnessScoreBackendResponse = {
     score: number;
     description: string;
+};
+
+type WellnessHistoryBackendResponse = {
+    week_start: string;
+    week_end: string;
+    score: number;
 };
 
 function transformWellnessScore(data: WellnessScoreBackendResponse): WellnessScore {
     return {
         score: data.score,
         description: data.description,
+    };
+}
+
+function transformWellnessHistoryPoint(data: WellnessHistoryBackendResponse): WellnessHistoryPoint {
+    return {
+        weekStart: data.week_start,
+        weekEnd: data.week_end,
+        score: data.score,
     };
 }
 
@@ -33,4 +53,16 @@ export function calculateWellnessScore(token: string): Promise<WellnessScore> {
             token
         )
         .then((response) => transformWellnessScore(unwrapApiData(response)));
+}
+
+export function getWellnessHistory(token: string, weeks = 12): Promise<WellnessHistoryPoint[]> {
+    return api
+        .get<WellnessHistoryBackendResponse[] | ApiResponse<WellnessHistoryBackendResponse[]>>(
+            `/api/wellness-score/history?weeks=${weeks}`,
+            token
+        )
+        .then((response) => {
+            const data = unwrapApiData(response);
+            return Array.isArray(data) ? data.map(transformWellnessHistoryPoint) : [];
+        });
 }

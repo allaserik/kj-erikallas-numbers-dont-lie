@@ -1,9 +1,11 @@
 package com.erikallas.ndl.health.wellness;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import java.util.List;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.erikallas.ndl.auth.user.UserService;
@@ -49,6 +51,21 @@ public class WellnessScoreController {
 
         String description = wellnessScoreService.getWellnessScoreDescription(user.getId());
         return ApiSuccess.of(new WellnessScoreResponse(score, description));
+    }
+
+    /**
+     * Get weekly wellness history points for trend visualization.
+     * 
+     * @param auth  JWT authentication token with user context
+     * @param weeks number of weeks to return (4-52), default 12
+     * @return list of weekly wellness points (oldest to newest)
+     */
+    @GetMapping("/api/wellness-score/history")
+    public ApiSuccess<List<WellnessHistoryPointResponse>> getWellnessHistory(
+            JwtAuthenticationToken auth,
+            @RequestParam(defaultValue = "12") int weeks) {
+        var user = userService.ensureUserFromJwt(auth);
+        return ApiSuccess.of(wellnessScoreService.getWeeklyWellnessHistory(user.getId(), weeks));
     }
 
     /**
