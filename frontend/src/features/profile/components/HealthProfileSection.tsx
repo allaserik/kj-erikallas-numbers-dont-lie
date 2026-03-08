@@ -38,6 +38,14 @@ export function HealthProfileSection({
     onSave,
     onCancel,
 }: HealthProfileSectionProps) {
+    const formatLabel = (value: string | number | "") =>
+        value === "" ? "—" : String(value).replace(/_/g, " ");
+    const formatCommaList = (value: string) => (value.trim() ? value : "—");
+    const formatRunTime = () =>
+        formData.run3kmMinutes !== "" || formData.run3kmSeconds !== ""
+            ? `${formData.run3kmMinutes || 0}m ${formData.run3kmSeconds || 0}s`
+            : "—";
+
     return (
         <Card>
             <CardTitle>Health Profile</CardTitle>
@@ -112,6 +120,32 @@ export function HealthProfileSection({
                                 </div>
                             </div>
                             <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Exercise Types</div>
+                                <div className="font-medium text-slate-900">{formatCommaList(formData.exerciseTypesText)}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Average Session Duration</div>
+                                <div className="font-medium text-slate-900">{formatLabel(formData.sessionDuration)}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Self-Assessed Fitness Level</div>
+                                <div className="font-medium text-slate-900">{formatLabel(formData.fitnessLevel)}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Preferred Exercise Environment</div>
+                                <div className="font-medium text-slate-900">{formatLabel(formData.exerciseEnvironment)}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Preferred Time of Day</div>
+                                <div className="font-medium text-slate-900">{formatLabel(formData.exerciseTimePreference)}</div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
+                                <div className="text-xs text-slate-600">Current Endurance Level</div>
+                                <div className="font-medium text-slate-900">
+                                    {formData.enduranceMinutes !== "" ? `${formData.enduranceMinutes} min` : "—"}
+                                </div>
+                            </div>
+                            <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">Strength Indicators</div>
                                 <div className="font-medium text-slate-900">
                                     Pushups: {formData.pushups !== "" ? formData.pushups : "—"} | Situps: {formData.situps !== "" ? formData.situps : "—"} | Pullups: {formData.pullups !== "" ? formData.pullups : "—"}
@@ -120,9 +154,7 @@ export function HealthProfileSection({
                             <div className="p-3 bg-slate-50 rounded">
                                 <div className="text-xs text-slate-600">3km Run Time</div>
                                 <div className="font-medium text-slate-900">
-                                    {formData.run3kmMinutes !== "" || formData.run3kmSeconds !== ""
-                                        ? `${formData.run3kmMinutes || 0}m ${formData.run3kmSeconds || 0}s`
-                                        : "—"}
+                                    {formatRunTime()}
                                 </div>
                             </div>
                         </div>
