@@ -17,6 +17,7 @@ export interface DashboardData {
     summary: HealthSummary | null;
     weeklySummary: PeriodSummary | null;
     monthlySummary: PeriodSummary | null;
+    insightConsentRequired: boolean;
 }
 
 export interface DashboardState extends DashboardData {
@@ -52,12 +53,14 @@ export function useDashboardData(): DashboardState {
         insightQ.loading;
 
     // Determine overall error state (return first error found, ignore summary errors)
+    const insightConsentRequired = (insightQ.error?.message || "").toLowerCase().includes("consent");
+
     const error =
         meQ.error ||
         profileQ.error ||
         latestWeightQ.error ||
         goalsQ.error ||
-        insightQ.error ||
+        (insightConsentRequired ? null : insightQ.error) ||
         null;
 
     // Extract data from individual queries
@@ -73,6 +76,7 @@ export function useDashboardData(): DashboardState {
         summary: summaryQ.data || null,
         weeklySummary: weeklySummaryQ.data || null,
         monthlySummary: monthlySummaryQ.data || null,
+        insightConsentRequired,
         isLoading,
         error,
     };

@@ -3,9 +3,29 @@ import type { Insight } from "../../../shared/types";
 
 interface InsightCardProps {
     insight: Insight | null;
+    consentRequired?: boolean;
 }
 
-export function InsightCard({ insight }: InsightCardProps) {
+export function InsightCard({ insight, consentRequired = false }: InsightCardProps) {
+    if (consentRequired) {
+        return (
+            <Card>
+                <CardTitle>✨ AI Insight</CardTitle>
+                <CardBody>
+                    <p className="text-sm text-slate-700 mb-3">
+                        AI insights are disabled until data usage consent is enabled.
+                    </p>
+                    <a
+                        href="/profile"
+                        className="inline-block px-3 py-2 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-700 transition"
+                    >
+                        Open Profile Settings →
+                    </a>
+                </CardBody>
+            </Card>
+        );
+    }
+
     if (!insight) {
         return null;
     }
