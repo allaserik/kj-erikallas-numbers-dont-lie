@@ -138,12 +138,8 @@ public class DataExportService {
                 insights);
     }
 
-    private JsonNode parsePayload(String payload) {
-        try {
-            return objectMapper.readTree(payload);
-        } catch (Exception e) {
-            return objectMapper.getNodeFactory().textNode(payload);
-        }
+    private JsonNode parsePayload(JsonNode payload) {
+        return payload == null ? objectMapper.getNodeFactory().nullNode() : payload;
     }
 
     public record DataExportResponse(

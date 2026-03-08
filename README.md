@@ -47,6 +47,7 @@ docker compose -f ./infra/docker-compose.yml --env-file ./.env up -d
 ```bash
 cd backend
 ./mvnw -U clean test
+./mvnw -q -DskipTests compile
 DEMO_MODE=true ./mvnw spring-boot:run
 ```
 
@@ -62,3 +63,17 @@ install ollama
 
 OpenAPI Swagger documentation
 [OpenAPI Swagger URL](http://localhost:8080/swagger-ui/index.html)
+
+## Run with openai api key
+
+```bash
+cd /home/erik/dev/kood/erikallas/numbers-dont-lie
+set -a
+source .env
+set +a
+
+cd backend
+./mvnw spring-boot:run
+
+echo $OPENAI_API_KEY | head -c 12 && echo "..."
+```

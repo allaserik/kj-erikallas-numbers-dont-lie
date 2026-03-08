@@ -13,7 +13,6 @@ import org.springframework.web.client.RestClient;
 public class OpenAiClient {
 
     private final RestClient rest;
-    @SuppressWarnings("unused")
     private final ObjectMapper om;
     private final Environment env;
 
@@ -67,13 +66,24 @@ public class OpenAiClient {
                                 "schema", schema)),
                 "store", false);
 
-        JsonNode resp = rest.post()
+        String raw = rest.post()
                 .uri("/responses")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + key)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
                 .retrieve()
-                .body(JsonNode.class);
+                .body(String.class);
+
+        if (raw == null || raw.isBlank()) {
+            throw new IllegalStateException("OpenAI response body was empty");
+        }
+
+        JsonNode resp;
+        try {
+            resp = om.readTree(raw);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to parse OpenAI response JSON", e);
+        }
 
         // Extract first output_text.text
         JsonNode output = resp.path("output");

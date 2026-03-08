@@ -1,10 +1,13 @@
 package com.erikallas.ndl.ai.insight;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "ai_insights")
@@ -27,9 +30,10 @@ public class AiInsightEntity {
     @Column(name = "model", nullable = false)
     private String model;
 
-    // Store JSON as string; DB column is jsonb
+    // Store payload as structured JSON; DB column is jsonb
     @Column(name = "payload", nullable = false, columnDefinition = "jsonb")
-    private String payload;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode payload;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -40,7 +44,7 @@ public class AiInsightEntity {
     protected AiInsightEntity() {
     }
 
-    public AiInsightEntity(UUID id, UUID userId, UUID goalId, String inputHash, String model, String payload,
+    public AiInsightEntity(UUID id, UUID userId, UUID goalId, String inputHash, String model, JsonNode payload,
             OffsetDateTime createdAt) {
         this.id = id;
         this.userId = userId;
@@ -71,7 +75,7 @@ public class AiInsightEntity {
         return model;
     }
 
-    public String getPayload() {
+    public JsonNode getPayload() {
         return payload;
     }
 
