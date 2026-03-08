@@ -1,17 +1,12 @@
 package com.erikallas.ndl.ai.insight;
 
 import com.erikallas.ndl.ai.openai.OpenAiClient;
-import com.erikallas.ndl.health.goal.GoalService;
-import com.erikallas.ndl.health.summary.HealthSummaryService;
-import com.erikallas.ndl.health.profile.HealthProfileService;
-import com.erikallas.ndl.health.weight.WeightEntryRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -24,24 +19,18 @@ public class AiInsightService {
     private static final Logger log = LoggerFactory.getLogger(AiInsightService.class);
 
     private static final Duration CACHE_TTL = Duration.ofHours(24);
+    private static final String PROMPT_VERSION = "v2-context-builder";
 
     private final AiInsightRepository repo;
     private final OpenAiClient openAi;
-    private final GoalService goalService;
-    private final HealthProfileService profileService;
-    private final WeightEntryRepository weightRepo;
-    private final HealthSummaryService summaryService;
+    private final InsightContextBuilder contextBuilder;
     private final ObjectMapper om;
 
-    public AiInsightService(AiInsightRepository repo, OpenAiClient openAi, GoalService goalService,
-            HealthProfileService profileService, WeightEntryRepository weightRepo, HealthSummaryService summaryService,
+    public AiInsightService(AiInsightRepository repo, OpenAiClient openAi, InsightContextBuilder contextBuilder,
             ObjectMapper om) {
         this.repo = repo;
         this.openAi = openAi;
-        this.goalService = goalService;
-        this.profileService = profileService;
-        this.weightRepo = weightRepo;
-        this.summaryService = summaryService;
+        this.contextBuilder = contextBuilder;
         this.om = om;
     }
 
@@ -52,33 +41,18 @@ public class AiInsightService {
     }
 
     public AiInsightResult getCurrent(UUID userId) {
-        var goal = goalService.getActive(userId);
-        var profile = profileService.find(userId).orElse(null);
-        var weights = weightRepo.findTop30ByUserIdOrderByMeasuredAtDesc(userId);
-
-        // If missing any requirement for smart insight, fall back to generic
-        if (goal == null || profile == null || weights.isEmpty()) {
-            log.info("Smart insight unavailable (goal={}, profile={}, weights={}). Returning fallback. userId={}",
-                    goal != null, profile != null, !weights.isEmpty(), userId);
+        Map<String, Object> context;
+        try {
+            context = contextBuilder.buildContext(userId);
+        } catch (Exception e) {
+            log.info("Smart insight unavailable due to missing context. Returning fallback. userId={}, reason={}",
+                    userId, e.getMessage());
             return fallbackToLast(userId);
         }
 
-        var latest = weights.get(0);
-        double bmi = summaryService.bmi(profile.getHeightCm(), latest.getWeightKg());
-        Double delta7d = summaryService.weightDelta7d(weights);
-
-        // Build a stable snapshot for hashing (LinkedHashMap preserves order)
-        Map<String, Object> snapshot = new LinkedHashMap<>();
-        snapshot.put("goalType", goal.getGoalType().name());
-        snapshot.put("targetWeightKg", goal.getTargetWeightKg());
-        snapshot.put("targetActivityDaysPerWeek", goal.getTargetActivityDaysPerWeek());
-        snapshot.put("heightCm", profile.getHeightCm());
-        snapshot.put("latestWeightKg", latest.getWeightKg());
-        snapshot.put("bmi", Math.round(bmi * 10.0) / 10.0);
-        snapshot.put("weightDelta7d", delta7d);
-
-        String snapshotJson = writeJson(snapshot);
-        String inputHash = sha256(snapshotJson);
+        String contextJson = writeJson(context);
+        String inputHash = sha256(PROMPT_VERSION + "|" + contextJson);
+        UUID goalId = extractGoalIdFromContext(context);
 
         // Cache hit?
         var cached = repo.findFirstByUserIdAndInputHashOrderByCreatedAtDesc(userId, inputHash).orElse(null);
@@ -95,16 +69,13 @@ public class AiInsightService {
         String systemPrompt = "You are a supportive wellness coach. You must respond ONLY with valid JSON matching the provided schema. "
                 + "Do not include any extra keys. Keep recommendations concise, actionable, and safe.";
 
-        String userPrompt = "User snapshot (JSON): " + snapshotJson + "\n\n"
-                + "Task: Provide exactly 3 short recommendations (movement, recovery, focus), "
-                + "1 reflective question (journaling style), and a 2-3 sentence motivational summary. "
-                + "Reference the user's goal type and targets. Avoid medical claims.";
+        String userPrompt = contextBuilder.buildUserPrompt(context);
 
         try {
             String json = openAi.generateInsightJson(systemPrompt, userPrompt);
             AiPayload payload = parseAndValidate(json);
 
-            AiInsightEntity stored = new AiInsightEntity(UUID.randomUUID(), userId, goal.getId(), inputHash,
+            AiInsightEntity stored = new AiInsightEntity(UUID.randomUUID(), userId, goalId, inputHash,
                     openAi.model(), writeJson(payload), OffsetDateTime.now());
             repo.save(stored);
 
@@ -113,6 +84,22 @@ public class AiInsightService {
             log.warn("AI insight generation failed, falling back. userId={}, reason={}", userId, e.getMessage());
             return fallbackToLast(userId);
         }
+    }
+
+    private UUID extractGoalIdFromContext(Map<String, Object> context) {
+        Object goalProgressObj = context.get("goal_progress");
+        if (!(goalProgressObj instanceof Map<?, ?> goalProgress)) {
+            return null;
+        }
+        Object goalIdObj = goalProgress.get("goal_id");
+        if (goalIdObj instanceof String goalIdStr) {
+            try {
+                return UUID.fromString(goalIdStr);
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private AiInsightResult fallbackToLast(UUID userId) {

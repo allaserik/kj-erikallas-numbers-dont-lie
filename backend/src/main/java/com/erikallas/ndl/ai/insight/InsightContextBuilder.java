@@ -325,6 +325,7 @@ public class InsightContextBuilder {
 
     private void addGoalProgressSection(Map<String, Object> context, UUID goalId, UUID userId) {
         Map<String, Object> progress = new LinkedHashMap<>();
+        progress.put("goal_id", goalId.toString());
 
         Optional<GoalProgressEntity> latestOpt = progressRepo.findFirstByGoalIdOrderByRecordedAtDesc(goalId);
 
