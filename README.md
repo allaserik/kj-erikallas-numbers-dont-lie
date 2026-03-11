@@ -2,6 +2,21 @@
 
 Wellness tracking app with health profile collection, goal tracking, wellness scoring, AI-generated insights, and trend visualizations.
 
+## Table Of Contents
+
+- [Project Overview](#project-overview)
+- [Tech Stack](#tech-stack)
+- [Setup And Installation](#setup-and-installation)
+- [Run Modes](#run-modes)
+- [Demo Data Details](#demo-data-details)
+- [Demo Troubleshooting](#demo-troubleshooting)
+- [Usage Guide](#usage-guide)
+- [5-Minute Overview](#5-minute-overview)
+- [Local Development](#local-development)
+- [Environment Variables](#environment-variables)
+- [AI Insights Notes](#ai-insights-notes)
+- [Further Development Ideas](#further-development-ideas)
+
 ## Project Overview
 
 Main capabilities:
@@ -37,6 +52,10 @@ Bonus/extra functionality implemented:
 cp .env.example .env
 ```
 
+Quick alternatives:
+- Demo template: `cp .env.demo.example .env`
+- Clean template: `cp .env.clean.example .env`
+
 2. Set secure values in `.env`:
 - `APP_TOKEN_PEPPER`
 - `APP_DATA_ENCRYPTION_KEY`
@@ -50,6 +69,12 @@ openssl rand -base64 48
 
 Use first output as `APP_TOKEN_PEPPER`, second as `APP_DATA_ENCRYPTION_KEY`.
 
+3. Start with one command:
+
+```bash
+docker compose up -d --build
+```
+
 ## Run Modes
 
 ### Demo (Recommended First)
@@ -62,7 +87,7 @@ This mode is optimized for demo purposes:
 Run:
 
 ```bash
-DEMO_MODE=true VITE_DEMO_MODE=true APP_EMAIL_ENABLED=true docker-compose up -d --build
+DEMO_MODE=true VITE_DEMO_MODE=true APP_EMAIL_ENABLED=true docker compose up -d --build
 ```
 
 Open:
@@ -72,7 +97,6 @@ Open:
 
 Demo credentials:
 - `demo@example.com` / `demo@example.com`
-- Detailed demo seed notes: [DEMO_MODE.md](DEMO_MODE.md)
 
 Read Docker logs for AI insight generation details and email payloads. From project root (./numbers-dont-lie):
 
@@ -108,12 +132,52 @@ If service names differ, list them:
 docker compose ps
 ```
 
+## Demo Data Details
+
+Seeded demo account:
+- Email: `demo@example.com`
+- Password: `demo@example.com`
+- User ID: `00000000-0000-0000-0000-000000000001`
+
+Seeded data includes:
+- Health profile with realistic baseline values
+- Active goal(s) and goal progress history
+- Historical weight entries for trend visualization
+- Activity check-ins for heatmap/timeline testing
+
+Why this helps:
+- Lets reviewers immediately validate dashboard/trends behavior
+- Avoids manual data entry before testing assignment criteria
+- Makes AI insight context richer during demos
+
+Reset demo database:
+
+```bash
+docker compose down -v
+DEMO_MODE=true VITE_DEMO_MODE=true APP_EMAIL_ENABLED=true docker compose up -d --build
+```
+
+## Demo Troubleshooting
+
+Demo tab not visible:
+- Ensure `VITE_DEMO_MODE=true`
+- Rebuild frontend: `docker compose up -d --build`
+
+Demo user/data not appearing:
+- Ensure `DEMO_MODE=true`
+- Reset volumes and start again (`docker compose down -v`)
+
+Email verification/reset not visible in inbox:
+- Ensure `APP_EMAIL_ENABLED=true`
+- Ensure `MAIL_HOST=mailhog`, `MAIL_PORT=1025`
+- Open `http://localhost:8025`
+
 ### Clean Mode (No Demo Seed Data)
 
 Use this when you want an empty database and non-demo UX:
 
 ```bash
-DEMO_MODE=false VITE_DEMO_MODE=false APP_EMAIL_ENABLED=false docker-compose up -d --build
+DEMO_MODE=false VITE_DEMO_MODE=false APP_EMAIL_ENABLED=false docker compose up -d --build
 ```
 
 In this mode, email verification/reset content is logged to backend console unless you configure SMTP and enable `APP_EMAIL_ENABLED=true`.
@@ -121,7 +185,7 @@ In this mode, email verification/reset content is logged to backend console unle
 ### Default One-Line Run (Docker)
 
 ```bash
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 Open:
@@ -132,14 +196,14 @@ Open:
 Stop:
 
 ```bash
-docker-compose down
+docker compose down
 ```
 
 Reset database:
 
 ```bash
-docker-compose down -v
-docker-compose up -d --build
+docker compose down -v
+docker compose up -d --build
 ```
 
 ## Usage Guide
@@ -194,27 +258,39 @@ npm run dev
 
 ## Environment Variables
 
-Use root `.env` for normal project runs.
+Use root `.env` for all normal runs.
 
-Important keys:
-- `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`
-- `AUTH0_AUDIENCE`
-- `OPENAI_API_KEY` (optional)
-- `OPENAI_MODEL` (default `gpt-4o-mini`)
-- `DEMO_MODE` and `VITE_DEMO_MODE` (optional demo flags)
-- `APP_TOKEN_PEPPER` (pepper for hashing refresh/reset/verification tokens at rest)
-- `APP_DATA_ENCRYPTION_KEY` (AES key material for encrypting 2FA secrets at rest)
-- `APP_EMAIL_ENABLED` (enable real SMTP sending)
-- `APP_EMAIL_FROM_ADDRESS`, `APP_EMAIL_FROM_NAME`, `APP_EMAIL_FRONTEND_URL`
-- `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`
-- `MAIL_SMTP_AUTH`, `MAIL_SMTP_STARTTLS`
+Important behavior:
+- `docker compose` automatically reads `.env` from project root.
+- Inline values override `.env` for that command only.
+- For submission/one-line run, only root `.env` is required.
+
+### Demo vs Clean Env
+
+| Variable | Demo value | Clean value | Notes |
+|---|---|---|---|
+| `DEMO_MODE` | `true` | `false` | Backend demo seed data |
+| `VITE_DEMO_MODE` | `true` | `false` | Frontend demo login tab |
+| `APP_EMAIL_ENABLED` | `true` | `false` or `true` | `true` sends via SMTP/MailHog |
+| `MAIL_HOST` | `mailhog` | `mailhog` or SMTP host | Docker default uses MailHog |
+| `MAIL_PORT` | `1025` | `1025` or SMTP port | MailHog SMTP port |
+| `OPENAI_API_KEY` | optional | optional | If absent, app uses fallback insight |
+
+### Core Keys Checklist
+
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_PORT`
+- `APP_TOKEN_PEPPER`
+- `APP_DATA_ENCRYPTION_KEY`
+- `VITE_AUTH0_AUDIENCE`
+- `OPENAI_API_KEY` (optional), `OPENAI_MODEL` (optional)
+- `APP_EMAIL_*` and `MAIL_*` (for real email flow)
 
 ### Email Testing Setup
 
 Reviewer-friendly local setup with MailHog:
 1. Set `APP_EMAIL_ENABLED=true`
-2. Keep `MAIL_HOST=mailhog` and `MAIL_PORT=1025` (docker-compose defaults)
-3. Run docker-compose
+2. Keep `MAIL_HOST=mailhog` and `MAIL_PORT=1025` (docker compose defaults)
+3. Run `docker compose up -d --build`
 4. Open `http://localhost:8025` to see verification and password-reset emails
 
 If `APP_EMAIL_ENABLED=false`, email payloads are intentionally logged to backend console for local testing only.
@@ -266,12 +342,11 @@ source .env
 set +a
 ```
 
-## Which `.env` Files Are Needed?
+### Which `.env` Files Are Needed?
 
 - Required: `.env` (root)
-- Template: `.env.example`
-
-For submission and one-line run, only `.env` is required.
+- Template/reference: `.env.example`
+- Ready presets: `.env.demo.example`, `.env.clean.example`
 
 ## AI Insights Notes
 
