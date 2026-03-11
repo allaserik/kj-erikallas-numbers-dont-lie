@@ -14,7 +14,7 @@ How to do testing?
 #### Mandatory
 
 * [X] Student can explain how PII removal affects AI model's ability to generate personalized recommendations
-  - Explanation prepared in `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` (PII removed from prompt, behavior-level personalization retained).
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` (PII removed from prompt, behavior-level personalization retained).
 
 * [X] Student can explain their strategy for detecting and handling AI hallucinations in health recommendations
   - Implemented and documented: strict JSON schema, runtime validation, grounding checks, percent-claim gating, safety filter, fallback/cached responses.
@@ -35,7 +35,7 @@ How to do testing?
   - Enforced in login flow for local accounts (`emailVerified` required).
 
 * [X] Student can explain the security implications of access token duration in JWT authentication
-  - Explanation prepared in `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` (short-lived access tokens + refresh model).
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` (short-lived access tokens + refresh model).
 
 * [X] Access token expires after configured minutes of inactivity
   - Configured in backend auth properties (`access-token-expiry-minutes`, default 15).
@@ -62,7 +62,7 @@ How to do testing?
   - Implemented with fitness assessment fields in health profile.
 
 * [X] Student can explain how normalization of health metrics impacts data visualization accuracy
-  - Explanation prepared in `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 * [X] Health metrics are converted to standard units before storage
   - Implemented explicit backend conversion pipeline: `height_unit` (`cm`/`in`) converts to stored `height_cm`, and `weight_unit` (`kg`/`lb`) converts to stored `weight_kg`.
@@ -86,10 +86,10 @@ How to do testing?
   - Wellness now uses real activity check-ins (last 7 days) and recalculates on activity/profile/goal updates.
 
 * [X] Student can explain their choice of AI model(s) based on response quality and latency requirements
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 * [X] Student can explain what model capabilities were most important for implementation
-  - Explanation prepared (structured output reliability prioritized).
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` (structured output reliability prioritized).
 
 * [X] System recalculates wellness score components when contributing metrics change
   - Triggered on profile update, weight update, and goal progress record.
@@ -104,10 +104,10 @@ How to do testing?
   - Supported by active-goal context and cache key regeneration.
 
 * [X] Student can explain the difference between AI response caching and regeneration
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 * [X] Student can explain how context length affects AI response quality in health recommendations
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 * [X] AI recommendations include specific references to user's stated fitness goals
   - Enforced by strict AI validation guard (`validateGoalSpecificReference`) and prompt rule requiring explicit active-goal references.
@@ -116,13 +116,13 @@ How to do testing?
   - Insight context excludes direct PII (email/name/auth identifiers).
 
 * [X] Student can explain prompt engineering approach to ensure consistent recommendation format
-  - Explanation prepared and implemented with strict schema + prompt structure.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md` and implemented with strict schema + prompt structure.
 
 * [X] System implements response validation to filter out recommendations that don't match user's health restrictions
   - Implemented post-generation dietary restriction validation in `AiInsightService`.
 
 * [X] Student can explain tradeoffs between zero-shot and few-shot prompting
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 ### Functional Checks
 
@@ -145,7 +145,7 @@ How to do testing?
   - Implemented dedicated `ComparisonViewCard` on Dashboard with current-vs-target, weekly/monthly comparison, trends link, and AI recommendation context.
 
 - [X] Student can explain how data visualization choices affect user's understanding of progress
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 - [X] AI insights are visually presented with priority-based highlighting and expandable details
   - Implemented priority labels and expandable recommendation items.
@@ -157,13 +157,13 @@ How to do testing?
   - Trend charts now use responsive + minimum-width SVG containers with horizontal overflow handling to preserve full data visibility on mobile.
 
 - [X] Student can explain impact of missing health data on AI recommendation accuracy
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 - [X] Error messages appear without page reload when API requests fail
   - Implemented frontend API error handling and inline alerts.
 
 - [X] Student can explain approach to preventing API abuse through rate limiting
-  - Explanation prepared; per-scope in-memory limiter implemented.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`; per-scope in-memory limiter implemented.
 
 - [X] System blocks rapid-fire API requests from same user
   - Implemented rate limits with 429 + `Retry-After`.
@@ -172,7 +172,7 @@ How to do testing?
   - Implemented export endpoint includes account/profile/weights/goals/progress/insights.
 
 - [X] Student can explain tradeoffs of chosen visualization approach/library
-  - Explanation prepared in requirements-fulfillment notes.
+  - Explanation prepared in `REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`.
 
 - [X] Dashboard loads placeholder UI while data is being fetched
   - Implemented skeleton cards and loading states.
