@@ -220,7 +220,7 @@ public class WellnessScoreService {
                 .max(Comparator.comparing(GoalProgressEntity::getRecordedAt))
                 .map(GoalProgressEntity::getProgressPercentage)
                 .filter(Objects::nonNull)
-                .map(this::clampScore)
+                .map(v -> clampScore(v.intValue()))
                 .orElse(50);
     }
 
