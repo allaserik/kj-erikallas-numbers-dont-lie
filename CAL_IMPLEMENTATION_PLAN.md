@@ -2,6 +2,21 @@
 
 Practical implementation roadmap for the calorie/meal-planning extension, aligned to `assignment-docs/CAL_ASSIGNMENT.md` and `assignment-docs/CAL_ASSIGNMENT_TEST.md`.
 
+## 0. Plan Summary (v1)
+
+This project extends the existing wellness app (not a separate app) with nutrition planning features.  
+Implementation priority:
+1. Complete mandatory checklist requirements first.
+2. Reuse current UI patterns and routes, then integrate nutrition flows in logical places.
+3. Apply high-ROI UX upgrades (onboarding, data-completeness hints, timeline interactions, comparison views).
+4. Defer infra-heavy items (full production hardening/admin-grade audit systems) to later phases.
+
+Decision defaults for v1:
+- API namespaces stay additive and conflict-safe (`/api/nutrition/*`, `/api/recipes/*`, `/api/meal-plans/*`, `/api/shopping-lists/*`).
+- Timestamps stored UTC, rendered by user timezone.
+- AI used for planning/generation; nutrition math remains deterministic via function-calling tools.
+- RAG implemented with Postgres + pgvector.
+
 ## 1. Scope and Principles
 
 1. Build **mandatory requirements first**, extras after baseline is stable.
@@ -128,6 +143,18 @@ Practical implementation roadmap for the calorie/meal-planning extension, aligne
    - `POST /api/nutrition/insights/generate`
    - `GET /api/nutrition/insights/latest`
 
+## 4.1 Public Interfaces and Compatibility Notes
+
+1. Existing fitness-app routes and APIs remain valid.
+2. New nutrition functionality is added as new endpoints/modules (no breaking rename/remove).
+3. Existing auth/consent guards continue to apply for new routes.
+4. Request/response contracts use ISO 8601 date/time fields consistently.
+5. Standardized unit policy is enforced in storage:
+   - solids in `g`
+   - liquids in `ml`
+   - energy in `kcal`
+   - durations in minutes
+
 ## 5. AI Pipeline Design
 
 ## 5.1 Sequential prompting (required >=3 steps)
@@ -177,6 +204,34 @@ Practical implementation roadmap for the calorie/meal-planning extension, aligne
    - weekly/monthly trend lines,
    - AI nutrition summary cards.
 
+## 6.1 UX Integration Plan (Current UI + README Ideas)
+
+Use the existing app IA and evolve it, instead of parallel UI systems.
+
+1. Navigation ownership
+   - `Dashboard`: today status + quick actions only.
+   - `Meal Planner`: planning/editing (meals, recipes, shopping).
+   - `Trends`: historical analytics and comparisons.
+   - `Settings`: privacy/security/account + nutrition preferences.
+2. First-run onboarding wizard
+   - New user path: profile -> consent -> nutrition preferences -> first meal plan.
+   - Persist onboarding state to resume interrupted setup.
+3. Timeline interactions
+   - Inline edit/delete for check-ins and intake entries.
+   - Optimistic updates with rollback on API error.
+4. Data completeness hints
+   - Display "insight quality" hints when profile/preferences/intake data is missing.
+   - Provide direct CTA links to missing steps.
+5. Analytics readability upgrades
+   - Week-over-week and month-over-month comparison deltas.
+   - Event annotations on charts (goal created, milestone reached, major changes).
+6. Configurable dashboard widgets (phase after MVP)
+   - User can prioritize cards (calories/macros/goal/adherence/insights).
+7. Mobile-first behavior
+   - Keep one primary action per screen.
+   - Use bottom sheets for meal swap/regenerate/alternatives.
+   - Preserve chart data via horizontal scroll where necessary.
+
 ## 7. Delivery Phases (Small Chunks)
 
 ## Phase 1: Foundations
@@ -200,9 +255,19 @@ Practical implementation roadmap for the calorie/meal-planning extension, aligne
 3. Intake logging + daily/weekly summaries + trend APIs.
 
 ## Phase 5: UX and Reliability
-1. Dashboard visualizations and insight cards.
-2. AI fallback/retry/caching.
-3. Validation and error UX polish.
+1. Add onboarding wizard and completion-state handling.
+2. Dashboard visualizations and insight cards.
+3. Add data-completeness hints and contextual CTAs.
+4. Add inline timeline edit/delete with optimistic updates.
+5. AI fallback/retry/caching.
+6. Validation and error UX polish.
+
+## Phase 6: Advanced UX/Analytics/Observability
+1. Add richer comparison views (WoW/MoM deltas).
+2. Add trend annotations for key nutrition/goal events.
+3. Add configurable/saved dashboard widgets and ranges.
+4. Add structured logs, request tracing, and metrics dashboards.
+5. Add external dependency health checks (AI provider/email/auth).
 
 ## 8. Acceptance Criteria Mapping (Mandatory)
 
@@ -224,6 +289,28 @@ Use this checklist when closing stories:
 14. AI summaries/suggestions integrated with dashboard/progress sections.
 15. Content versioning with restore for meal plans.
 16. API failure recovery: retry/backoff/fallback + user-friendly messages.
+17. First-run onboarding flow exists and guides required setup.
+18. Timeline supports inline edit/delete with smooth UX.
+19. Missing data hints are visible and actionable.
+
+## 8.1 Test and Verification Strategy
+
+1. Requirement-to-test mapping
+   - Every mandatory line in `CAL_ASSIGNMENT_TEST.md` maps to at least one backend verification and one UI verification scenario.
+2. API and data integrity checks
+   - Validate all date/time payloads as ISO 8601.
+   - Validate unit normalization (`g/ml/kcal/min`) in persisted entities and derived calculations.
+3. AI/RAG verification
+   - Confirm 3-step sequential prompt chain uses previous-step output.
+   - Confirm nutrition calculations are executed through function-calling tools.
+   - Confirm RAG retrieval contributes to augmented prompt inputs.
+4. Failure-path checks
+   - Parse/schema/timeout/rate-limit/connectivity failure handling for AI and tool calls.
+   - User-friendly errors and fallback behavior verification.
+5. UX flow checks
+   - Onboarding path completion and resume.
+   - Timeline inline edit/delete optimistic update + rollback.
+   - Mobile-first critical actions remain accessible and readable.
 
 ## 9. Non-Functional Standards
 
@@ -238,6 +325,7 @@ Use this checklist when closing stories:
 4. Testing
    - integration tests for planner pipeline and function-calling errors.
    - component/e2e smoke tests for planner + shopping + tracking flows.
+   - onboarding and timeline interaction e2e smoke checks.
 
 ## 10. Recommended First Sprint (1 week)
 
@@ -253,3 +341,15 @@ Use this checklist when closing stories:
 4. Seed at least 500 ingredients + 500 recipes (can be generated, then validated).
 
 This gives a stable base before AI orchestration complexity.
+
+## 11. Assumptions and Deferred Items
+
+Assumptions:
+1. Current stack remains unchanged (Spring Boot + React + PostgreSQL).
+2. Existing design system/components remain the visual baseline.
+3. Existing wellness features stay intact while nutrition capabilities are layered in.
+
+Deferred (post-v1):
+1. Full production hardening (HSTS/reverse-proxy/security headers policy rollouts).
+2. Infrastructure-level encryption/key-rotation governance beyond current app-layer scope.
+3. Admin-facing audit UX and advanced operational dashboards.
