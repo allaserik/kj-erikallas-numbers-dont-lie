@@ -128,7 +128,7 @@ export function WeightChart({
                     <svg
                         width={width}
                         height={height}
-                        className="border border-slate-200 rounded bg-white"
+                        className="border border-slate-200 rounded bg-white w-full min-w-[400px]"
                         viewBox={`0 0 ${width} ${height}`}
                     >
                         {/* Grid lines */}

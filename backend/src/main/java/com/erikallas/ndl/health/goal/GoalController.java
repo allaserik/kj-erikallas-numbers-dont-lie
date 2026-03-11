@@ -58,16 +58,16 @@ public class GoalController {
     }
 
     /**
-     * Get the active goal for the authenticated user.
+     * Get active goals for the authenticated user.
      * 
      * @param auth JWT authentication token
-     * @return the active goal
+     * @return active goals ordered by creation date desc
      */
     @GetMapping("/api/goals/active")
-    public ApiSuccess<GoalResponse> active(JwtAuthenticationToken auth) {
+    public ApiSuccess<List<GoalResponse>> active(JwtAuthenticationToken auth) {
         var user = userService.ensureUserFromJwt(auth);
-        var entity = goalService.getActive(user.getId());
-        return ApiSuccess.of(ResponseMapper.toGoalResponse(entity));
+        var entities = goalService.getActiveGoals(user.getId());
+        return ApiSuccess.of(entities.stream().map(ResponseMapper::toGoalResponse).toList());
     }
 
     /**
@@ -84,8 +84,7 @@ public class GoalController {
     }
 
     /**
-     * Create a new goal for the authenticated user. Only one active goal allowed
-     * per user.
+     * Create a new goal for the authenticated user.
      * 
      * @param body the goal creation request
      * @param auth JWT authentication token

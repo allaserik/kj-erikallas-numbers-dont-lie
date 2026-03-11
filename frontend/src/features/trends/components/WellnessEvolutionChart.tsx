@@ -45,7 +45,7 @@ export function WellnessEvolutionChart({ points }: WellnessEvolutionChartProps) 
                         width={width}
                         height={height}
                         viewBox={`0 0 ${width} ${height}`}
-                        className="border border-slate-200 rounded bg-white"
+                        className="border border-slate-200 rounded bg-white w-full min-w-[400px]"
                     >
                         <line
                             x1={padding.left}

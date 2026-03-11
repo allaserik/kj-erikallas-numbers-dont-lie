@@ -2,11 +2,12 @@ import { Alert } from "../../shared/ui/Alert";
 import { Card, CardBody } from "../../shared/ui/Card";
 import { BMICard } from "./components/BMICard";
 import { WellnessScoreCard } from "./components/WellnessScoreCard";
-import { GoalCard } from "./components/GoalCard";
+import { ActiveGoalsCard } from "./components/ActiveGoalsCard";
 import { InsightCard } from "./components/InsightCard";
 import { PeriodSummaryCard } from "./components/PeriodSummaryCard";
 import { QuickNav } from "./components/QuickNav";
 import { ActivityStreakCard } from "./components/ActivityStreakCard";
+import { ComparisonViewCard } from "./components/ComparisonViewCard";
 import { BMICardSkeleton, WellnessScoreCardSkeleton, GoalCardSkeleton, InsightCardSkeleton } from "./components/SkeletonCards";
 import type { DashboardState } from "./useDashboardData";
 import { Link } from "react-router-dom";
@@ -107,9 +108,16 @@ export function DashboardContent({
                 <>
                     <BMICard summary={data.summary} isLoading={data.isLoading} />
                     <WellnessScoreCard profile={data.profile} isLoading={data.isLoading} />
-                    <GoalCard activeGoal={data.activeGoal} />
+                    <ActiveGoalsCard goals={data.activeGoals} />
                     <ActivityStreakCard activeDaysLast7={data.activeDaysLast7} />
                     <InsightCard insight={data.insight} consentRequired={data.insightConsentRequired} />
+                    <ComparisonViewCard
+                        summary={data.summary}
+                        weeklySummary={data.weeklySummary}
+                        monthlySummary={data.monthlySummary}
+                        activeGoals={data.activeGoals}
+                        insight={data.insight}
+                    />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <PeriodSummaryCard summary={data.weeklySummary} />
                         <PeriodSummaryCard summary={data.monthlySummary} />

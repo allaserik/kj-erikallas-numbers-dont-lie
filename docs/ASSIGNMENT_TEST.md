@@ -109,8 +109,8 @@ How to do testing?
 * [X] Student can explain how context length affects AI response quality in health recommendations
   - Explanation prepared in requirements-fulfillment notes.
 
-* [ ] AI recommendations include specific references to user's stated fitness goals
-  - Partial: context includes goals and progress; grounding is enforced to context metrics. Explicit goal mention in every response is not hard-guaranteed.
+* [X] AI recommendations include specific references to user's stated fitness goals
+  - Enforced by strict AI validation guard (`validateGoalSpecificReference`) and prompt rule requiring explicit active-goal references.
 
 * [X] AI health insights exclude any personally identifiable information
   - Insight context excludes direct PII (email/name/auth identifiers).
@@ -141,8 +141,8 @@ How to do testing?
 - [X] Goal progress includes milestone tracking
   - Implemented milestone tracking at 5% intervals.
 
-- [ ] Comparison view shows current vs target metrics, weekly/monthly comparison, trends and AI recommendations
-  - Partial: data exists across dashboard/trends, but not a single dedicated comparison view page.
+- [X] Comparison view shows current vs target metrics, weekly/monthly comparison, trends and AI recommendations
+  - Implemented dedicated `ComparisonViewCard` on Dashboard with current-vs-target, weekly/monthly comparison, trends link, and AI recommendation context.
 
 - [X] Student can explain how data visualization choices affect user's understanding of progress
   - Explanation prepared in requirements-fulfillment notes.
@@ -153,8 +153,8 @@ How to do testing?
 - [X] Weight progress chart displays goal weight as a reference line
   - Implemented in weight chart.
 
-- [ ] Charts resize without data loss on mobile devices
-  - Partial: responsive/overflow handling exists; formal device test evidence should be shown in demo.
+- [X] Charts resize without data loss on mobile devices
+  - Trend charts now use responsive + minimum-width SVG containers with horizontal overflow handling to preserve full data visibility on mobile.
 
 - [X] Student can explain impact of missing health data on AI recommendation accuracy
   - Explanation prepared in requirements-fulfillment notes.

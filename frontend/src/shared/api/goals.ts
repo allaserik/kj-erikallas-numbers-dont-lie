@@ -68,16 +68,25 @@ export function getAllGoals(token: string): Promise<Goal[]> {
 }
 
 /**
- * Get active goals only - returns single active goal or null
+ * Get active goals only
  */
-export function getActiveGoals(token: string): Promise<Goal | null> {
-    return api.get<any | ApiResponse<any>>("/api/goals/active", token)
+export function getActiveGoals(token: string): Promise<Goal[]> {
+    return api.get<any[] | ApiResponse<any[]>>("/api/goals/active", token)
         .then((data) => {
             const payload = unwrapApiData(data);
-            if (!payload) return null;
-            return transformGoalResponse(payload);
+            if (!Array.isArray(payload)) return [];
+            return payload.map(transformGoalResponse);
         })
-        .catch(() => null); // Return null if no active goal exists
+        .catch(() => []);
+}
+
+/**
+ * Get one primary active goal for views that still use single-goal widgets.
+ */
+export async function getPrimaryActiveGoal(token: string): Promise<Goal | null> {
+    const goals = await getActiveGoals(token);
+    if (!goals.length) return null;
+    return [...goals].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 }
 
 /**

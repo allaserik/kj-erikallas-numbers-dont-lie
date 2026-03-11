@@ -292,14 +292,20 @@ public class GoalProgressService {
         if (currentDays == null) {
             return Optional.empty();
         }
-        var goalOpt = goalRepository.findFirstByUserIdAndActiveTrue(userId);
-        if (goalOpt.isEmpty()) {
+        var activeGoals = goalRepository.findByUserIdAndActiveTrueOrderByCreatedAtDesc(userId);
+        if (activeGoals.isEmpty()) {
             return Optional.empty();
         }
-        var goal = goalOpt.get();
-        if (goal.getTargetActivityDaysPerWeek() == null || goal.getTargetActivityDaysPerWeek() <= 0) {
-            return Optional.empty();
+        GoalProgressEntity firstSaved = null;
+        for (var goal : activeGoals) {
+            if (goal.getTargetActivityDaysPerWeek() == null || goal.getTargetActivityDaysPerWeek() <= 0) {
+                continue;
+            }
+            var saved = recordProgress(goal.getId(), currentDays);
+            if (firstSaved == null && saved != null) {
+                firstSaved = saved;
+            }
         }
-        return Optional.ofNullable(recordProgress(goal.getId(), currentDays));
+        return Optional.ofNullable(firstSaved);
     }
 }

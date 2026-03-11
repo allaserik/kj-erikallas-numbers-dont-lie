@@ -18,6 +18,7 @@ public interface GoalRepository extends JpaRepository<GoalEntity, UUID> {
     Page<GoalEntity> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 
     List<GoalEntity> findByUserIdAndActiveTrue(UUID userId);
+    List<GoalEntity> findByUserIdAndActiveTrueOrderByCreatedAtDesc(UUID userId);
 
     // Get all non-deleted goals for user
     @Query("SELECT g FROM GoalEntity g WHERE g.userId = :userId AND g.deletedAt IS NULL ORDER BY g.createdAt DESC")

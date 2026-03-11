@@ -28,6 +28,7 @@ public class AiInsightService {
 
     private static final Duration CACHE_TTL = Duration.ofHours(24);
     private static final String PROMPT_VERSION = "v4-grounded-safe-novel-restrictions";
+    private static final int GENERATION_ATTEMPTS = 2;
     private static final Pattern PERCENT_PATTERN = Pattern.compile("\\b(\\d{1,3})\\s*%");
     private static final Pattern UNSAFE_PATTERN = Pattern.compile(
             "\\b(diagnose|diagnosis|medication|dose|dosage|prescribe|cure|starve|starvation|purge|laxative|self-harm|suicide)\\b",
@@ -89,8 +90,7 @@ public class AiInsightService {
                 + "Keep recommendations concise, actionable, and safe.";
 
         try {
-            String json = openAi.generateInsightJson(systemPrompt, userPrompt);
-            AiPayload payload = parseAndValidateGenerated(json, context, recentRecommendations);
+            AiPayload payload = generateAndValidate(systemPrompt, userPrompt, context, recentRecommendations);
 
             AiInsightEntity stored = new AiInsightEntity(UUID.randomUUID(), userId, goalId, inputHash,
                     openAi.model(), om.valueToTree(payload), OffsetDateTime.now());
@@ -103,17 +103,35 @@ public class AiInsightService {
         }
     }
 
-    private UUID extractGoalIdFromContext(Map<String, Object> context) {
-        Object goalProgressObj = context.get("goal_progress");
-        if (!(goalProgressObj instanceof Map<?, ?> goalProgress)) {
-            return null;
-        }
-        Object goalIdObj = goalProgress.get("goal_id");
-        if (goalIdObj instanceof String goalIdStr) {
+    private AiPayload generateAndValidate(String systemPrompt, String userPrompt, Map<String, Object> context,
+            Set<String> recentRecommendations) {
+        Exception lastError = null;
+
+        for (int attempt = 1; attempt <= GENERATION_ATTEMPTS; attempt++) {
             try {
-                return UUID.fromString(goalIdStr);
-            } catch (Exception ignored) {
-                return null;
+                String prompt = attempt == 1 ? userPrompt : userPrompt
+                        + "\n\nCORRECTION: Previous output failed validation. Ensure recommendations explicitly reference active goals and concrete goal metrics from context.";
+                String json = openAi.generateInsightJson(systemPrompt, prompt);
+                return parseAndValidateGenerated(json, context, recentRecommendations);
+            } catch (Exception e) {
+                lastError = e;
+                log.warn("AI generation attempt {} failed validation: {}", attempt, e.getMessage());
+            }
+        }
+
+        throw new IllegalArgumentException("AI output failed validation after retries", lastError);
+    }
+
+    private UUID extractGoalIdFromContext(Map<String, Object> context) {
+        Object activeGoalsObj = context.get("active_goals");
+        if (activeGoalsObj instanceof List<?> goals && !goals.isEmpty() && goals.get(0) instanceof Map<?, ?> firstGoal) {
+            Object firstGoalIdObj = firstGoal.get("goal_id");
+            if (firstGoalIdObj instanceof String firstGoalIdStr) {
+                try {
+                    return UUID.fromString(firstGoalIdStr);
+                } catch (Exception ignored) {
+                    return null;
+                }
             }
         }
         return null;
@@ -195,6 +213,7 @@ public class AiInsightService {
 
             if (strictGuards) {
                 validateGrounding(payload, context);
+                validateGoalSpecificReference(payload, context);
                 validatePercentClaims(payload, context);
                 validateSafety(payload);
                 validateDietaryRestrictions(payload, context);
@@ -222,6 +241,22 @@ public class AiInsightService {
         if (!grounded) {
             throw new IllegalArgumentException("insight missing concrete grounded reference");
         }
+    }
+
+    private void validateGoalSpecificReference(AiPayload payload, Map<String, Object> context) {
+        Set<String> goalTokens = extractGoalReferenceTokens(context);
+        if (goalTokens.isEmpty()) {
+            return;
+        }
+
+        List<String> texts = new ArrayList<>(payload.recommendations());
+        texts.add(payload.summary());
+        for (String text : texts) {
+            if (containsAnyToken(normalizeText(text), goalTokens)) {
+                return;
+            }
+        }
+        throw new IllegalArgumentException("insight must explicitly reference at least one active goal");
     }
 
     private void validatePercentClaims(AiPayload payload, Map<String, Object> context) {
@@ -289,11 +324,8 @@ public class AiInsightService {
         addValueToken(out, nestedValue(context, "current_metrics", "current_weight_kg"));
         addValueToken(out, nestedValue(context, "current_metrics", "current_bmi"));
         addValueToken(out, nestedValue(context, "current_metrics", "wellness_score"));
-        addValueToken(out, nestedValue(context, "goal_progress", "progress_percentage"));
-        addValueToken(out, nestedValue(context, "goal_progress", "days_remaining"));
         addValueToken(out, nestedValue(context, "weight_trends", "weight_change_7_days_kg"));
-        addValueToken(out, nestedValue(context, "active_goal", "target_weight_kg"));
-        addValueToken(out, nestedValue(context, "active_goal", "target_activity_days_per_week"));
+        addTokensFromActiveGoals(out, context);
         return out;
     }
 
@@ -328,17 +360,81 @@ public class AiInsightService {
         if (context == null) {
             return allowed;
         }
-        Object progress = nestedValue(context, "goal_progress", "progress_percentage");
-        if (progress instanceof Number n) {
-            allowed.add(n.intValue());
-        } else if (progress instanceof String s) {
-            try {
-                allowed.add(Integer.parseInt(s.trim()));
-            } catch (NumberFormatException ignored) {
-                // ignore
+        Object activeProgressObj = context.get("active_goals_progress");
+        if (activeProgressObj instanceof List<?> progressList) {
+            for (Object item : progressList) {
+                if (!(item instanceof Map<?, ?> progressMap)) {
+                    continue;
+                }
+                Object pctObj = progressMap.get("progress_percentage");
+                if (pctObj instanceof Number n) {
+                    allowed.add(n.intValue());
+                } else if (pctObj instanceof String s) {
+                    try {
+                        allowed.add(Integer.parseInt(s.trim()));
+                    } catch (NumberFormatException ignored) {
+                        // ignore
+                    }
+                }
             }
         }
         return allowed;
+    }
+
+    private void addTokensFromActiveGoals(Set<String> out, Map<String, Object> context) {
+        Object goalsObj = context.get("active_goals");
+        if (goalsObj instanceof List<?> goals) {
+            for (Object item : goals) {
+                if (!(item instanceof Map<?, ?> goalMap)) {
+                    continue;
+                }
+                addValueToken(out, goalMap.get("target_weight_kg"));
+                addValueToken(out, goalMap.get("target_activity_days_per_week"));
+                addValueToken(out, goalMap.get("goal_type"));
+            }
+        }
+
+        Object progressObj = context.get("active_goals_progress");
+        if (progressObj instanceof List<?> progressList) {
+            for (Object item : progressList) {
+                if (!(item instanceof Map<?, ?> progressMap)) {
+                    continue;
+                }
+                addValueToken(out, progressMap.get("progress_percentage"));
+                addValueToken(out, progressMap.get("days_remaining"));
+            }
+        }
+    }
+
+    private Set<String> extractGoalReferenceTokens(Map<String, Object> context) {
+        Set<String> tokens = new LinkedHashSet<>();
+        Object goalsObj = context.get("active_goals");
+        if (!(goalsObj instanceof List<?> goals)) {
+            return tokens;
+        }
+
+        for (Object item : goals) {
+            if (!(item instanceof Map<?, ?> goalMap)) {
+                continue;
+            }
+            Object goalTypeObj = goalMap.get("goal_type");
+            if (goalTypeObj instanceof String goalType) {
+                tokens.add(normalizeText(goalType));
+                tokens.add(normalizeText(goalType.replace("_", " ")));
+            }
+            Object targetWeight = goalMap.get("target_weight_kg");
+            if (targetWeight != null) {
+                tokens.add(normalizeText(String.valueOf(targetWeight)));
+                tokens.add(normalizeText(String.valueOf(targetWeight) + " kg"));
+            }
+            Object targetActivityDays = goalMap.get("target_activity_days_per_week");
+            if (targetActivityDays != null) {
+                tokens.add(normalizeText(String.valueOf(targetActivityDays)));
+                tokens.add(normalizeText(String.valueOf(targetActivityDays) + " days"));
+                tokens.add(normalizeText(String.valueOf(targetActivityDays) + " days per week"));
+            }
+        }
+        return tokens;
     }
 
     @SuppressWarnings("unchecked")
@@ -465,6 +561,7 @@ public class AiInsightService {
         StringBuilder sb = new StringBuilder(contextBuilder.buildUserPrompt(context));
         sb.append("\n\n=== STRICT OUTPUT RULES ===\n");
         sb.append("- Mention at least one concrete metric from the provided context in recommendations or summary.\n");
+        sb.append("- Explicitly reference at least one active goal (goal type or target metric) in recommendations or summary.\n");
         sb.append("- If you mention any percentage, it must exactly match a provided percentage from context.\n");
         sb.append("- Avoid diagnosis, prescriptions, dosages, and extreme advice.\n");
         sb.append("- Respect dietary restrictions and do not suggest restricted foods.\n");

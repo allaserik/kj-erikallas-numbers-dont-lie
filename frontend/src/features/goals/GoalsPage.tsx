@@ -14,12 +14,13 @@ import type { Goal } from "../../shared/types";
 export default function GoalsPage() {
     const { isAuthenticated } = useAppAuth();
     const getToken = useAuthToken();
-    const { activeGoal, allGoals, isLoading, error, isCreating, isDeleting, createNewGoal, updateExistingGoal, deleteExistingGoal } = useGoalsData();
+    const { activeGoals, allGoals, isLoading, error, isCreating, isDeleting, createNewGoal, updateExistingGoal, deleteExistingGoal } = useGoalsData();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
     // Filter history: all goals that are either not active or are archived
-    const inactiveGoals = allGoals.filter((goal) => !goal.isActive || goal.id !== activeGoal?.id);
+    const activeGoalIds = new Set(activeGoals.map((g) => g.id));
+    const inactiveGoals = allGoals.filter((goal) => !activeGoalIds.has(goal.id));
 
     const handleCreateGoal = async (goalType: string, targetWeightKg?: number, targetActivityDays?: number, notes?: string, targetDate?: string) => {
         const token = await getToken();
@@ -88,9 +89,19 @@ export default function GoalsPage() {
             {isAuthenticated && !isLoading && !error && (
                 <>
                     {/* Active Goal Section */}
-                    {activeGoal ? (
+                    {activeGoals.length > 0 ? (
                         <div>
-                            <ActiveGoalCard goal={activeGoal} onArchive={handleArchiveGoal} onEdit={handleEditGoal} isArchiving={isDeleting} />
+                            <div className="space-y-3">
+                                {activeGoals.map((goal) => (
+                                    <ActiveGoalCard
+                                        key={goal.id}
+                                        goal={goal}
+                                        onArchive={handleArchiveGoal}
+                                        onEdit={handleEditGoal}
+                                        isArchiving={isDeleting}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     ) : (
                         <Card>
@@ -106,7 +117,7 @@ export default function GoalsPage() {
                     )}
 
                     {/* Create Goal Button (when active goal exists) */}
-                    {activeGoal && (
+                    {activeGoals.length > 0 && (
                         <Button onClick={() => setIsCreateModalOpen(true)} className="w-full bg-blue-600 hover:bg-blue-700">
                             Create Another Goal
                         </Button>
@@ -119,7 +130,7 @@ export default function GoalsPage() {
                             <GoalHistoryList goals={inactiveGoals} onDelete={handleDeleteGoal} isDeleting={isDeleting} />
                         </div>
                     )}
-                    {activeGoal && inactiveGoals.length === 0 && (
+                    {activeGoals.length > 0 && inactiveGoals.length === 0 && (
                         <Card>
                             <CardBody>
                                 <p className="text-sm text-slate-600">

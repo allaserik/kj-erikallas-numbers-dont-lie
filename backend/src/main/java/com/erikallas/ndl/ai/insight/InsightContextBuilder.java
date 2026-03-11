@@ -71,8 +71,10 @@ public class InsightContextBuilder {
             throw new IllegalStateException("Weight data required");
         }
 
-        GoalEntity activeGoal = goalRepo.findFirstByUserIdAndActiveTrue(userId)
-                .orElseThrow(() -> new IllegalStateException("Active goal required"));
+        List<GoalEntity> activeGoals = goalRepo.findByUserIdAndActiveTrueOrderByCreatedAtDesc(userId);
+        if (activeGoals.isEmpty()) {
+            throw new IllegalStateException("Active goal required");
+        }
 
         // Use LinkedHashMap to preserve field order for stable hashing
         Map<String, Object> context = new LinkedHashMap<>();
@@ -93,10 +95,10 @@ public class InsightContextBuilder {
         addDietarySection(context, profile);
 
         // Goal details
-        addGoalSection(context, activeGoal);
+        addActiveGoalsSection(context, activeGoals);
 
         // Goal progress
-        addGoalProgressSection(context, activeGoal.getId(), userId);
+        addGoalProgressSection(context, activeGoals);
 
         // Wellness summary
         addWellnessSection(context, profile);
@@ -167,18 +169,34 @@ public class InsightContextBuilder {
         }
 
         // Goals
-        Map<?, ?> goals = (Map<?, ?>) context.getOrDefault("active_goal", new HashMap<>());
+        List<?> goals = (List<?>) context.getOrDefault("active_goals", List.of());
         if (!goals.isEmpty()) {
-            sb.append("ACTIVE GOAL:\n");
-            goals.forEach((k, v) -> sb.append("  ").append(k).append(": ").append(v).append("\n"));
+            sb.append("ACTIVE GOALS:\n");
+            int i = 1;
+            for (Object goalObj : goals) {
+                sb.append("  Goal ").append(i++).append(":\n");
+                if (goalObj instanceof Map<?, ?> goalMap) {
+                    goalMap.forEach((k, v) -> sb.append("    ").append(k).append(": ").append(v).append("\n"));
+                } else {
+                    sb.append("    ").append(goalObj).append("\n");
+                }
+            }
             sb.append("\n");
         }
 
         // Progress
-        Map<?, ?> progress = (Map<?, ?>) context.getOrDefault("goal_progress", new HashMap<>());
+        List<?> progress = (List<?>) context.getOrDefault("active_goals_progress", List.of());
         if (!progress.isEmpty()) {
             sb.append("GOAL PROGRESS:\n");
-            progress.forEach((k, v) -> sb.append("  ").append(k).append(": ").append(v).append("\n"));
+            int i = 1;
+            for (Object progressObj : progress) {
+                sb.append("  Goal ").append(i++).append(" Progress:\n");
+                if (progressObj instanceof Map<?, ?> progressMap) {
+                    progressMap.forEach((k, v) -> sb.append("    ").append(k).append(": ").append(v).append("\n"));
+                } else {
+                    sb.append("    ").append(progressObj).append("\n");
+                }
+            }
             sb.append("\n");
         }
 
@@ -325,52 +343,55 @@ public class InsightContextBuilder {
         context.put("dietary", dietary);
     }
 
-    private void addGoalSection(Map<String, Object> context, GoalEntity goal) {
-        Map<String, Object> goalMap = new LinkedHashMap<>();
-
-        if (goal.getGoalType() != null) {
-            goalMap.put("goal_type", goal.getGoalType().name());
-        }
-
-        if (goal.getNotes() != null) {
-            goalMap.put("notes", goal.getNotes());
-        }
-
-        if (goal.getTargetWeightKg() != null) {
-            goalMap.put("target_weight_kg", goal.getTargetWeightKg());
-        }
-
-        if (goal.getTargetActivityDaysPerWeek() != null) {
-            goalMap.put("target_activity_days_per_week", goal.getTargetActivityDaysPerWeek());
-        }
-
-        if (goal.getCreatedAt() != null) {
-            goalMap.put("goal_started", goal.getCreatedAt());
-        }
-
-        context.put("active_goal", goalMap);
+    private void addActiveGoalsSection(Map<String, Object> context, List<GoalEntity> goals) {
+        List<Map<String, Object>> goalItems = goals.stream().map(goal -> {
+            Map<String, Object> goalMap = new LinkedHashMap<>();
+            goalMap.put("goal_id", goal.getId().toString());
+            if (goal.getGoalType() != null) {
+                goalMap.put("goal_type", goal.getGoalType().name());
+            }
+            if (goal.getNotes() != null) {
+                goalMap.put("notes", goal.getNotes());
+            }
+            if (goal.getTargetWeightKg() != null) {
+                goalMap.put("target_weight_kg", goal.getTargetWeightKg());
+            }
+            if (goal.getTargetActivityDaysPerWeek() != null) {
+                goalMap.put("target_activity_days_per_week", goal.getTargetActivityDaysPerWeek());
+            }
+            if (goal.getCreatedAt() != null) {
+                goalMap.put("goal_started", goal.getCreatedAt());
+            }
+            if (goal.getTargetDate() != null) {
+                goalMap.put("target_date", goal.getTargetDate());
+            }
+            return goalMap;
+        }).toList();
+        context.put("active_goals", goalItems);
     }
 
-    private void addGoalProgressSection(Map<String, Object> context, UUID goalId, UUID userId) {
-        Map<String, Object> progress = new LinkedHashMap<>();
-        progress.put("goal_id", goalId.toString());
+    private void addGoalProgressSection(Map<String, Object> context, List<GoalEntity> goals) {
+        List<Map<String, Object>> progressItems = goals.stream().map(goal -> {
+            Map<String, Object> progress = new LinkedHashMap<>();
+            progress.put("goal_id", goal.getId().toString());
+            Optional<GoalProgressEntity> latestOpt = progressRepo.findFirstByGoalIdOrderByRecordedAtDesc(goal.getId());
 
-        Optional<GoalProgressEntity> latestOpt = progressRepo.findFirstByGoalIdOrderByRecordedAtDesc(goalId);
+            if (latestOpt.isPresent()) {
+                GoalProgressEntity latest = latestOpt.get();
+                progress.put("progress_percentage", latest.getProgressPercentage());
+                progress.put("current_value", latest.getCurrentValue());
+                progress.put("is_on_track", latest.getIsOnTrack());
+                progress.put("days_remaining", latest.getDaysRemaining());
+                progress.put("milestones_completed", latest.getMilestonesCompleted());
+                progress.put("last_recorded_at", latest.getRecordedAt());
+            }
 
-        if (latestOpt.isPresent()) {
-            GoalProgressEntity latest = latestOpt.get();
-            progress.put("progress_percentage", latest.getProgressPercentage());
-            progress.put("current_value", latest.getCurrentValue());
-            progress.put("is_on_track", latest.getIsOnTrack());
-            progress.put("days_remaining", latest.getDaysRemaining());
-            progress.put("milestones_completed", latest.getMilestonesCompleted());
-            progress.put("last_recorded_at", latest.getRecordedAt());
-        }
+            List<GoalProgressEntity> history = progressRepo.findTop30ByGoalIdOrderByRecordedAtDesc(goal.getId());
+            progress.put("total_progress_records", history.size());
+            return progress;
+        }).toList();
 
-        List<GoalProgressEntity> history = progressRepo.findTop30ByGoalIdOrderByRecordedAtDesc(goalId);
-        progress.put("total_progress_records", history.size());
-
-        context.put("goal_progress", progress);
+        context.put("active_goals_progress", progressItems);
     }
 
     private void addWellnessSection(Map<String, Object> context, HealthProfileEntity profile) {

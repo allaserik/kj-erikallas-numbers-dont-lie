@@ -1,12 +1,12 @@
 import { useState, useCallback, useRef } from "react";
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
-import { getAllGoals, getActiveGoals, createGoal, updateGoal, deleteGoal } from "../../shared/api/goals";
+import { getAllGoals, createGoal, updateGoal, deleteGoal } from "../../shared/api/goals";
 import { useAppAuth } from "../../shared/auth/AuthContext";
 import type { Goal } from "../../shared/types";
 
 export interface GoalsState {
     allGoals: Goal[];
-    activeGoal: Goal | null;
+    activeGoals: Goal[];
     isLoading: boolean;
     error: Error | null;
     isCreating: boolean;
@@ -24,15 +24,10 @@ export function useGoalsData() {
 
     // Fetch all goals (re-fetches when refetchCounter changes)
     const allGoalsQ = useAuthedQuery(`allGoals-${refetchCounter}`, getAllGoals, isAuthenticated);
-
-    // Fetch active goal (re-fetches when refetchCounter changes)
-    const activeGoalQ = useAuthedQuery(`activeGoal-${refetchCounter}`, getActiveGoals, isAuthenticated);
-
-    const isLoading = allGoalsQ.loading || activeGoalQ.loading;
-    const error = allGoalsQ.error || activeGoalQ.error || null;
-
-    // Extract active goal (returns single goal or null)
-    const activeGoal = activeGoalQ.data ? (activeGoalQ.data as Goal) : null;
+    const isLoading = allGoalsQ.loading;
+    const error = allGoalsQ.error || null;
+    const allGoals = Array.isArray(allGoalsQ.data) ? allGoalsQ.data : [];
+    const activeGoals = allGoals.filter((goal) => goal.isActive);
 
     // Refetch both queries
     const refetch = useCallback(() => {
@@ -103,8 +98,8 @@ export function useGoalsData() {
     );
 
     return {
-        allGoals: Array.isArray(allGoalsQ.data) ? allGoalsQ.data : [],
-        activeGoal,
+        allGoals,
+        activeGoals,
         isLoading,
         error,
         isCreating,

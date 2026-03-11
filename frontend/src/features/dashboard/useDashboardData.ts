@@ -15,7 +15,7 @@ export interface DashboardData {
     me: UserProfile | null;
     profile: HealthProfile | null;
     latestWeight: WeightEntry | null;
-    activeGoal: Goal | null;
+    activeGoals: Goal[];
     insight: Insight | null;
     summary: HealthSummary | null;
     weeklySummary: PeriodSummary | null;
@@ -41,12 +41,22 @@ export function useDashboardData(): DashboardState {
     const profileQ = useAuthedQuery("profile", getHealthProfile, meReady);
     const latestWeightQ = useAuthedQuery("latestWeight", getLatestWeight, meReady);
     const privacyQ = useAuthedQuery("privacyPreferences", getPrivacyPreferences, meReady);
-    const goalsQ = useAuthedQuery("goals", getActiveGoals, meReady);
-    const activeGoalId = goalsQ.data?.id;
-    const goalProgressQ = useAuthedQuery(
-        "activeGoalProgress",
-        (token: string) => getCurrentGoalProgress(activeGoalId as string, token),
-        meReady && !!activeGoalId
+    const activeGoalsQ = useAuthedQuery(
+        "activeGoalsDashboard",
+        async (token: string) => {
+            const goals = await getActiveGoals(token);
+            const goalsWithProgress = await Promise.all(
+                goals.map(async (goal) => {
+                    const progress = await getCurrentGoalProgress(goal.id, token);
+                    return {
+                        ...goal,
+                        progress: progress?.progressPercentage ?? goal.progress ?? 0,
+                    };
+                })
+            );
+            return goalsWithProgress;
+        },
+        meReady
     );
     const activityQ = useAuthedQuery(
         "activityDashboard",
@@ -71,8 +81,7 @@ export function useDashboardData(): DashboardState {
         profileQ.loading ||
         latestWeightQ.loading ||
         privacyQ.loading ||
-        goalsQ.loading ||
-        goalProgressQ.loading ||
+        activeGoalsQ.loading ||
         activityQ.loading ||
         summaryQ.loading ||
         weeklySummaryQ.loading ||
@@ -88,23 +97,14 @@ export function useDashboardData(): DashboardState {
         profileQ.error ||
         latestWeightQ.error ||
         privacyQ.error ||
-        goalsQ.error ||
-        goalProgressQ.error ||
+        activeGoalsQ.error ||
         activityQ.error ||
         (insightConsentRequired ? null : insightQ.error) ||
         null;
 
     // Extract data from individual queries
     const latestWeight = latestWeightQ.data;
-    const activeGoal = goalsQ.data
-        ? {
-            ...goalsQ.data,
-            progress:
-                goalProgressQ.data?.progressPercentage ??
-                goalsQ.data.progress ??
-                0,
-        }
-        : null;
+    const activeGoals = activeGoalsQ.data || [];
 
     const activeDaysLast7 = (() => {
         const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -121,7 +121,7 @@ export function useDashboardData(): DashboardState {
         me: meQ.data || null,
         profile: profileQ.data || null,
         latestWeight,
-        activeGoal,
+        activeGoals,
         insight: insightQ.data || null,
         summary: summaryQ.data || null,
         weeklySummary: weeklySummaryQ.data || null,

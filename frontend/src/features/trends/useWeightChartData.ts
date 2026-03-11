@@ -1,6 +1,6 @@
 import { useAuthedQuery } from "../../shared/auth/useAuthedQuery";
 import { getWeightHistory } from "../../shared/api/weight";
-import { getActiveGoals } from "../../shared/api/goals";
+import { getPrimaryActiveGoal } from "../../shared/api/goals";
 import { getGoalMilestones } from "../../shared/api/goalProgress";
 import type { WeightEntry, PaginatedResponse } from "../../shared/types";
 import { useAppAuth } from "../../shared/auth/AuthContext";
@@ -45,7 +45,7 @@ export function useWeightChartData(range: WeightRange = "90"): WeightChartState 
     );
 
     // Fetch active goal for target weight reference
-    const activeGoalQ = useAuthedQuery("activeGoal", getActiveGoals, isAuthenticated);
+    const activeGoalQ = useAuthedQuery("activeGoal", getPrimaryActiveGoal, isAuthenticated);
     const activeGoalId = activeGoalQ.data?.id;
     const milestonesQ = useAuthedQuery(
         `goalMilestones-${activeGoalId || "none"}`,

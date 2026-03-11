@@ -19,6 +19,10 @@ public class GoalService {
         return repo.findFirstByUserIdAndActiveTrue(userId).orElse(null);
     }
 
+    public java.util.List<GoalEntity> getActiveGoals(UUID userId) {
+        return repo.findByUserIdAndActiveTrueOrderByCreatedAtDesc(userId);
+    }
+
     @Transactional
     public GoalEntity createAndActivate(
             UUID userId,
@@ -27,23 +31,6 @@ public class GoalService {
             Integer targetActivityDaysPerWeek,
             LocalDate targetDate,
             String notes) {
-        // Deactivate existing active goal (if any)
-        repo.findFirstByUserIdAndActiveTrue(userId).ifPresent(existing -> {
-            OffsetDateTime now = OffsetDateTime.now();
-            GoalEntity updated = new GoalEntity(
-                    existing.getId(),
-                    existing.getUserId(),
-                    existing.getGoalType(),
-                    existing.getTargetWeightKg(),
-                    existing.getTargetActivityDaysPerWeek(),
-                    existing.getTargetDate(),
-                    existing.getNotes(),
-                    false,
-                    existing.getCreatedAt(),
-                    now);
-            repo.save(updated);
-        });
-
         OffsetDateTime now = OffsetDateTime.now();
         GoalEntity created = new GoalEntity(
                 UUID.randomUUID(),
@@ -69,27 +56,6 @@ public class GoalService {
 
         if (!existing.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Goal not found");
-        }
-
-        // If activating this goal, deactivate others
-        if (Boolean.TRUE.equals(isActive)) {
-            repo.findFirstByUserIdAndActiveTrue(userId).ifPresent(active -> {
-                if (!active.getId().equals(goalId)) {
-                    OffsetDateTime now = OffsetDateTime.now();
-                    GoalEntity deactivated = new GoalEntity(
-                            active.getId(),
-                            active.getUserId(),
-                            active.getGoalType(),
-                            active.getTargetWeightKg(),
-                            active.getTargetActivityDaysPerWeek(),
-                            active.getTargetDate(),
-                            active.getNotes(),
-                            false,
-                            active.getCreatedAt(),
-                            now);
-                    repo.save(deactivated);
-                }
-            });
         }
 
         OffsetDateTime now = OffsetDateTime.now();

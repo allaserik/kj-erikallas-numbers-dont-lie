@@ -102,24 +102,30 @@ public class DemoDataInitializer {
             profileRepo.save(profile);
             log.info("Created demo health profile (height: 175cm)");
 
-            // 3. Create goals (one active, one archived for history testing)
-            GoalEntity activeGoal = new GoalEntity(UUID.randomUUID(), DEMO_USER_ID, GoalType.WEIGHT_LOSS, 75.0, 4,
+            // 3. Create goals (multiple active + one archived for history testing)
+            GoalEntity activeWeightGoal = new GoalEntity(UUID.randomUUID(), DEMO_USER_ID, GoalType.WEIGHT_LOSS, 75.0, 4,
                     now.toLocalDate().plusDays(90), "Lose 5kg in 3 months", true,
                     now, now);
-            goalRepo.save(activeGoal);
+            goalRepo.save(activeWeightGoal);
+
+            GoalEntity activeFitnessGoal = new GoalEntity(UUID.randomUUID(), DEMO_USER_ID, GoalType.IMPROVE_FITNESS, null,
+                    5, now.toLocalDate().plusDays(60), "Reach 5 active days per week", true,
+                    now.minusDays(5), now.minusDays(5));
+            goalRepo.save(activeFitnessGoal);
 
             GoalEntity archivedGoal = new GoalEntity(UUID.randomUUID(), DEMO_USER_ID, GoalType.IMPROVE_FITNESS, null,
                     5, now.toLocalDate().minusDays(10), "Improve weekly training consistency", false,
                     now.minusDays(120), now.minusDays(20));
             goalRepo.save(archivedGoal);
-            log.info("Created demo goals (active + archived)");
+            log.info("Created demo goals (multiple active + archived)");
 
             // 4. Create 30 days of weight entries with realistic progression
             createWeightEntries(DEMO_USER_ID, now);
             log.info("Created 30 days of weight entries");
 
             // 5. Create goal progress history for trend charts and analytics
-            createGoalProgressHistory(activeGoal, now);
+            createWeightGoalProgressHistory(activeWeightGoal, now);
+            createActivityGoalProgressHistory(activeFitnessGoal, now);
             createArchivedGoalProgressHistory(archivedGoal, now);
             log.info("Created goal progress history");
 
@@ -162,7 +168,7 @@ public class DemoDataInitializer {
         }
     }
 
-    private void createGoalProgressHistory(GoalEntity goal, OffsetDateTime baseTime) {
+    private void createWeightGoalProgressHistory(GoalEntity goal, OffsetDateTime baseTime) {
         // Progress snapshots over ~8 weeks to support weekly/monthly summary testing.
         double[] currentWeights = { 82.1, 81.5, 80.9, 80.4, 79.8, 79.1, 78.4, 77.8, 77.2 };
         int[] progressPercents = { 8, 16, 24, 33, 45, 57, 68, 79, 88 };
@@ -177,6 +183,34 @@ public class DemoDataInitializer {
                     progressPercents[i],
                     true,
                     Math.max(0, (int) java.time.temporal.ChronoUnit.DAYS.between(baseTime, goal.getTargetDate().atStartOfDay().atOffset(java.time.ZoneOffset.UTC))),
+                    ts,
+                    ts,
+                    ts
+            );
+            progress.setMilestonesCompleted(progressPercents[i] / 5);
+            progress.setMilestoneDetails(List.of(Map.of(
+                    "percentage", (progressPercents[i] / 5) * 5,
+                    "completed_at", ts.toString()
+            )));
+            goalProgressRepo.save(progress);
+        }
+    }
+
+    private void createActivityGoalProgressHistory(GoalEntity goal, OffsetDateTime baseTime) {
+        int[] activityDays = { 2, 3, 3, 4, 4, 5 };
+        int[] progressPercents = { 40, 60, 60, 80, 80, 100 };
+
+        for (int i = 0; i < activityDays.length; i++) {
+            OffsetDateTime ts = baseTime.minusDays(35 - (i * 7));
+            GoalProgressEntity progress = new GoalProgressEntity(
+                    UUID.randomUUID(),
+                    goal.getId(),
+                    goal.getUserId(),
+                    java.math.BigDecimal.valueOf(activityDays[i]),
+                    progressPercents[i],
+                    true,
+                    Math.max(0, (int) java.time.temporal.ChronoUnit.DAYS.between(baseTime,
+                            goal.getTargetDate().atStartOfDay().atOffset(java.time.ZoneOffset.UTC))),
                     ts,
                     ts,
                     ts
