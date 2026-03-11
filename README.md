@@ -74,6 +74,40 @@ Demo credentials:
 - `demo@example.com` / `demo@example.com`
 - Detailed demo seed notes: [DEMO_MODE.md](DEMO_MODE.md)
 
+Read Docker logs for AI insight generation details and email payloads. From project root (./numbers-dont-lie):
+
+All services, live stream:
+```bash
+docker compose logs -f
+```
+
+Specific services:
+```bash
+docker compose logs -f postgres
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+Last 200 lines only:
+
+```bash
+docker compose logs --tail=200 postgres
+docker compose logs --tail=200 backend
+docker compose logs --tail=200 frontend
+```
+
+With timestamps:
+
+```bash
+docker compose logs -f -t backend
+```
+
+If service names differ, list them:
+
+```bash
+docker compose ps
+```
+
 ### Clean Mode (No Demo Seed Data)
 
 Use this when you want an empty database and non-demo UX:
@@ -248,19 +282,6 @@ When `OPENAI_API_KEY` is configured:
 
 When AI is unavailable:
 - Service returns latest cached insight or a safe fallback insight
-
-## Submission/Review Docs
-
-- Assignment requirements: `docs/ASSIGNMENT.md`
-- Test criteria: `docs/ASSIGNMENT_TEST.md`
-- Current implementation gap analysis: `docs/REVIEW_GAP_CHECKLIST.md`
-- Requirements defense notes: `docs/REQUIREMENTS_FULFILLMENT_EXPLANATIONS.md`
-- Encryption-at-rest production plan: `docs/SECURITY_ENCRYPTION_AT_REST_PLAN.md`
-
-## Known Limitations
-
-- Infra-level encryption-at-rest evidence (volume/KMS policy) is still pending
-- Restriction-aware AI filtering is implemented, but currently keyword-based rather than a full nutrition rule engine
 
 ## Further Development Ideas
 
