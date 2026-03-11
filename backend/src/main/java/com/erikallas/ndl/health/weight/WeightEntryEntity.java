@@ -1,6 +1,8 @@
 package com.erikallas.ndl.health.weight;
 
+import com.erikallas.ndl.common.persistence.encryption.EncryptedStringConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -28,6 +30,7 @@ public class WeightEntryEntity {
     private double weightKg;
 
     @Column(name = "note")
+    @Convert(converter = EncryptedStringConverter.class)
     private String note;
 
     @Column(name = "deleted_at")

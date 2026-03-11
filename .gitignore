@@ -64,3 +64,6 @@ openai-off.sh
 # Secrets
 secrets/
 secrets.sh
+
+#Dev notes
+DEV_NOTES.md

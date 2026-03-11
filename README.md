@@ -185,6 +185,45 @@ Reviewer-friendly local setup with MailHog:
 
 If `APP_EMAIL_ENABLED=false`, email payloads are intentionally logged to backend console for local testing only.
 
+### Encryption In Transit (HTTPS)
+
+You can run backend HTTPS locally using a PKCS12 keystore:
+
+1. Generate a local keystore (example):
+
+```bash
+keytool -genkeypair \
+  -alias tomcat \
+  -keyalg RSA \
+  -keysize 2048 \
+  -storetype PKCS12 \
+  -keystore backend/local-dev.p12 \
+  -validity 3650 \
+  -storepass changeit \
+  -dname "CN=localhost"
+```
+
+2. Set env vars:
+- `SERVER_SSL_ENABLED=true`
+- `SERVER_SSL_KEY_STORE=file:./local-dev.p12` (or absolute path)
+- `SERVER_SSL_KEY_STORE_PASSWORD=...`
+- `SERVER_SSL_KEY_STORE_TYPE=PKCS12`
+- `SERVER_SSL_KEY_ALIAS=tomcat`
+
+When enabled, backend traffic is encrypted over HTTPS.
+
+### Encryption At Rest
+
+Application-layer at-rest encryption is enabled for sensitive health fields:
+- `health_profiles.dietary_preferences` (encrypted JSON text)
+- `health_profiles.dietary_restrictions` (encrypted JSON text)
+- `health_profiles.fitness_assessment` (encrypted JSON text)
+- `weight_entries.note` (encrypted text)
+- `activity_checkins.note` (encrypted text)
+
+Encryption key material:
+- `APP_DATA_ENCRYPTION_KEY`
+
 If running backend directly and loading `.env` into shell:
 
 ```bash
@@ -222,3 +261,42 @@ When AI is unavailable:
 
 - Infra-level encryption-at-rest evidence (volume/KMS policy) is still pending
 - Restriction-aware AI filtering is implemented, but currently keyword-based rather than a full nutrition rule engine
+
+## Further Development Ideas
+
+Based on the current implementation, these are practical next steps:
+
+1. Security and Compliance
+- Move from app-layer encryption only to full infrastructure encryption-at-rest (managed volume encryption + key rotation policy).
+- Run backend strictly behind HTTPS in all environments and add HSTS/reverse-proxy hardening.
+- Add structured audit trail for sensitive actions (consent changes, exports, account deletion, security settings).
+
+2. AI Quality and Evaluation
+- Add an internal evaluation suite with scenario-based scoring for relevance, safety, and goal alignment.
+- Add stricter domain validators (exercise contraindications, nutrition restriction ontology, unsafe advice classes).
+- Support model fallback strategy by tier (primary model -> cheaper model -> deterministic safe template).
+
+3. Goals and Progress
+- Add auto-progress snapshots for weight goals on each weight check-in (similar to activity goal auto-progress).
+- Add projected completion date per active goal using trend slope and confidence range.
+- Add per-goal timeline views (milestones + notes + check-in correlation).
+
+4. Analytics and Visualization
+- Add richer comparison views (week-over-week and month-over-month component deltas).
+- Add configurable dashboard widgets and saved ranges.
+- Add trend annotations for key events (goal created, milestone reached, major weight change).
+
+5. UX and Product Flow
+- Add first-run onboarding wizard (profile -> consent -> first check-in -> first goal).
+- Expand timeline interactions (edit/delete check-ins inline with optimistic updates).
+- Add explicit “data completeness” hints to guide users toward better AI insight quality.
+
+6. Testing and Reliability
+- Increase backend integration coverage for auth, privacy, and AI fallback paths.
+- Add frontend e2e smoke suite for reviewer-critical flows.
+- Add migration verification tests to prevent schema drift and data conversion issues.
+
+7. Operations and Observability
+- Add structured logs and request tracing across auth/AI/export endpoints.
+- Add metrics dashboards (error rates, response times, AI fallback frequency, rate-limit hits).
+- Add environment health checks for external dependencies (email provider, Auth0, AI provider).

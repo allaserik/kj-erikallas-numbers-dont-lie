@@ -1,6 +1,9 @@
 package com.erikallas.ndl.health.profile;
 
+import com.erikallas.ndl.common.persistence.encryption.EncryptedJsonMapConverter;
+import com.erikallas.ndl.common.persistence.encryption.EncryptedStringListConverter;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -9,8 +12,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "health_profiles")
@@ -32,16 +33,16 @@ public class HealthProfileEntity {
     @Column(name = "baseline_activity_level", nullable = false)
     private String baselineActivityLevel;
 
-    @Column(name = "dietary_preferences", columnDefinition = "text[]")
-    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "dietary_preferences", columnDefinition = "text")
+    @Convert(converter = EncryptedStringListConverter.class)
     private List<String> dietaryPreferences;
 
-    @Column(name = "dietary_restrictions", columnDefinition = "text[]")
-    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "dietary_restrictions", columnDefinition = "text")
+    @Convert(converter = EncryptedStringListConverter.class)
     private List<String> dietaryRestrictions;
 
-    @Column(name = "fitness_assessment", columnDefinition = "jsonb")
-    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "fitness_assessment", columnDefinition = "text")
+    @Convert(converter = EncryptedJsonMapConverter.class)
     private Map<String, Object> fitnessAssessment;
 
     @Column(name = "fitness_assessment_completed")
