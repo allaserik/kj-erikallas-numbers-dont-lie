@@ -9,6 +9,8 @@ import CheckInPage from './features/checkin/CheckInPage';
 import ProfilePage from './features/profile/ProfilePage';
 import SettingsPage from './features/settings/SettingsPage';
 import ConsentPage from './features/consent/ConsentPage';
+import NutritionPreferencesPage from './features/nutrition/NutritionPreferencesPage';
+import PlannerPage from './features/planner/PlannerPage';
 import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './features/auth/ResetPasswordPage';
@@ -45,11 +47,18 @@ function AppContent({ isAuthenticated }: { isAuthenticated: boolean }) {
         {/* Protected routes - require auth */}
         <Route path="/" element={<AppShell />}>
           <Route index element={guarded(<DashboardPage />)} />
+          <Route path="planner" element={guarded(<PlannerPage />)}>
+            <Route index element={<Navigate to="/planner/today" replace />} />
+            <Route path="today" element={<CheckInPage />} />
+            <Route path="goals" element={<GoalsPage />} />
+            <Route path="nutrition" element={<NutritionPreferencesPage />} />
+          </Route>
           <Route path="trends" element={guarded(<TrendsPage />)} />
-          <Route path="goals" element={guarded(<GoalsPage />)} />
-          <Route path="checkin" element={guarded(<CheckInPage />)} />
+          <Route path="goals" element={<Navigate to="/planner/goals" replace />} />
+          <Route path="checkin" element={<Navigate to="/planner/today" replace />} />
           <Route path="profile" element={guarded(<ProfilePage />)} />
           <Route path="settings" element={guarded(<SettingsPage />)} />
+          <Route path="nutrition/preferences" element={<Navigate to="/planner/nutrition" replace />} />
           <Route path="consent" element={hasConsent ? <Navigate to="/" replace /> : <ConsentPage />} />
         </Route>
       </Routes>

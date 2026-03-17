@@ -1,9 +1,8 @@
 import { NavLink } from "react-router-dom";
 import {
     HomeIcon,
-    PlusCircleIcon,
+    CalendarDaysIcon,
     ChartBarIcon,
-    AdjustmentsHorizontalIcon,
     UserCircleIcon,
     Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
@@ -28,14 +27,14 @@ export default function BottomNav() {
                 </NavLink>
                 {/* Check In */}
                 <NavLink
-                    to="/checkin"
+                    to="/planner/today"
                     className={({ isActive }) =>
                         `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs rounded-md transition-colors ${isActive ? "text-green-700 bg-green-50" : "text-slate-600"}`
                     }
-                    aria-label="Check In"
+                    aria-label="Planner"
                 >
-                    <PlusCircleIcon className="h-6 w-6" />
-                    <span>Check In</span>
+                    <CalendarDaysIcon className="h-6 w-6" />
+                    <span>Planner</span>
                 </NavLink>
                 {/* Trends */}
                 <NavLink
@@ -47,17 +46,6 @@ export default function BottomNav() {
                 >
                     <ChartBarIcon className="h-6 w-6" />
                     <span>Trends</span>
-                </NavLink>
-                {/* Goals */}
-                <NavLink
-                    to="/goals"
-                    className={({ isActive }) =>
-                        `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs rounded-md transition-colors ${isActive ? "text-green-700 bg-green-50" : "text-slate-600"}`
-                    }
-                    aria-label="Goals"
-                >
-                    <AdjustmentsHorizontalIcon className="h-6 w-6" />
-                    <span>Goals</span>
                 </NavLink>
                 {/* Profile */}
                 <NavLink
