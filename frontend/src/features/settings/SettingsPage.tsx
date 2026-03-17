@@ -1,6 +1,8 @@
 import { UserCard } from "../profile/components/UserCard";
 import { AccountSettings } from "../profile/components/AccountSettings";
 import { useAppAuth } from "../../shared/auth/AuthContext";
+import { Card, CardBody, CardTitle } from "../../shared/ui/Card";
+import { Link } from "react-router-dom";
 
 export default function SettingsPage() {
     const { isAuthenticated } = useAppAuth();
@@ -13,6 +15,22 @@ export default function SettingsPage() {
             </div>
 
             <UserCard isAuthenticated={isAuthenticated} />
+
+            <Card>
+                <CardTitle>Nutrition</CardTitle>
+                <CardBody>
+                    <p className="text-sm text-slate-600 mb-3">
+                        Configure calorie target, macros, dietary preferences, allergies, meal timing, and cuisine context.
+                    </p>
+                    <Link
+                        to="/planner/nutrition"
+                        className="inline-block px-4 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition"
+                    >
+                        Open Nutrition Preferences
+                    </Link>
+                </CardBody>
+            </Card>
+
             <AccountSettings />
         </div>
     );
